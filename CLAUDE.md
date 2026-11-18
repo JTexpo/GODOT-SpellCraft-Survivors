@@ -4,9 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project State
 
-Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). The repo currently holds only design documents. There is no `project.godot`, source, or tests yet. Sprint 0 (project foundation) has not started. No build, lint, or test commands exist yet. Don't invent them. Once a test framework is chosen, record the commands here, including how to run a single test.
+Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (project foundation) is in progress on the `sprint-0-foundation` branch. See `sprint-0-design.md` and `docs/superpowers/plans/`. Decisions are logged in `development-log.md`.
 
-The `godot` MCP server (`@coding-solo/godot-mcp`, launched via `npx`) is configured in `.mcp.json`. It needs `npx` on `$PATH` to connect.
+## Commands
+
+Run everything with the venv active (`source venv/bin/activate`). Godot is the Homebrew `godot` (4.7.2). After adding or renaming a `class_name` script, run `godot --headless --import` once so the class cache updates.
+
+- Run all tests (GUT 9.7.1, vendored in `addons/gut/`): `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`
+- Run one test file: add `-gselect=test_health_component` (file name without `.gd`)
+- Run one test: add `-gunit_test_name=test_name`
+- Smoke-run the project: `godot --headless --quit-after 60`
+
+The `godot` MCP server (`@coding-solo/godot-mcp`, launched via `npx`) is configured in `.mcp.json`. Node and `npx` live only in the gitignored `venv/` (installed with `nodeenv`), so start Claude Code from a shell where you ran `source venv/bin/activate`, or the server fails to connect. Godot itself (4.7.2) comes from Homebrew.
+
+Planned decisions (Sprint 0, not yet built): 480×270 internal resolution with integer scaling, Compatibility renderer and single-threaded web export for an eventual GitHub Pages release, and GUT for tests (vendored in `addons/gut/`, tests in `tests/test_*.gd`).
 
 ## Required Workflow
 
