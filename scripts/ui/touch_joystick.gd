@@ -33,22 +33,22 @@ func _input(event: InputEvent) -> void:
 		handle_drag(event.index, event.position)
 
 
-func handle_touch(index: int, pressed: bool, position: Vector2) -> void:
+func handle_touch(index: int, pressed: bool, screen_position: Vector2) -> void:
 	if pressed:
-		if touch_index == -1 and get_global_rect().has_point(position):
+		if touch_index == -1 and get_global_rect().has_point(screen_position):
 			touch_index = index
-			_update(position)
+			_update(screen_position)
 	elif index == touch_index:
 		_release()
 
 
-func handle_drag(index: int, position: Vector2) -> void:
+func handle_drag(index: int, screen_position: Vector2) -> void:
 	if index == touch_index:
-		_update(position)
+		_update(screen_position)
 
 
-func _update(position: Vector2) -> void:
-	var offset := position - get_global_rect().get_center()
+func _update(screen_position: Vector2) -> void:
+	var offset := screen_position - get_global_rect().get_center()
 	var vector := (offset / radius).limit_length(1.0)
 	_knob_offset = vector * radius
 	_set_action(ACTION_RIGHT, maxf(vector.x, 0.0))

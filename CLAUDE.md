@@ -17,7 +17,7 @@ Run everything with the venv active (`source venv/bin/activate`). Godot is the H
 
 The `godot` MCP server (`@coding-solo/godot-mcp`, launched via `npx`) is configured in `.mcp.json`. Node and `npx` live only in the gitignored `venv/` (installed with `nodeenv`), so start Claude Code from a shell where you ran `source venv/bin/activate`, or the server fails to connect. Godot itself (4.7.2) comes from Homebrew.
 
-Planned decisions (Sprint 0, not yet built): 480×270 internal resolution with integer scaling, Compatibility renderer and single-threaded web export for an eventual GitHub Pages release, and GUT for tests (vendored in `addons/gut/`, tests in `tests/test_*.gd`).
+Established in Sprint 0: 480×270 internal resolution with integer scaling, Compatibility renderer, a checked-in single-threaded Web export preset (not yet exported; templates aren't installed) for an eventual GitHub Pages release, GUT for tests (`tests/test_*.gd`), and a `TouchJoystick` for touch movement (Godot 4.7 has a native `VirtualJoystick`, so don't reuse that name).
 
 ## Required Workflow
 

@@ -37,19 +37,19 @@ The following decisions should be treated as established design requirements:
 
 ### Tasks
 
-- [ ] Create the game project.
-- [ ] Configure the target resolution.
-- [ ] Configure pixel-art rendering and filtering.
-- [ ] Establish the top-down camera.
-- [ ] Implement basic scene management.
-- [ ] Establish input handling for keyboard and mouse.
-- [ ] Establish input handling for controller/joystick.
-- [ ] Create a basic player placeholder.
-- [ ] Create a basic enemy placeholder.
-- [ ] Establish a reusable entity/component structure.
-- [ ] Establish a reusable data structure for spells.
-- [ ] Establish a reusable data structure for scrolls.
-- [ ] Establish version control and repository structure.
+- [x] Create the game project.
+- [x] Configure the target resolution.
+- [x] Configure pixel-art rendering and filtering.
+- [x] Establish the top-down camera.
+- [x] Implement basic scene management.
+- [x] Establish input handling for keyboard and mouse.
+- [x] Establish input handling for controller/joystick.
+- [x] Create a basic player placeholder.
+- [x] Create a basic enemy placeholder.
+- [x] Establish a reusable entity/component structure.
+- [x] Establish a reusable data structure for spells.
+- [x] Establish a reusable data structure for scrolls.
+- [x] Establish version control and repository structure.
 
 ### Deliverable
 
