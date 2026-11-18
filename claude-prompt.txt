@@ -1,0 +1,32 @@
+Before making any changes:
+
+1. Read README.md.
+2. Read sprint-development.md.
+3. Read technical-design.md.
+4. Read CLAUDE.md.
+
+We are currently working on Sprint [X].
+
+Today's task is:
+
+[DESCRIBE TASK]
+
+Before implementing anything:
+- Inspect the existing project.
+- Identify the files that need to be created or modified.
+- Explain your proposed implementation.
+- Identify any dependencies.
+- Identify potential architectural issues.
+
+Wait for my approval before writing code.
+
+Once approved:
+- Implement only the requested task.
+- Follow existing project conventions.
+- Avoid unnecessary refactoring.
+- Do not implement future sprint features.
+- Test your implementation.
+- Explain all files changed.
+- Provide instructions for manually testing the feature in Godot.
+
+Do not modify game design decisions without asking me.

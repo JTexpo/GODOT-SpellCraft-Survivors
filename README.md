@@ -1,0 +1,560 @@
+# Game Design Document
+
+# 1. Game Concept
+
+An 8-bit, top-down, survival roguelite inspired by *Vampire Survivors*, where the player takes on the role of a wizard fighting increasingly dangerous waves of enemies.
+
+Rather than relying on traditional weapons, the player collects magical spell-scrolls that can be combined at an **Arcane Lectern** to craft unique spells.
+
+Each spell is constructed using three components:
+
+- **Base:** Determines the elemental damage type.
+- **Area:** Determines how the spell behaves and where it affects enemies.
+- **Buffs:** Provides additional modifiers that alter the spell's properties.
+
+Spells have a limited mana capacity. Once depleted, they are lost, and the player must craft a new spell. This encourages players to constantly move, manage their resources, and experiment with different spell combinations.
+
+The ultimate goal is to survive increasingly difficult enemy waves, collect resources, discover powerful spell combinations, and become a stronger wizard with every adventure.
+
+## 1.1 Core Gameplay Pillars
+
+- **Spell Crafting:** Discover scrolls and combine them to create unique magical attacks.
+- **Resource Management:** Balance spell damage, mana consumption, and cooldowns.
+- **Movement and Survival:** Keep moving to avoid enemies while managing limited magical resources.
+- **Build Variety:** Create different playstyles through spell combinations and equipment.
+- **Roguelite Progression:** Use resources collected during adventures to improve future runs.
+
+# 2. Core Gameplay Loop
+
+1. Begin an adventure with a starting spell and equipment.
+2. Fight enemies and collect XP and Gold.
+3. Level up to improve character attributes and unlock additional spell slots.
+4. Discover spell-scrolls dropped by enemies or found throughout the world.
+5. Combine scrolls at Arcane Lecterns to craft new spells or modify existing ones.
+6. Manage spell mana while surviving increasingly difficult enemy waves.
+7. Defeat bosses and progress through increasingly dangerous encounters.
+8. Eventually die or complete the adventure.
+9. Spend accumulated resources on permanent progression and equipment.
+10. Begin another adventure with a stronger or entirely different build.
+
+# 3. Spell Crafting System
+
+Spells are constructed using three categories of scrolls:
+
+- Base
+- Area
+- Buffs
+
+Every crafted spell requires at least one Base and one Area scroll. Buffs are optional.
+
+## 3.1 Base Scrolls
+
+Base scrolls determine the elemental damage type of a spell.
+
+Each element has strengths and weaknesses against particular enemy types. Exploiting an enemy's vulnerability increases damage, while attacking an enemy with a resistant element reduces damage.
+
+| Element | Strong Against | Weak Against |
+|---|---|---|
+| Fire | Land | Sea |
+| Thunder | Sea | Land |
+| Land | Thunder | Fire |
+| Sea | Fire | Thunder |
+
+### Elemental Interactions
+
+- **Fire:** Effective against Land enemies but ineffective against Sea enemies.
+- **Thunder:** Effective against Sea enemies but ineffective against Land enemies.
+- **Land:** Effective against Thunder enemies but ineffective against Fire enemies.
+- **Sea:** Effective against Fire enemies but ineffective against Thunder enemies.
+
+Enemies without an elemental affinity receive normal damage from all elements.
+
+### Multiple Base Types
+
+Certain buffs allow a spell to incorporate additional Base types.
+
+For example:
+- Fire + Thunder creates a hybrid elemental spell.
+- Land + Sea creates a hybrid elemental spell.
+- Fire + Sea can exploit multiple elemental interactions.
+
+Hybrid spells can potentially exploit multiple enemy vulnerabilities, but drain mana much faster than a single element
+
+## 3.2 Area Scrolls
+
+Area scrolls determine the shape, targeting method, and behavior of a spell.
+
+Increasing a spell's effective range or area increases its mana consumption.
+
+### Available Areas
+
+**Line**
+- Originates from the player.
+- Travels or extends in the direction the player is facing or aiming.
+- Damages enemies within its path.
+- Can be upgraded to increase its length and width.
+
+**Cone**
+- Originates from the player.
+- Projects outward in a cone in the direction of the mouse or joystick.
+- Damages enemies within its arc.
+- Can be upgraded to increase its angle and range.
+
+**Area**
+- Targets a location selected using the mouse or joystick.
+- Creates an area-of-effect attack at the selected location.
+- Can be upgraded to increase its radius and duration.
+
+**Missile**
+- Originates from the player.
+- Fires a projectile toward the selected direction.
+- Travels independently until it hits an enemy or reaches its maximum range.
+- Can be upgraded to increase projectile speed, range, and size.
+
+### Area Scaling
+
+Area scrolls can have different levels of effectiveness.
+
+For example:
+- Small Line: Low mana consumption, short range.
+- Large Line: High mana consumption, long range.
+- Small Area: Low mana consumption, small explosion.
+- Large Area: High mana consumption, large explosion.
+
+The goal is to make every Area type useful in different situations rather than having one universally superior option.
+
+## 3.3 Buff Scrolls
+
+Buff scrolls provide additional modifiers to crafted spells.
+
+Buffs are optional, but each additional buff increases the spell's mana consumption.
+
+This creates a trade-off between creating a powerful spell and maintaining enough mana to use it consistently.
+
+### Available Buffs
+
+| Buff | Effect |
+|---|---|
+| Increased Max Mana | Increases the spell's maximum mana capacity. |
+| Increased Damage | Increases the spell's damage output. |
+| Double Vulnerability Damage | Doubles bonus damage against vulnerable enemies. |
+| Ignore Resistance | Allows the spell to bypass enemy elemental resistance. |
+| Duplicate Area | Creates additional instances of the spell's Area effect. |
+| Additional Base | Adds another elemental damage type to the spell. |
+
+### Duplicate Area
+
+Duplicate Area increases the number of times an Area effect is applied.
+
+The direction and distribution of duplicates depend on the Area type.
+
+Examples:
+- 1 Duplicate: Mirrors the original spell.
+- 2 Duplicates: Fires in three directions.
+- 3 Duplicates: Fires in four directions.
+- 4 Duplicates: Fires in five directions.
+
+For directional spells, duplicates can be distributed around the original firing direction.
+
+For targeted Area spells, duplicates can create additional explosions around the original target.
+
+The exact distribution should depend on the spell's Area type.
+
+### Spell Balance
+
+Every buff increases the spell's overall mana requirements.
+
+The more powerful the spell, the more frequently the player will need to manage its mana.
+
+This prevents players from simply stacking every available buff onto a single spell without considering the consequences.
+
+# 4. Arcane Lectern
+
+The Arcane Lectern is the primary crafting station used to combine spell-scrolls.
+
+Players can discover Lecterns throughout the map and use them to modify their spell loadout.
+
+### Crafting Rules
+
+- A spell requires at least one Base scroll.
+- A spell requires one Area scroll.
+- Buffs are optional.
+- A spell can only have one Area type unless modified by a special mechanic.
+- Additional Base types can be added through buffs.
+- Additional buffs increase mana consumption.
+
+### Crafting Possibilities
+
+Players can experiment with different combinations to create specialized spells.
+
+Examples:
+
+| Spell | Components | Playstyle |
+|---|---|---|
+| Fire Missile | Fire + Missile | Long-range damage |
+| Thunder Cone | Thunder + Cone | Close-range crowd control |
+| Land Area | Land + Area | Large-area damage |
+| Sea Line | Sea + Line | Directional damage |
+| Multi-Fire Missile | Fire + Missile + Duplicate Area | Multi-projectile damage |
+| Piercing Thunder | Thunder + Missile + Ignore Resistance | Reliable damage against resistant enemies |
+
+### Lectern Interaction
+
+When interacting with a Lectern, the player enters a crafting interface.
+
+The player can:
+1. Select an existing spell or an empty spell slot.
+2. Insert a Base scroll.
+3. Insert an Area scroll.
+4. Add any available Buff scrolls.
+5. Review the resulting spell's damage, mana capacity, and mana consumption.
+6. Confirm the combination.
+
+Crafting should be quick enough that players aren't spending excessive time away from the action.
+
+# 5. Mana System
+
+Mana is the primary resource used to cast spells.
+
+Every spell has its own mana capacity and consumption rate.
+
+### Spell Mana
+
+- Each spell has a maximum mana capacity.
+- Casting a spell consumes mana.
+- More powerful spells consume more mana.
+- Mana does not regenerate.
+- Spells cannot be cast when they lack sufficient mana.
+
+### Mana Management
+
+The player is encouraged to rotate between spells rather than relying on a single attack.
+
+For example:
+- Spell A is used until its mana is depleted.
+- Spell B is used while the player finds resources to craft Spell C (a replacement of Spell A).
+- Spell C is used while the player finds resources to craft newer spells.
+
+This creates a natural rhythm of attacking, moving, and managing resources.
+
+### Potential Mana Modifiers
+
+Future scrolls and equipment could introduce:
+- Increased mana regeneration.
+- Reduced mana consumption.
+- Increased maximum mana.
+- Mana regeneration on enemy kills.
+- Mana regeneration on vulnerability hits.
+- Chance to refund mana after casting.
+
+# 6. Roguelite Progression
+
+A wizard's adventure doesn't need to end when they die.
+
+After each run, players retain certain resources and can spend them to improve their character for future adventures.
+
+The two primary progression resources are:
+
+- XP
+- Gold
+
+## 6.1 XP Progression
+
+XP is accumulated during adventures and contributes toward the player's permanent wizard level.
+
+There are 20 progression levels.
+
+Each level provides a predefined upgrade, gradually improving the wizard's attributes and starting spell loadout.
+
+### Level Progression
+
+| Level | Reward |
+|---|---|
+| 1 | Increase Base Level |
+| 2 | Increase Movement Speed |
+| 3 | Increase Maximum Health |
+| 4 | Increase Maximum Mana of All Spells |
+| 5 | Increase Maximum Spell Slots from 1 to 2 |
+| 6 | Increase Movement Speed |
+| 7 | Starting Spell receives 1 Random Buff |
+| 8 | Increase Maximum Health |
+| 9 | Increase Maximum Mana of All Spells |
+| 10 | Increase Maximum Spell Slots from 2 to 3 |
+| 11 | Increase Movement Speed |
+| 12 | Starting Spell receives 1 Chosen Buff |
+| 13 | Increase Maximum Health |
+| 14 | Start with 2 Spells |
+| 15 | Increase Maximum Spell Slots from 3 to 4 |
+| 16 | Increase Movement Speed |
+| 17 | Second Starting Spell receives 1 Random Buff |
+| 18 | Increase Maximum Health |
+| 19 | Second Starting Spell receives 1 Chosen Buff |
+| 20 | Increase Maximum Spell Slots from 4 to 5 |
+
+### Base Level
+
+Base Level determines the strength of the wizard's starting magical capabilities.
+
+Potential benefits include:
+- Increased base spell damage.
+- Improved starting mana capacity.
+- Increased spell effectiveness.
+
+### Spell Slots
+
+Spell slots determine how many unique spells the player can equip simultaneously.
+
+Players begin with one spell slot and gradually unlock up to five.
+
+This encourages experimentation with different spell combinations and creates more opportunities for specialized builds.
+
+## 6.2 Gold Progression
+
+Gold is collected during adventures and used to purchase equipment and consumables between runs.
+
+Unlike XP, Gold is primarily used to customize the wizard's equipment and playstyle.
+
+Equipment categories include:
+- Robes
+- Staffs and Wands
+- Hats and Hoods
+- Potions
+
+### Robes
+
+Robes are permanent equipment modifiers that provide passive bonuses.
+
+Only one robe can be equipped at a time.
+
+Available robe modifiers:
+
+- Increased Fire Base Damage.
+- Increased Land Base Damage.
+- Increased Sea Base Damage.
+- Increased Thunder Base Damage.
+- Increased Maximum Mana for All Spells.
+- Increased Maximum Health.
+- Increased Movement Speed.
+
+Different robes encourage players to specialize in particular elements or playstyles.
+
+### Staffs and Wands
+
+Wizards can cast spells without a Staff or Wand.
+
+However, equipping one introduces additional modifiers that can significantly change how the wizard plays.
+
+Only one Staff or Wand can be equipped at a time.
+
+#### Wands
+
+Wands prioritize casting speed and efficiency at the expense of raw damage.
+
+**Primary Characteristics:**
+- Increased Casting Speed.
+- Reduced Spell Damage.
+
+**Possible Modifiers:**
+- Chance to cast a spell without consuming mana.
+- Increased spell distance.
+- Increased projectile speed.
+- Reduced mana consumption.
+- Chance to cast twice.
+
+Wands are ideal for players who prefer rapid attacks and consistent spell usage.
+
+#### Staffs
+
+Staffs prioritize damage and spell effectiveness at the expense of casting speed.
+
+**Primary Characteristics:**
+- Increased Spell Damage.
+- Reduced Casting Speed.
+
+**Possible Modifiers:**
+- Chance to deal double damage.
+- Increased spell area.
+- Increased elemental vulnerability damage.
+- Increased spell duration.
+- Increased damage against bosses.
+
+Staffs are ideal for players who prefer slower, more powerful attacks.
+
+### Hats and Hoods
+
+Hats and Hoods are functionally identical equipment categories, with their differences being purely visual.
+
+Only one can be equipped at a time.
+
+They provide passive modifiers similar to Robes.
+
+**Available Modifiers:**
+- Increased Fire Base Damage.
+- Increased Land Base Damage.
+- Increased Sea Base Damage.
+- Increased Thunder Base Damage.
+- Increased Maximum Mana for All Spells.
+- Increased Maximum Health.
+- Increased Movement Speed.
+
+### Potions
+
+Potions are consumable items that provide temporary benefits during an adventure.
+
+Unlike Robes, Staffs, Wands, and Hats, potions are consumed when used.
+
+Potential potion types:
+
+- Health Potion: Restores a percentage of maximum health.
+- Mana Potion: Restores mana to all spells.
+- Speed Potion: Temporarily increases movement speed.
+- Damage Potion: Temporarily increases spell damage.
+- Invulnerability Potion: Temporarily prevents incoming damage.
+- Luck Potion: Temporarily increases the chance of finding rare scrolls.
+
+Potions introduce another layer of resource management and allow players to prepare for particularly difficult encounters.
+
+# 7. Enemy Design
+
+Enemies are the primary source of pressure during an adventure.
+
+Each enemy has its own behavior, movement speed, health, damage, and elemental affinity.
+
+### Enemy Attributes
+
+- **Health:** How much damage an enemy can withstand.
+- **Damage:** How much damage an enemy deals to the player.
+- **Movement Speed:** How quickly an enemy approaches the player.
+- **Element:** Determines elemental vulnerabilities and resistances.
+- **Experience:** How much XP the enemy drops when defeated.
+- **Gold:** How much Gold the enemy drops when defeated.
+
+### Enemy Archetypes
+
+Potential enemy types include:
+
+- **Swarmers:** Weak enemies that attack in large numbers.
+- **Chasers:** Fast enemies that aggressively pursue the player.
+- **Ranged Enemies:** Attack from a distance and force the player to reposition.
+- **Tanks:** Slow, heavily armored enemies with high health.
+- **Exploders:** Move toward the player and explode when close.
+- **Support Enemies:** Buff or heal nearby enemies.
+- **Elite Enemies:** Stronger variations of standard enemies with improved stats and abilities.
+
+### Elemental Affinities
+
+Every enemy can have an elemental affinity.
+
+This creates opportunities for players to adapt their spell loadouts based on the enemies they encounter.
+
+For example, a Fire enemy may resist Fire damage but be vulnerable to Sea damage.
+
+# 8. Bosses and Encounters
+
+Bosses serve as major milestones during an adventure.
+
+Unlike regular enemies, bosses have unique attack patterns and mechanics that require the player to actively react and reposition.
+
+Potential boss mechanics:
+- Large-area attacks that require dodging.
+- Summoning additional enemies.
+- Temporary elemental resistance.
+- Multiple attack phases.
+- Vulnerability windows after specific attacks.
+
+Defeating bosses can reward the player with:
+- Large amounts of XP.
+- Gold.
+- Rare spell-scrolls.
+- Unique equipment.
+- Special crafting materials.
+
+# 9. World and Progression
+
+The world is designed around surviving increasingly difficult enemy encounters.
+
+As time progresses, enemies become stronger, spawn rates increase, and new enemy types are introduced.
+
+### Difficulty Scaling
+
+Difficulty can increase through:
+- Increased enemy health.
+- Increased enemy damage.
+- Increased enemy movement speed.
+- Increased enemy spawn rates.
+- Introduction of elite enemies.
+- Introduction of new enemy archetypes.
+- Periodic boss encounters.
+
+### Map Exploration
+
+The player is encouraged to explore the map rather than remaining in one location.
+
+Potential points of interest include:
+- Arcane Lecterns.
+- Treasure Chests.
+- Health and Mana Shrines.
+- Rare Scroll Drops.
+- Boss Arenas.
+- Merchant Encounters.
+
+These points of interest provide incentives to move around the map and take calculated risks.
+
+# 10. Art Direction and Presentation
+
+### Visual Style
+
+- 8-bit / pixel-art aesthetic.
+- Top-down perspective.
+- Comical fantasy setting.
+- Cartoon architecture and environments.
+- Bright, readable spell effects.
+- Distinct elemental color palettes.
+
+### Visual Identity
+
+The world should feel mystical and magical, contrasting the colorful magical effects produced by the player's spells.
+
+Each element should have a recognizable visual identity:
+
+- Fire: Orange, red, and yellow.
+- Thunder: Yellow, white, and electric blue.
+- Land: Brown, green, and earthy tones.
+- Sea: Blue, cyan, and turquoise.
+
+### User Interface
+
+The interface should prioritize readability during combat.
+
+Important HUD elements include:
+- Player health.
+- Individual spell mana bars.
+- Current XP and level.
+- Gold collected.
+- Equipped spells.
+- Active buffs and potion effects.
+- Remaining time until the next boss encounter.
+
+# 11. Future Features and Potential Expansions
+
+The following features could be explored after the core gameplay systems are established.
+
+- **Spell Discoveries:** Unlock hidden combinations by experimenting with specific scrolls.
+- **Rare Scrolls:** Introduce special scrolls with unique effects.
+- **Spell Evolution:** Allow spells to evolve after reaching certain conditions.
+- **Wizard Classes:** Introduce different starting characters with unique passive abilities.
+- **Relics:** Add powerful passive modifiers that influence an entire run.
+- **Curses:** Introduce powerful upgrades with negative side effects.
+- **Biomes:** Create different environments with unique enemies and elemental affinities.
+- **Endless Mode:** Allow players to continue surviving for as long as possible.
+- **Challenge Mode:** Introduce special rules that alter the way a run plays.
+
+# 12. Core Design Philosophy
+
+The primary focus of the game is experimentation and resource management.
+
+Players should feel encouraged to experiment with different spell combinations rather than relying on a single optimal build.
+
+Every spell should have strengths and weaknesses, and every equipment choice should introduce a meaningful trade-off.
+
+The most powerful wizard isn't necessarily the one with the highest damage output, but the one who can effectively manage their spells, exploit enemy weaknesses, and survive the chaos of an increasingly dangerous battlefield.
