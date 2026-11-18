@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/test_arena.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/base_enemy.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="4"]
 
 [node name="Main" type="Node2D"]
 
@@ -19,3 +20,5 @@ limit_left = 0
 limit_top = 0
 limit_right = 960
 limit_bottom = 540
+
+[node name="TouchControls" parent="." instance=ExtResource("4")]
