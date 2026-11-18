@@ -52,6 +52,23 @@ func test_second_finger_ignored_while_first_held() -> void:
 	assert_eq(_vector(), before)
 
 
+func test_hiding_while_held_clears_movement() -> void:
+	_stick.show()
+	_stick.handle_touch(0, true, _center)
+	_stick.handle_drag(0, _center + Vector2(_stick.radius, 0))
+	_stick.hide()
+	assert_eq(_vector(), Vector2.ZERO)
+	assert_eq(_stick.touch_index, -1)
+
+
+func test_pause_while_held_clears_movement() -> void:
+	_stick.handle_touch(0, true, _center)
+	_stick.handle_drag(0, _center + Vector2(_stick.radius, 0))
+	_stick.notification(Node.NOTIFICATION_PAUSED)
+	assert_eq(_vector(), Vector2.ZERO)
+	assert_eq(_stick.touch_index, -1)
+
+
 func test_touch_outside_control_ignored() -> void:
 	_stick.handle_touch(0, true, _center + Vector2(500, 500))
 	assert_eq(_stick.touch_index, -1)

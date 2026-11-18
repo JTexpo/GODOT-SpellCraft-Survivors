@@ -24,6 +24,11 @@ func _exit_tree() -> void:
 	_release()
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PAUSED or (what == NOTIFICATION_VISIBILITY_CHANGED and not visible):
+		_release()
+
+
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return

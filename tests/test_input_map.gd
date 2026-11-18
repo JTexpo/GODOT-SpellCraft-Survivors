@@ -33,3 +33,9 @@ func test_cast_is_left_mouse_button() -> void:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			found = true
 	assert_true(found)
+
+
+func test_all_events_match_any_device() -> void:
+	for action in ACTIONS:
+		for event in InputMap.action_get_events(action):
+			assert_eq(event.device, -1, "%s event is pinned to device %d" % [action, event.device])
