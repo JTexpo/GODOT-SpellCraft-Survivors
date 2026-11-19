@@ -8,6 +8,8 @@ signal died
 @onready var _hurtbox: HurtboxComponent = $HurtboxComponent
 @onready var _knockback: KnockbackComponent = $KnockbackComponent
 @onready var _flash: HitFlashComponent = $HitFlashComponent
+@onready var _aim: AimComponent = $AimComponent
+@onready var _attack: AttackComponent = $AttackComponent
 
 
 func _ready() -> void:
@@ -20,6 +22,8 @@ func _physics_process(delta: float) -> void:
 		return
 	var direction := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	_move.apply(self, direction, _knockback.update(delta))
+	if _aim.is_firing:
+		_attack.try_fire(global_position, _aim.aim_direction)
 
 
 func _on_hit_received(_damage: float, source_position: Vector2, knockback: float) -> void:

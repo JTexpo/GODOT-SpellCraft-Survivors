@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scripts/components/knockback_component.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/components/hit_flash_component.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/components/aim_component.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/components/attack_component.gd" id="8"]
+[ext_resource type="Resource" path="res://resources/attacks/basic_attack.tres" id="9"]
 
 [sub_resource type="RectangleShape2D" id="shape"]
 size = Vector2(12, 12)
@@ -57,3 +59,7 @@ target = NodePath("../Body")
 
 [node name="AimComponent" type="Node" parent="."]
 script = ExtResource("7")
+
+[node name="AttackComponent" type="Node" parent="."]
+script = ExtResource("8")
+data = ExtResource("9")
