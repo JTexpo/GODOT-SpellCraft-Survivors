@@ -72,3 +72,19 @@ func test_enemy_hits_show_damage_numbers_but_player_hits_do_not() -> void:
 	var player := main.get_node("Player") as Player
 	(player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(10.0, Vector2.ZERO)
 	assert_eq(numbers.active_count(), 1)
+
+
+func test_killing_an_enemy_can_drop_a_scroll() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var spawner := main.get_node("EnemySpawner") as EnemySpawner
+	var enemy := spawner.spawn_at(Vector2(100, 100))
+	enemy.data = enemy.data.duplicate() as EnemyData
+	enemy.data.drop_table = enemy.data.drop_table.duplicate() as DropTable
+	enemy.data.drop_table.drop_chance = 1.0
+	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	var found := 0
+	for pickup in get_tree().get_nodes_in_group(&"scroll_pickups"):
+		if main.is_ancestor_of(pickup):
+			found += 1
+	assert_eq(found, 1)

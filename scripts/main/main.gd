@@ -9,6 +9,7 @@ extends Node2D
 @onready var _reticle: TargetReticle = $TargetReticle
 @onready var _spawner: EnemySpawner = $EnemySpawner
 @onready var _damage_numbers: DamageNumbers = $DamageNumbers
+@onready var _dropper: ScrollDropper = $ScrollDropper
 
 
 func _ready() -> void:
@@ -19,6 +20,7 @@ func _ready() -> void:
 	_spell_bar.bind(_player.loadout)
 	_reticle.bind(_player)
 	_spawner.enemy_damaged.connect(_damage_numbers.show_number)
+	_spawner.enemy_died.connect(_dropper.on_enemy_died)
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
 
 

@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/spell_bar.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/target_reticle.tscn" id="9"]
 [ext_resource type="Script" path="res://scripts/ui/damage_numbers.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/systems/scroll_dropper.gd" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/scrolls/scroll_pickup.tscn" id="12"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("0")
@@ -31,6 +33,10 @@ limit_right = 960
 limit_bottom = 540
 
 [node name="TargetReticle" parent="." instance=ExtResource("9")]
+
+[node name="ScrollDropper" type="Node" parent="."]
+script = ExtResource("11")
+pickup_scene = ExtResource("12")
 
 [node name="DamageNumbers" type="Node2D" parent="."]
 script = ExtResource("10")
