@@ -74,30 +74,30 @@ Before implementing spell crafting, the player needs to feel good to control.
 
 #### Player
 
-- [ ] Implement player movement.
-- [ ] Implement movement speed.
-- [ ] Implement player health.
-- [ ] Implement player damage and death.
-- [ ] Implement enemy collision.
-- [ ] Implement player damage feedback.
-- [ ] Implement basic knockback.
+- [x] Implement player movement.
+- [x] Implement movement speed.
+- [x] Implement player health.
+- [x] Implement player damage and death.
+- [x] Implement enemy collision.
+- [x] Implement player damage feedback.
+- [x] Implement basic knockback.
 
 #### Enemies
 
-- [ ] Create a basic enemy.
-- [ ] Implement enemy movement toward the player.
-- [ ] Implement enemy collision damage.
-- [ ] Implement enemy health.
-- [ ] Implement enemy death.
-- [ ] Implement enemy spawning.
-- [ ] Implement configurable enemy spawn rates.
+- [x] Create a basic enemy.
+- [x] Implement enemy movement toward the player.
+- [x] Implement enemy collision damage.
+- [x] Implement enemy health.
+- [x] Implement enemy death.
+- [x] Implement enemy spawning.
+- [x] Implement configurable enemy spawn rates.
 
 #### Combat
 
-- [ ] Create a temporary basic attack.
-- [ ] Implement damage calculations.
-- [ ] Implement enemy damage feedback.
-- [ ] Implement basic combat effects.
+- [x] Create a temporary basic attack.
+- [x] Implement damage calculations.
+- [x] Implement enemy damage feedback.
+- [x] Implement basic combat effects.
 
 ### Deliverable
 
@@ -767,7 +767,8 @@ A visually cohesive and audio-complete game with a recognizable cartoon fantasy 
 - [ ] Optimize projectile handling.
 - [ ] Implement object pooling where beneficial.
 - [ ] Optimize particle effects.
-- [ ] Profile performance with large enemy counts.
+- [ ] Profile performance with large enemy counts (Sprint 1 desktop baseline: 60 fps target met at 300 and 500 enemies, see `development-log.md`; re-measure on phones/browsers).
+- [ ] Add crowd separation if enemy stacking hurts readability (enemies currently converge on the player).
 - [ ] Fix memory leaks.
 - [ ] Fix known gameplay bugs.
 

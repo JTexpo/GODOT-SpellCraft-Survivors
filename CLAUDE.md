@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project State
 
-Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (project foundation) is in progress on the `sprint-0-foundation` branch. See `sprint-0-design.md` and `docs/superpowers/plans/`. Decisions are logged in `development-log.md`.
+Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation) and Sprint 1 (movement and combat foundation) are done. See `sprint-0-design.md`, `sprint-1-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
 
 ## Commands
 
@@ -14,6 +14,8 @@ Run everything with the venv active (`source venv/bin/activate`). Godot is the H
 - Run one test file: add `-gselect=test_health_component` (file name without `.gd`)
 - Run one test: add `-gunit_test_name=test_name`
 - Smoke-run the project: `godot --headless --quit-after 60`
+- Run the game: `godot --path .` (or open `project.godot` in the editor and press F5)
+- Stress test (windowed): `godot --path . res://scenes/world/stress_test.tscn -- --enemies=300 --seconds=10` prints one `STRESS` line with fps and frame times. Target is 60 fps at 300 enemies.
 
 The `godot` MCP server (`@coding-solo/godot-mcp`, launched via `npx`) is configured in `.mcp.json`. Node and `npx` live only in the gitignored `venv/` (installed with `nodeenv`), so start Claude Code from a shell where you ran `source venv/bin/activate`, or the server fails to connect. Godot itself (4.7.2) comes from Homebrew.
 
@@ -74,3 +76,12 @@ Systems that must stay separate and reusable:
 - Directories from the proposed layout (`scenes/`, `scripts/{autoload,systems,utilities}/`, `resources/`, `assets/`, `tests/`) are created only as their systems are built.
 - Don't optimize prematurely. Profile first. Object pooling for projectiles is the likely first optimization.
 - Record significant architectural decisions. The layout in `technical-design.md` mentions a `development-log.md`, which doesn't exist yet.
+
+## Combat architecture (Sprint 1)
+
+- Combat is built from small components on an entity: `HealthComponent`, `HurtboxComponent` (receives hits, optional player-wide invulnerability window), `HitboxComponent` (deals damage, per-target cooldown, optional one-shot), `KnockbackComponent`, `HitFlashComponent`. All damage goes through `DamageSystem.calculate`, the single place elemental rules will live.
+- Collision layers (named in `project.godot`, bit constants in `PhysicsLayers`): world, player_hurtbox, enemy_hurtbox, enemy_hitbox, player_projectile. Enemy hurtboxes and hitboxes are passive (`monitoring = false`), so only the player's hurtbox and projectiles do any overlap work. Enemies never detect each other.
+- Enemies are light `Node2D`s moved by position (no `move_and_slide()`), clamped to the arena bounds. Stats come from `EnemyData`, spawning from `SpawnConfig`, the temporary attack from `AttackData`. The attack, projectile and health bar are marked TEMPORARY and expected to change in later sprints.
+- Aim and fire go through `AimComponent` (mouse, right stick, or the touch aim stick) and `cast`. `emulate_mouse_from_touch` is off on purpose, so touching the move stick never fires.
+- Hand-written `.tscn` files need `node_paths=PackedStringArray("prop")` on the `[node]` line for any exported Node-typed property set with a NodePath, or it stays null silently.
+- `TouchJoystick` is ours. Godot 4.7 has a native `VirtualJoystick`, so don't reuse that name.
