@@ -1,6 +1,6 @@
 # Sprint 3 Design: Spell Areas and Behaviors
 
-**Status:** Draft. Builder check done and its questions settled. Awaiting the user's approval.
+**Status:** Built. Approved by the user after a fresh builder check, then implemented on branch `sprint-3-spell-areas`.
 
 Scope comes from `sprint-development.md` (Sprint 3), with one addition the user asked for in conversation: a fifth Area, **Wave**. Architecture follows `technical-design.md` (sections 5 and 9), `CLAUDE.md`, and `sprint-0/1/2-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 

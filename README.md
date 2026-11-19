@@ -111,6 +111,13 @@ Increasing a spell's effective range or area increases its mana consumption.
 - Travels independently until it hits an enemy or reaches its maximum range.
 - Can be upgraded to increase projectile speed, range, and size.
 
+**Wave**
+- Originates from the player.
+- Sends a wide crescent outward in the direction of the mouse or joystick, like a Missile shaped like a cone's front edge.
+- Hits every enemy it passes through once, and widens a little as it travels.
+- Disappears at its maximum range.
+- Can be upgraded to increase its width, range, and speed.
+
 ### Area Scaling
 
 Area scrolls can have different levels of effectiveness.
@@ -120,6 +127,8 @@ For example:
 - Large Line: High mana consumption, long range.
 - Small Area: Low mana consumption, small explosion.
 - Large Area: High mana consumption, large explosion.
+
+Every Area has a default range (a Cone starts short, a Line starts long). Crafting can lengthen or shorten it, and longer range costs more mana while shorter range costs less.
 
 The goal is to make every Area type useful in different situations rather than having one universally superior option.
 
@@ -195,6 +204,7 @@ Examples:
 | Thunder Cone | Thunder + Cone | Close-range crowd control |
 | Land Area | Land + Area | Large-area damage |
 | Sea Line | Sea + Line | Directional damage |
+| Sea Wave | Sea + Wave | Moving wall of damage that clears crowds |
 | Multi-Fire Missile | Fire + Missile + Duplicate Area | Multi-projectile damage |
 | Piercing Thunder | Thunder + Missile + Ignore Resistance | Reliable damage against resistant enemies |
 

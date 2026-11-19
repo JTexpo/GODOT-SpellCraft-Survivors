@@ -61,3 +61,32 @@ Stress test after Sprint 2 (same method as Sprint 1, Apple M1, windowed, vsync o
 | 500 | 506.7 | 1.97 | 7.10 |
 
 Sprint 1 was 733.6 and 535.3 fps, so the spell path costs about 5%. The 60 fps target is still met with a large margin.
+
+
+## 2026-11-19: Sprint 3 (spell Areas)
+
+Decisions (details in `sprint-3-design.md`):
+
+- Five Areas, with **Wave** added at the user's request: a wide crescent that travels outward, widens a little, and hits every enemy it passes once. Each Area is one scene behind `launch(spell, origin, direction, target)`, with defaults in an `AreaData` resource. A spell carries `range_scale` and `size_scale`, which Sprint 6 crafting will write. The rule linking range to mana cost is left to the Spell Builder (Sprint 6).
+- `AreaData` is the single source of truth for a spell's Area. `SpellData.area` and `projectile_lifetime` were removed, and Missile's lifetime is now range / speed. `AreaType` moved to `AreaData` with `WAVE` appended.
+- Mouse Area spells land at the cursor, clamped to range. Stick and touch land at the spell's full range in the aim direction. A small `TargetReticle` shows the spot (TEMPORARY).
+- Line and Cone are instant shapes that last about 0.12 s. Cone angle is clamped to 1-359 degrees. Area zones tick on `tick_interval`. All five hit through the existing `HitboxComponent` (`hit_cooldown`), so no hitbox changes were needed.
+- A spell with no Area now casts nothing and spends no mana (this fixes a Sprint 2 deferred minor).
+- Starting numbers (tune by playing): Fire Missile 10 dmg / 0.35 s / cost 1 / mana 40; Thunder Cone 8 / 0.4 / 2 / 60; Land Area 12 per tick / 1.0 / 4 / 60; Sea Line 14 / 0.6 / 2 / 50; Sea Wave 12 / 0.8 / 3 / 60. Slots 1-5 hold them in that order.
+
+Known limitations:
+- Damage is still worked out at cast time through `AreaEffect._configure_hitbox`. Sprint 4 moves the elemental multiplier to impact there.
+- The once-per-target guarantee and the Area tick use wall-clock time (`hit_cooldown`). Safe with no pause yet. Revisit when pause exists.
+- Overlapping Area zones from repeated casts all tick, so spamming them stacks damage (paid for in mana).
+
+Stress test after Sprint 3 (300 enemies, each Area firing every 0.05 s, Apple M1, windowed, vsync off):
+
+| Area | avg fps | avg frame ms | p99 frame ms |
+|---|---|---|---|
+| Missile | 720.1 | 1.39 | 1.85 |
+| Line | 473.3 | 2.11 | 9.33 |
+| Cone | 489.7 | 2.04 | 9.88 |
+| Zone | 471.7 | 2.12 | 4.17 |
+| Wave | 312.8 | 3.20 | 4.76 |
+
+The 60 fps target is met by a wide margin for every Area. Wave is the most expensive. The Line and Cone p99 spikes (about 9-10 ms) are worth watching if enemy counts grow.

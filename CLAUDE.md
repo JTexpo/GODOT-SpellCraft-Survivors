@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project State
 
-Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation) and Sprint 2 (base spell system) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
+Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation), Sprint 2 (base spell system) and Sprint 3 (spell Areas) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md`, `sprint-3-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
 
 ## Commands
 
@@ -89,7 +89,15 @@ Systems that must stay separate and reusable:
 ## Spell architecture (Sprint 2)
 
 - `SpellData` (Resource) is static configuration: elements, damage, mana, cast interval, projectile stats, `max_hits`. `SpellInstance` (`RefCounted`) is the equipped runtime object and owns current mana and the cooldown. Never put mutable state on `SpellData`, because resources are shared and two copies of a spell must never share mana.
-- `SpellLoadout` (component on the Player) holds five slots and the selected index, selects and cycles, and casts through `try_cast`. A depleted spell stays selected and does nothing (no auto-switch). Slot keys, controller shoulder buttons (`spell_prev`/`spell_next`) and the touch `SpellBar` all end in `select` or `cycle`. Sprint 3's Areas are expected to replace the projectile spawn inside `try_cast`, which is the single seam.
-- `SpellProjectile` takes everything from the `SpellData` it is launched with. `HitboxComponent.max_hits` and `SpellData.max_hits` make piercing a data change.
+- `SpellLoadout` (component on the Player) holds five slots and the selected index, selects and cycles, and casts through `try_cast`. A depleted spell stays selected and does nothing (no auto-switch). Slot keys, controller shoulder buttons (`spell_prev`/`spell_next`) and the touch `SpellBar` all end in `select` or `cycle`. `try_cast` instantiates the spell's Area scene (see Sprint 3 below).
+- `MissileArea` takes everything from the `SpellData` it is launched with. `HitboxComponent.max_hits` and `SpellData.max_hits` make piercing a data change.
 - Elemental math lives only in `ElementTable` (configurable multipliers, Fire > Land > Thunder > Sea > Fire) and `DamageSystem.calculate(base, attacker_element, defender_element, table)`. Enemies have no element until Sprint 4, so nothing passes a defender element yet.
 - `SpellBar` and `SpellSlotWidget` are TEMPORARY HUD. Slot widgets read the loadout and handle touch taps themselves (`emulate_mouse_from_touch` is off) and ignore mouse clicks. F9 (`debug_restore_mana`, handled in `Main`) refills mana for testing.
+
+## Area architecture (Sprint 3)
+
+- Five Areas: Line, Cone, Area (ground zone), Missile, Wave. Each is its own scene under `scenes/spells/areas/`, whose root script extends `AreaEffect` and implements `launch(spell, origin, direction, target)`. `SpellLoadout.try_cast` instantiates `spell.area_data.scene` and calls it. Never branch on the Area type in the loadout, player or damage code.
+- `AreaData` (Resource, `resources/spells/areas/`) holds one Area type's scene and defaults: `default_range`, `default_size`, `duration`, `tick_interval`, `widen_rate`, `needs_ground_target`. A `SpellData` points at one and carries `range_scale` and `size_scale`. `effective_range()` and `effective_size()` are the numbers every Area reads, and Sprint 6 crafting only has to write the two scales. Mana cost stays an authored number per spell. The rule "longer range costs more" belongs to the Spell Builder (Sprint 6), not the Areas.
+- Ground-targeted Areas land at `SpellData.clamp_target(origin, target)`. The mouse's target is the cursor and a stick's is a far point along the aim, so a stick lands at full range. Targeting and the `TargetReticle` read `AreaData.needs_ground_target`.
+- All Areas build their hit damage through `AreaEffect._configure_hitbox`, so Sprint 4 moves the elemental multiplier to hit time in one place. Line, Cone and Wave hit each enemy once per cast and Area hits once per tick, through `HitboxComponent.hit_cooldown`.
+- Enemies are clamped to the arena bounds (no negative coordinates), so Area tests cast from an offset origin.
