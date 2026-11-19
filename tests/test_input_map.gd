@@ -5,6 +5,7 @@ const ACTIONS: Array[StringName] = [
 	&"interact", &"pause", &"cast",
 	&"spell_slot_1", &"spell_slot_2", &"spell_slot_3", &"spell_slot_4", &"spell_slot_5",
 	&"aim_up", &"aim_down", &"aim_left", &"aim_right", &"restart",
+	&"spell_prev", &"spell_next", &"debug_restore_mana",
 ]
 const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left", &"move_right"]
 
@@ -44,3 +45,12 @@ func test_all_events_match_any_device() -> void:
 
 func test_touch_does_not_emulate_mouse() -> void:
 	assert_eq(ProjectSettings.get_setting("input_devices/pointing/emulate_mouse_from_touch"), false)
+
+
+func test_spell_cycling_is_on_the_controller_shoulders() -> void:
+	for action in [&"spell_prev", &"spell_next"]:
+		assert_true(_has_event(action, InputEventJoypadButton), "%s has no joypad button" % action)
+
+
+func test_debug_restore_mana_is_a_key() -> void:
+	assert_true(_has_event(&"debug_restore_mana", InputEventKey))

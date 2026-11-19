@@ -3,13 +3,17 @@ extends CharacterBody2D
 
 signal died
 
+const SLOT_ACTIONS: Array[StringName] = [
+	&"spell_slot_1", &"spell_slot_2", &"spell_slot_3", &"spell_slot_4", &"spell_slot_5",
+]
+
 @onready var health: HealthComponent = $HealthComponent
 @onready var _move: MoveComponent = $MoveComponent
 @onready var _hurtbox: HurtboxComponent = $HurtboxComponent
 @onready var _knockback: KnockbackComponent = $KnockbackComponent
 @onready var _flash: HitFlashComponent = $HitFlashComponent
 @onready var _aim: AimComponent = $AimComponent
-@onready var _attack: AttackComponent = $AttackComponent
+@onready var loadout: SpellLoadout = $SpellLoadout
 
 
 func _ready() -> void:
@@ -23,7 +27,22 @@ func _physics_process(delta: float) -> void:
 	var direction := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	_move.apply(self, direction, _knockback.update(delta))
 	if _aim.is_firing:
-		_attack.try_fire(global_position, _aim.aim_direction)
+		loadout.try_cast(global_position, _aim.aim_direction)
+	else:
+		loadout.end_cast()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if health.is_dead():
+		return
+	for index in SLOT_ACTIONS.size():
+		if event.is_action_pressed(SLOT_ACTIONS[index]):
+			loadout.select(index)
+			return
+	if event.is_action_pressed(&"spell_prev"):
+		loadout.cycle(-1)
+	elif event.is_action_pressed(&"spell_next"):
+		loadout.cycle(1)
 
 
 func _on_hit_received(_damage: float, source_position: Vector2, knockback: float) -> void:

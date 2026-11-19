@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/spells/spell_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/spells/projectiles/spell_projectile.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"sea"
+display_name = "Sea"
+elements = Array[int]([3])
+area = 3
+max_mana = 45.0
+mana_cost = 1.0
+damage = 9.0
+cast_interval = 0.3
+projectile_speed = 200.0
+projectile_lifetime = 1.2
+knockback = 60.0
+max_hits = 1
+color = Color(0.2, 0.55, 1, 1)
+projectile_scene = ExtResource("2")

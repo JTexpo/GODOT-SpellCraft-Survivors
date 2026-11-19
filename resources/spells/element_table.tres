@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ElementTable" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/spells/element_table.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+strong_multiplier = 1.5
+weak_multiplier = 0.5
+neutral_multiplier = 1.0

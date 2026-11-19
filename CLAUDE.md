@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project State
 
-Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation) and Sprint 1 (movement and combat foundation) are done. See `sprint-0-design.md`, `sprint-1-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
+Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation) and Sprint 2 (base spell system) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
 
 ## Commands
 
@@ -81,7 +81,15 @@ Systems that must stay separate and reusable:
 
 - Combat is built from small components on an entity: `HealthComponent`, `HurtboxComponent` (receives hits, optional player-wide invulnerability window), `HitboxComponent` (deals damage, per-target cooldown, optional one-shot), `KnockbackComponent`, `HitFlashComponent`. All damage goes through `DamageSystem.calculate`, the single place elemental rules will live.
 - Collision layers (named in `project.godot`, bit constants in `PhysicsLayers`): world, player_hurtbox, enemy_hurtbox, enemy_hitbox, player_projectile. Enemy hurtboxes and hitboxes are passive (`monitoring = false`), so only the player's hurtbox and projectiles do any overlap work. Enemies never detect each other.
-- Enemies are light `Node2D`s moved by position (no `move_and_slide()`), clamped to the arena bounds. Stats come from `EnemyData`, spawning from `SpawnConfig`, the temporary attack from `AttackData`. The attack, projectile and health bar are marked TEMPORARY and expected to change in later sprints.
-- Aim and fire go through `AimComponent` (mouse, right stick, or the touch aim stick) and `cast`. `emulate_mouse_from_touch` is off on purpose, so touching the move stick never fires.
+- Enemies are light `Node2D`s moved by position (no `move_and_slide()`), clamped to the arena bounds. Stats come from `EnemyData` and spawning from `SpawnConfig`. The health bar and spell bar are marked TEMPORARY and expected to change in later sprints.
+- Aim and fire go through `AimComponent` (mouse, right stick, or the touch aim stick) and `cast`. The Player forwards both to `SpellLoadout`. `emulate_mouse_from_touch` is off on purpose, so touching the move stick never fires.
 - Hand-written `.tscn` files need `node_paths=PackedStringArray("prop")` on the `[node]` line for any exported Node-typed property set with a NodePath, or it stays null silently.
 - `TouchJoystick` is ours. Godot 4.7 has a native `VirtualJoystick`, so don't reuse that name.
+
+## Spell architecture (Sprint 2)
+
+- `SpellData` (Resource) is static configuration: elements, damage, mana, cast interval, projectile stats, `max_hits`. `SpellInstance` (`RefCounted`) is the equipped runtime object and owns current mana and the cooldown. Never put mutable state on `SpellData`, because resources are shared and two copies of a spell must never share mana.
+- `SpellLoadout` (component on the Player) holds five slots and the selected index, selects and cycles, and casts through `try_cast`. A depleted spell stays selected and does nothing (no auto-switch). Slot keys, controller shoulder buttons (`spell_prev`/`spell_next`) and the touch `SpellBar` all end in `select` or `cycle`. Sprint 3's Areas are expected to replace the projectile spawn inside `try_cast`, which is the single seam.
+- `SpellProjectile` takes everything from the `SpellData` it is launched with. `HitboxComponent.max_hits` and `SpellData.max_hits` make piercing a data change.
+- Elemental math lives only in `ElementTable` (configurable multipliers, Fire > Land > Thunder > Sea > Fire) and `DamageSystem.calculate(base, attacker_element, defender_element, table)`. Enemies have no element until Sprint 4, so nothing passes a defender element yet.
+- `SpellBar` and `SpellSlotWidget` are TEMPORARY HUD. Slot widgets read the loadout and handle touch taps themselves (`emulate_mouse_from_touch` is off) and ignore mouse clicks. F9 (`debug_restore_mana`, handled in `Main`) refills mana for testing.

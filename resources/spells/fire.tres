@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/spells/spell_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/spells/projectiles/spell_projectile.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"fire"
+display_name = "Fire"
+elements = Array[int]([0])
+area = 3
+max_mana = 40.0
+mana_cost = 1.0
+damage = 10.0
+cast_interval = 0.35
+projectile_speed = 220.0
+projectile_lifetime = 1.2
+knockback = 120.0
+max_hits = 1
+color = Color(1, 0.45, 0.1, 1)
+projectile_scene = ExtResource("2")

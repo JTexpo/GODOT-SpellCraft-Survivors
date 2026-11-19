@@ -38,3 +38,26 @@ Caveats:
 ## 2026-11-19: Bug found by the user
 
 Enemies stopped in front of the player. Each enemy aimed at a random point up to 24 px from the player and stopped there, but the hit boxes are 12 px wide, so enemies that stopped 13-24 px away never dealt damage. Fixed: the random offset now fades out as the enemy closes in. Side effect: enemies converge on the player, which brings back the crowd-stacking question. It is still the decision gate at the end of Sprint 1.
+
+
+## 2026-11-19: Sprint 2 (base spell system)
+
+Decisions (details in `sprint-2-design.md`):
+
+- `SpellData` is configuration only. `SpellInstance` (plain `RefCounted`) owns current mana and the cast cooldown, so two copies of one spell never share mana. `SpellLoadout` holds five slots and the selected index, and the Player only forwards input to it.
+- A depleted spell stays selected and does nothing: no auto-switch, and the "dry" cue plays once per press (a latch cleared by `end_cast()` or a selection change). The player picks the next spell on purpose, because mana never regenerates.
+- `SpellData.max_hits` and `HitboxComponent.max_hits` make impact data-driven. Every Sprint 2 spell is `1`, so nothing pierces yet, but Sprint 3's piercing spells only need a bigger number. A projectile never hits the same enemy twice (`hit_cooldown` is longer than its lifetime).
+- Controllers cycle spells with the shoulder buttons (`spell_prev`, `spell_next`), skipping empty slots. Keys 1-5 select directly. On touch, the `SpellBar` slot widgets handle `InputEventScreenTouch` themselves (mouse emulation is off) and ignore mouse clicks, so tapping a slot never casts. F9 (`debug_restore_mana`) refills all mana. It is handled in `Main` and marked DEBUG.
+- Starting numbers (tune by playing): Fire 10 dmg / 0.35 s / cost 1 / mana 40; Thunder 7 / 0.18 / 1 / 60; Land 18 / 0.7 / 2 / 40; Sea 9 / 0.3 / 1 / 45. A full Fire pool is about 40 casts, roughly 20 kills at 2 hits per enemy.
+- The stress test uses `stress_spell.tres` (Fire's values, a billion mana, 0.05 s interval), so it measures the real casting path and never runs dry.
+
+Known limitation: damage is worked out when the spell is cast, with no defender element, because enemies have no element yet. `ElementTable` and `DamageSystem.calculate(base, attacker, defender)` are built and unit-tested. Sprint 4 should move the multiplier to the moment of impact.
+
+Stress test after Sprint 2 (same method as Sprint 1, Apple M1, windowed, vsync off):
+
+| Enemies | avg fps | avg frame ms | p99 frame ms |
+|---|---|---|---|
+| 300 | 696.6 | 1.44 | 3.61 |
+| 500 | 506.7 | 1.97 | 7.10 |
+
+Sprint 1 was 733.6 and 535.3 fps, so the spell path costs about 5%. The 60 fps target is still met with a large margin.

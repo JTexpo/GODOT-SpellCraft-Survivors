@@ -9,7 +9,7 @@ const WARMUP_FRAMES := 30
 const SPAWN_RADIUS_MIN := 40.0
 const SPAWN_RADIUS_MAX := 200.0
 const SPIN_SPEED := 7.0
-const ATTACK_COOLDOWN := 0.05
+const STRESS_SPELL := preload("res://resources/spells/stress_spell.tres")
 
 @export var enemy_count: int = 300
 ## 0 means run until closed. Above 0 it prints one STRESS line and quits.
@@ -27,7 +27,7 @@ var _rng := RandomNumberGenerator.new()
 
 @onready var _spawner: EnemySpawner = $EnemySpawner
 @onready var _player: Player = $Player
-@onready var _attack: AttackComponent = $Player/AttackComponent
+@onready var _loadout: SpellLoadout = $Player/SpellLoadout
 @onready var _label: Label = $Hud/Label
 
 
@@ -36,9 +36,8 @@ func _ready() -> void:
 	_rng.randomize()
 	_spawner.set_process(false)
 	_player.health.set_max_health(1.0e9)
-	var data := _attack.data.duplicate() as AttackData
-	data.cooldown = ATTACK_COOLDOWN
-	_attack.data = data
+	_loadout.slots[0] = SpellInstance.new(STRESS_SPELL)
+	_loadout.select(0)
 	if run_seconds > 0.0:
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 		Engine.max_fps = 0
@@ -48,7 +47,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_angle += SPIN_SPEED * delta
-	_attack.try_fire(_player.global_position, Vector2.from_angle(_angle))
+	_loadout.try_cast(_player.global_position, Vector2.from_angle(_angle))
 
 
 func _process(delta: float) -> void:
