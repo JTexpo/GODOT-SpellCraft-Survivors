@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/components/hurtbox_component.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/components/knockback_component.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/components/hit_flash_component.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/components/aim_component.gd" id="7"]
 
 [sub_resource type="RectangleShape2D" id="shape"]
 size = Vector2(12, 12)
@@ -53,3 +54,6 @@ script = ExtResource("5")
 [node name="HitFlashComponent" type="Node" parent="." node_paths=PackedStringArray("target")]
 script = ExtResource("6")
 target = NodePath("../Body")
+
+[node name="AimComponent" type="Node" parent="."]
+script = ExtResource("7")

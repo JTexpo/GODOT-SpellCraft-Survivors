@@ -15,3 +15,23 @@ offset_right = 112.0
 offset_bottom = -16.0
 grow_vertical = 0
 script = ExtResource("1")
+
+[node name="AimJoystick" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -112.0
+offset_top = -112.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("1")
+action_up = &"aim_up"
+action_down = &"aim_down"
+action_left = &"aim_left"
+action_right = &"aim_right"
+held_action = &"cast"
