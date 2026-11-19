@@ -4,6 +4,7 @@ const ACTIONS: Array[StringName] = [
 	&"move_up", &"move_down", &"move_left", &"move_right",
 	&"interact", &"pause", &"cast",
 	&"spell_slot_1", &"spell_slot_2", &"spell_slot_3", &"spell_slot_4", &"spell_slot_5",
+	&"aim_up", &"aim_down", &"aim_left", &"aim_right", &"restart",
 ]
 const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left", &"move_right"]
 
@@ -39,3 +40,7 @@ func test_all_events_match_any_device() -> void:
 	for action in ACTIONS:
 		for event in InputMap.action_get_events(action):
 			assert_eq(event.device, -1, "%s event is pinned to device %d" % [action, event.device])
+
+
+func test_touch_does_not_emulate_mouse() -> void:
+	assert_eq(ProjectSettings.get_setting("input_devices/pointing/emulate_mouse_from_touch"), false)
