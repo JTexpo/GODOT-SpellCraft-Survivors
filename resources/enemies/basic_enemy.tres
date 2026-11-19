@@ -11,3 +11,6 @@ contact_knockback = 80.0
 speed = 40.0
 speed_variation = 0.15
 offset_radius = 24.0
+element = -1
+color = Color(0.75, 0.75, 0.75, 1)
+spawn_weight = 1.0
