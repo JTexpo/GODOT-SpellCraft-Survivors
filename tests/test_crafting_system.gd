@@ -165,3 +165,25 @@ func test_crafted_spell_works_in_the_loadout() -> void:
 		if child is AreaEffect:
 			effects += 1
 	assert_eq(effects, 1)
+
+
+func test_a_recipe_that_cannot_be_built_changes_nothing() -> void:
+	var bare_base := _fire.duplicate() as ScrollData
+	bare_base.modifiers = null
+	var bare_area := _missile.duplicate() as ScrollData
+	bare_area.area_data = _missile.area_data.duplicate() as AreaData
+	bare_area.area_data.base_stats = null
+	_inventory.add(bare_base)
+	_inventory.add(_fire)
+	_inventory.add(_missile)
+	_inventory.add(bare_area)
+	for case in [[bare_base, _missile], [_fire, bare_area]]:
+		var before := _snapshot()
+		var before_counts := [_inventory.count(case[0]), _inventory.count(case[1])]
+		var validated := CraftingSystem.validate(_request(case[0], case[1]), _rules, _inventory, _loadout)
+		assert_false(validated.ok)
+		assert_eq(validated.reason, CraftingSystem.REASON_CANNOT_BUILD)
+		var crafted := CraftingSystem.craft(_request(case[0], case[1]), _rules, _inventory, _loadout)
+		assert_false(crafted.ok)
+		assert_eq(_snapshot(), before, "nothing was consumed or equipped")
+		assert_eq([_inventory.count(case[0]), _inventory.count(case[1])], before_counts)

@@ -194,3 +194,24 @@ func test_choices_survive_a_rebuild_and_buttons_exist() -> void:
 	_screen.choose_base(_fire)
 	assert_eq(_screen.session.base, _fire)
 	assert_eq(_screen.base_button_count(), 1)
+
+
+func _touch(pressed: bool, at: Vector2) -> InputEventScreenTouch:
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = pressed
+	touch.position = at
+	return touch
+
+
+func test_a_bridged_touch_does_not_press_the_global_cast_action() -> void:
+	# The synthetic left click would otherwise also press `cast` (bound to the left mouse button),
+	# and a finger held down when the screen closes could keep it pressed.
+	_screen.open(_inventory, _loadout)
+	_screen.handle_input(_touch(true, Vector2(40, 40)))
+	await wait_process_frames(2)
+	var pressed_cast := Input.is_action_pressed(&"cast")
+	_screen.handle_input(_touch(false, Vector2(40, 40)))
+	await wait_process_frames(2)
+	Input.action_release(&"cast")
+	assert_false(pressed_cast, "a bridged touch must not press the cast action")
+

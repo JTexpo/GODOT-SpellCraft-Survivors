@@ -56,10 +56,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## Turns a touch into a left mouse press so the buttons react. Returns true if it did.
+## The touch position is already in game coordinates, so the click goes straight into this
+## viewport (`push_input`). `Input.parse_input_event` would scale it a second time at any window
+## size above the base resolution, and it would also press the global `cast` action, which is
+## bound to the left mouse button.
 func handle_input(event: InputEvent) -> bool:
 	if not _open or not event is InputEventScreenTouch:
 		return false
-	Input.parse_input_event(TouchBridge.to_mouse_button(event))
+	get_viewport().push_input(TouchBridge.to_mouse_button(event), true)
 	return true
 
 

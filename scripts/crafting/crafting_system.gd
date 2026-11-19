@@ -12,6 +12,7 @@ const REASON_BAD_RANGE := "Choose a range."
 const REASON_BUFFS_LOCKED := "Buffs are not available yet."
 const REASON_LOCKED_SLOT := "That slot is locked."
 const REASON_MISSING := "You don't have that scroll."
+const REASON_CANNOT_BUILD := "That recipe can't be built."
 
 
 ## The spell the request would build, or null if the Base, Area or range is unusable. Ignores the
@@ -72,4 +73,8 @@ static func _problem(
 		return REASON_LOCKED_SLOT
 	if not inventory.has(request.base) or not inventory.has(request.area):
 		return REASON_MISSING
+	# A scroll with missing data (no modifiers, no baseline) cannot make a spell. Refuse it here, or
+	# craft() would consume both scrolls and equip nothing.
+	if preview(request, rules) == null:
+		return REASON_CANNOT_BUILD
 	return ""
