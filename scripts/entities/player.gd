@@ -18,6 +18,15 @@ const SLOT_ACTIONS: Array[StringName] = [
 @onready var collector: PickupCollector = $PickupCollector
 
 
+var _cast_blocked: bool = false
+
+
+## Call when a menu closes. The player will not cast until the cast input has been released once,
+## so the click that confirmed something in the menu cannot also fire a spell.
+func require_cast_release() -> void:
+	_cast_blocked = true
+
+
 func _ready() -> void:
 	_hurtbox.hit_received.connect(_on_hit_received)
 	health.died.connect(_on_died)
@@ -28,6 +37,14 @@ func _physics_process(delta: float) -> void:
 		return
 	var direction := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	_move.apply(self, direction, _knockback.update(delta))
+	if _cast_blocked:
+		# The click that closed a menu is probably still held. Wait for it to be released. This
+		# reads the real input, because aim.is_firing is updated after this node runs and is stale
+		# on the first frame after a pause. The frame the guard lifts is skipped for the same reason.
+		loadout.end_cast()
+		if not Input.is_action_pressed(&"cast"):
+			_cast_blocked = false
+		return
 	if aim.is_firing:
 		loadout.try_cast(global_position, aim.aim_direction, aim.aim_point)
 	else:

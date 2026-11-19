@@ -192,3 +192,17 @@ func test_hitbox_passes_its_element_to_the_hurtbox() -> void:
 	hitbox.element = SpellData.Element.FIRE
 	assert_true(hitbox.try_hit(target))
 	assert_eq(target.health.current_health, 15.0)
+
+
+func test_hit_cooldown_survives_a_pause() -> void:
+	GameTime.reset()
+	var target := _make_target(Vector2.ZERO, 100.0)
+	var hitbox := _make_hitbox(10.0, 0.05)
+	assert_true(hitbox.try_hit(target))
+	GameTime.freeze()
+	OS.delay_msec(80)
+	assert_false(hitbox.try_hit(target), "still inside the cooldown, because the clock is frozen")
+	GameTime.unfreeze()
+	OS.delay_msec(60)
+	assert_true(hitbox.try_hit(target), "the cooldown ran out in game time")
+	GameTime.reset()

@@ -156,3 +156,18 @@ func test_player_has_a_pickup_collector() -> void:
 	assert_true(_player.collector is PickupCollector)
 	assert_eq(_player.collector.inventory, _player.inventory)
 	assert_eq(_player.collector.collision_mask, PhysicsLayers.PICKUP)
+
+
+func test_no_cast_until_the_cast_input_is_released_after_resume() -> void:
+	_player.require_cast_release()
+	Input.action_press(&"cast")
+	await wait_physics_frames(6)
+	assert_eq(_projectile_count(), 0, "the held click must not fire")
+	var fire := _player.loadout.slots[0] as SpellInstance
+	assert_eq(fire.current_mana, fire.data.max_mana)
+	Input.action_release(&"cast")
+	await wait_physics_frames(3)
+	Input.action_press(&"cast")
+	await wait_physics_frames(4)
+	Input.action_release(&"cast")
+	assert_gt(_projectile_count(), 0, "after a release it casts again")

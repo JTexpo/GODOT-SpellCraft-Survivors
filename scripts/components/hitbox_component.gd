@@ -38,7 +38,7 @@ func is_finished() -> bool:
 	return _finished
 
 
-func try_hit(target: HurtboxComponent, now_msec: int = Time.get_ticks_msec()) -> bool:
+func try_hit(target: HurtboxComponent, now_msec: int = GameTime.now_msec()) -> bool:
 	if _finished:
 		return false
 	var id := target.get_instance_id()
