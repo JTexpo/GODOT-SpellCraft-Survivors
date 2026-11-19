@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="SpellData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/spells/spell_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/spells/projectiles/spell_projectile.tscn" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -17,3 +18,4 @@ projectile_lifetime = 1.2
 knockback = 80.0
 max_hits = 1
 color = Color(1, 0.9, 0.2, 1)
+projectile_scene = ExtResource("2")
