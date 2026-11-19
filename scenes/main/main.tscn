@@ -1,12 +1,16 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://scripts/main/main.gd" id="0"]
 [ext_resource type="PackedScene" path="res://scenes/world/test_arena.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
 [ext_resource type="Script" path="res://scripts/systems/enemy_spawner.gd" id="3"]
-[ext_resource type="Resource" path="res://resources/spawning/default_spawn_config.tres" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="4"]
+[ext_resource type="Resource" path="res://resources/spawning/default_spawn_config.tres" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/ui/health_bar.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="7"]
 
 [node name="Main" type="Node2D"]
+script = ExtResource("0")
 
 [node name="TestArena" parent="." instance=ExtResource("1")]
 
@@ -24,3 +28,13 @@ limit_right = 960
 limit_bottom = 540
 
 [node name="TouchControls" parent="." instance=ExtResource("4")]
+
+[node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="HealthBar" parent="Hud" instance=ExtResource("6")]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 88.0
+offset_bottom = 22.0
+
+[node name="DeathScreen" parent="." instance=ExtResource("7")]

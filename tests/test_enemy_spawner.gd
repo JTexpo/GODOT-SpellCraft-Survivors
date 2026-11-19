@@ -15,6 +15,12 @@ func before_each() -> void:
 	_spawner = _make_spawner(3)
 
 
+func after_each() -> void:
+	for child in get_children():
+		if child is Enemy:
+			child.free()
+
+
 func _make_spawner(max_alive: int) -> EnemySpawner:
 	var config := SpawnConfig.new()
 	config.interval = 0.5
