@@ -10,10 +10,6 @@
 [ext_resource type="Script" path="res://scripts/components/spell_loadout.gd" id="8"]
 [ext_resource type="Script" path="res://resources/spells/spell_data.gd" id="9"]
 [ext_resource type="Resource" path="res://resources/spells/fire_missile.tres" id="10"]
-[ext_resource type="Resource" path="res://resources/spells/thunder_cone.tres" id="11"]
-[ext_resource type="Resource" path="res://resources/spells/land_area.tres" id="12"]
-[ext_resource type="Resource" path="res://resources/spells/sea_line.tres" id="13"]
-[ext_resource type="Resource" path="res://resources/spells/sea_wave.tres" id="14"]
 [ext_resource type="Script" path="res://scripts/components/scroll_inventory.gd" id="20"]
 [ext_resource type="Script" path="res://scripts/components/pickup_collector.gd" id="21"]
 
@@ -72,7 +68,8 @@ script = ExtResource("7")
 
 [node name="SpellLoadout" type="Node" parent="."]
 script = ExtResource("8")
-starting_spells = Array[ExtResource("9")]([ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14")])
+unlocked_slots = 1
+starting_spells = Array[ExtResource("9")]([ExtResource("10")])
 
 [node name="ScrollInventory" type="Node" parent="."]
 script = ExtResource("20")

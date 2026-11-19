@@ -48,6 +48,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"debug_give_scrolls"):
 		for scroll in debug_scrolls:
 			_player.inventory.add(scroll, 3)
+	# DEBUG: unlocks the next spell slot, until levels do it (Sprint 8). Delete then.
+	elif event.is_action_pressed(&"debug_unlock_slot"):
+		_player.loadout.unlock_next()
 
 
 func _toggle_inventory() -> void:

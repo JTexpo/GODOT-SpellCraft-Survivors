@@ -23,6 +23,10 @@ func test_spell_bar_is_bound_and_slot_presses_select() -> void:
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	assert_eq(bar.widgets.size(), 5)
 	bar.slot_pressed.emit(1)
+	assert_eq(player.loadout.selected_index, 0, "slot 2 is locked")
+	player.loadout.unlock_next()
+	player.loadout.equip(1, load("res://resources/spells/thunder_cone.tres") as SpellData)
+	bar.slot_pressed.emit(1)
 	assert_eq(player.loadout.selected_index, 1)
 
 
@@ -43,6 +47,8 @@ func test_dead_player_cannot_change_spell_by_tapping_the_bar() -> void:
 	add_child_autofree(main)
 	var player := main.get_node("Player") as Player
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
+	player.loadout.unlock_next()
+	player.loadout.equip(1, load("res://resources/spells/thunder_cone.tres") as SpellData)
 	(player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	var touch := InputEventScreenTouch.new()
 	touch.pressed = true
@@ -165,3 +171,15 @@ func test_player_death_hides_the_inventory_button_so_restart_taps_get_through() 
 	touch.position = Vector2(button.global_position + button.size / 2.0)
 	button._input(touch)
 	assert_signal_not_emitted(button, "pressed")
+
+
+func test_debug_unlock_key_unlocks_the_next_slot() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var player := main.get_node("Player") as Player
+	var event := InputEventAction.new()
+	event.action = &"debug_unlock_slot"
+	event.pressed = true
+	main._unhandled_input(event)
+	assert_true(player.loadout.is_unlocked(1))
+	assert_false(player.loadout.is_unlocked(2))

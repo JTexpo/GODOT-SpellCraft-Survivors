@@ -8,6 +8,10 @@ signal selection_changed(index: int)
 signal cast_fired(index: int)
 ## Emitted once per press when the selected spell has no mana left.
 signal cast_failed_dry(index: int)
+## A slot got a new spell (crafting). The slot holds a fresh SpellInstance.
+signal slot_changed(index: int)
+## A locked slot became available.
+signal slot_unlocked(index: int)
 
 const SLOT_COUNT := 5
 ## Stands in for "far away" when a cast has no target point.
@@ -15,6 +19,9 @@ const FAR_TARGET_DISTANCE := 10000.0
 
 ## Index = slot. A null entry is an empty slot.
 @export var starting_spells: Array[SpellData] = []
+## How many slots, counting from the first, the player can use. The rest are locked and hold
+## nothing. Sprint 8's levels will raise this.
+@export var unlocked_slots: int = SLOT_COUNT
 ## Where projectiles are added. Defaults to the owner's parent.
 var projectile_root: Node
 
@@ -27,7 +34,7 @@ var _dry_latched: bool = false
 func _ready() -> void:
 	slots.clear()
 	for i in SLOT_COUNT:
-		var spell: SpellData = starting_spells[i] if i < starting_spells.size() else null
+		var spell: SpellData = starting_spells[i] if i < starting_spells.size() and is_unlocked(i) else null
 		slots.append(SpellInstance.new(spell) if spell != null else null)
 
 
@@ -41,8 +48,34 @@ func selected() -> SpellInstance:
 	return slots[selected_index] if selected_index < slots.size() else null
 
 
+func is_unlocked(index: int) -> bool:
+	return index >= 0 and index < mini(unlocked_slots, SLOT_COUNT)
+
+
+## Unlocks the next locked slot. False if all of them are already unlocked.
+func unlock_next() -> bool:
+	if unlocked_slots >= SLOT_COUNT:
+		return false
+	unlocked_slots += 1
+	slot_unlocked.emit(unlocked_slots - 1)
+	return true
+
+
+## Puts a new spell, with a full mana pool, in an unlocked slot, replacing whatever was there.
+## Returns the new instance, or null (changing nothing) if the slot is locked or out of range.
+func equip(index: int, spell: SpellData) -> SpellInstance:
+	if spell == null or not is_unlocked(index) or index >= slots.size():
+		return null
+	var instance := SpellInstance.new(spell)
+	slots[index] = instance
+	if index == selected_index:
+		_dry_latched = false
+	slot_changed.emit(index)
+	return instance
+
+
 func select(index: int) -> bool:
-	if index < 0 or index >= slots.size() or index == selected_index or slots[index] == null:
+	if not is_unlocked(index) or index >= slots.size() or index == selected_index or slots[index] == null:
 		return false
 	selected_index = index
 	_dry_latched = false

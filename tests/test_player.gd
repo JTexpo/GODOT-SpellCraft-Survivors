@@ -82,16 +82,32 @@ func test_alive_player_casts_and_spends_mana_from_the_selected_spell() -> void:
 	assert_lt(fire.current_mana, fire.data.max_mana)
 
 
-func test_slot_keys_select_spells() -> void:
+func _unlock_and_equip(index: int) -> void:
+	while not _player.loadout.is_unlocked(index):
+		_player.loadout.unlock_next()
+	_player.loadout.equip(index, load("res://resources/spells/thunder_cone.tres") as SpellData)
+
+
+func test_slot_keys_ignore_locked_slots_and_select_unlocked_ones() -> void:
+	_player._unhandled_input(_action_event(&"spell_slot_2"))
+	assert_eq(_player.loadout.selected_index, 0, "slot 2 is locked")
+	_player._unhandled_input(_action_event(&"spell_slot_5"))
+	assert_eq(_player.loadout.selected_index, 0, "slot 5 is locked")
+	_unlock_and_equip(1)
 	_player._unhandled_input(_action_event(&"spell_slot_2"))
 	assert_eq(_player.loadout.selected_index, 1)
-	_player._unhandled_input(_action_event(&"spell_slot_5"))
-	assert_eq(_player.loadout.selected_index, 4)
 
 
 func test_shoulder_actions_cycle_spells() -> void:
+	_unlock_and_equip(1)
 	_player._unhandled_input(_action_event(&"spell_next"))
 	assert_eq(_player.loadout.selected_index, 1)
+	_player._unhandled_input(_action_event(&"spell_prev"))
+	assert_eq(_player.loadout.selected_index, 0)
+
+
+func test_shoulder_actions_do_nothing_with_one_spell() -> void:
+	_player._unhandled_input(_action_event(&"spell_next"))
 	_player._unhandled_input(_action_event(&"spell_prev"))
 	assert_eq(_player.loadout.selected_index, 0)
 
@@ -120,11 +136,15 @@ func test_player_exposes_its_aim_component() -> void:
 	assert_eq(_player.aim, _player.get_node("AimComponent"))
 
 
-func test_starting_slots_are_the_five_spells_in_order() -> void:
-	var ids := []
-	for slot in _player.loadout.slots:
-		ids.append((slot as SpellInstance).data.id)
-	assert_eq(ids, [&"fire_missile", &"thunder_cone", &"land_area", &"sea_line", &"sea_wave"])
+func test_player_starts_with_only_fire_missile_and_four_locked_slots() -> void:
+	var loadout := _player.loadout
+	assert_eq(loadout.slots[0].data.id, &"fire_missile")
+	assert_eq(loadout.slots[0].data.max_mana, 100.0)
+	assert_eq(loadout.slots[0].current_mana, 100.0)
+	assert_eq(loadout.unlocked_slots, 1)
+	for i in range(1, 5):
+		assert_null(loadout.slots[i], "slot %d" % i)
+		assert_false(loadout.is_unlocked(i), "slot %d" % i)
 
 
 func test_player_has_a_scroll_inventory() -> void:

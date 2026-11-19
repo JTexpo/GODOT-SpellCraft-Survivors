@@ -122,3 +122,55 @@ func test_touching_the_empty_slot_is_ignored_by_the_loadout() -> void:
 	assert_true(sparse_bar.widgets[1].empty)
 	sparse_bar.widgets[1]._input(_touch(sparse_bar.widgets[1].get_global_rect().get_center()))
 	assert_eq(sparse.selected_index, 0)
+
+
+func _limited_bar(unlocked: int) -> Array:
+	var spells: Array[SpellData] = [load(PATHS[0]) as SpellData]
+	var loadout := SpellLoadout.new()
+	loadout.starting_spells = spells
+	loadout.unlocked_slots = unlocked
+	loadout.projectile_root = _root
+	add_child_autofree(loadout)
+	var bar := load("res://scenes/ui/spell_bar.tscn").instantiate() as SpellBar
+	add_child_autofree(bar)
+	bar.bind(loadout)
+	return [loadout, bar]
+
+
+func test_locked_slots_are_dimmed_and_inert() -> void:
+	var pair := _limited_bar(1)
+	var bar := pair[1] as SpellBar
+	assert_false(bar.widgets[0].locked)
+	for i in range(1, 5):
+		assert_true(bar.widgets[i].locked, "slot %d" % i)
+	watch_signals(bar)
+	assert_false(bar.widgets[2].handle_touch(bar.widgets[2].get_global_rect().get_center()))
+	bar.widgets[2]._input(_touch(bar.widgets[2].get_global_rect().get_center()))
+	assert_signal_not_emitted(bar, "slot_pressed")
+	assert_lt(bar.widgets[2].modulate.a, 0.5)
+
+
+func test_unlocking_a_slot_enables_its_widget() -> void:
+	var pair := _limited_bar(1)
+	var loadout := pair[0] as SpellLoadout
+	var bar := pair[1] as SpellBar
+	loadout.unlock_next()
+	assert_false(bar.widgets[1].locked)
+	assert_true(bar.widgets[1].empty)
+	assert_true(bar.widgets[2].locked)
+
+
+func test_a_replaced_slot_follows_the_new_instances_mana() -> void:
+	var old := _loadout.slots[2] as SpellInstance
+	var fresh := _loadout.equip(2, load(PATHS[4]) as SpellData)
+	assert_eq(_bar.widgets[2].element_color, (load(PATHS[4]) as SpellData).color)
+	_loadout.select(2)
+	_loadout._process(1.0)
+	_loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_almost_eq(_bar.widgets[2].ratio, fresh.mana_ratio(), 0.0001)
+	assert_lt(_bar.widgets[2].ratio, 1.0)
+	var shown: float = _bar.widgets[2].ratio
+	old.restore_mana()
+	old.current_mana = 1.0
+	old.mana_changed.emit(1.0, old.data.max_mana)
+	assert_eq(_bar.widgets[2].ratio, shown, "the old instance no longer drives the widget")
