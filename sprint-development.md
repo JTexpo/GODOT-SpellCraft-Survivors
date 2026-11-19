@@ -258,29 +258,29 @@ Enemies should have elemental strengths and weaknesses, encouraging players to e
 
 #### Elemental Interactions
 
-- [ ] Implement enemy elemental affinities.
-- [ ] Implement elemental vulnerabilities.
-- [ ] Implement elemental resistances.
-- [ ] Implement neutral damage.
-- [ ] Implement configurable vulnerability multipliers.
-- [ ] Implement configurable resistance multipliers.
+- [x] Implement enemy elemental affinities.
+- [x] Implement elemental vulnerabilities.
+- [x] Implement elemental resistances.
+- [x] Implement neutral damage.
+- [x] Implement configurable vulnerability multipliers.
+- [x] Implement configurable resistance multipliers.
 
 #### Enemy Variety
 
-- [ ] Create a Fire enemy.
-- [ ] Create a Thunder enemy.
-- [ ] Create a Land enemy.
-- [ ] Create a Sea enemy.
-- [ ] Implement different enemy movement speeds.
-- [ ] Implement different enemy health values.
-- [ ] Implement different enemy damage values.
+- [x] Create a Fire enemy.
+- [x] Create a Thunder enemy.
+- [x] Create a Land enemy.
+- [x] Create a Sea enemy.
+- [x] Implement different enemy movement speeds.
+- [x] Implement different enemy health values.
+- [x] Implement different enemy damage values.
 
 #### Visual Feedback
 
-- [ ] Display damage numbers.
-- [ ] Communicate vulnerability hits.
-- [ ] Communicate resistance hits.
-- [ ] Add elemental visual effects to enemies.
+- [x] Display damage numbers.
+- [x] Communicate vulnerability hits.
+- [x] Communicate resistance hits.
+- [x] Add elemental visual effects to enemies.
 
 ### Deliverable
 
@@ -292,6 +292,8 @@ A combat system where choosing the correct elemental spell provides a meaningful
 - Enemy affinities are configurable.
 - Vulnerabilities and resistances are visually communicated.
 - Players can identify which spells are effective against different enemies.
+
+**Built note:** each enemy has one element, with vulnerability and resistance derived from the element table (same element is normal damage). The multiplier applies when a hit lands, and each hit reports vulnerable, resisted or neutral. "Elemental visual effects" is the enemy body tint in the element colour. "Players can identify which spells are effective" is communicated through damage numbers and colours, with no in-game legend yet.
 
 ---
 

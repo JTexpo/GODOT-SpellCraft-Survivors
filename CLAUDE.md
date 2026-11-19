@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project State
 
-Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation), Sprint 2 (base spell system) and Sprint 3 (spell Areas) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md`, `sprint-3-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
+Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation), Sprint 2 (base spell system) and Sprint 3 (spell Areas) and Sprint 4 (elemental enemies) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md`, `sprint-3-design.md`, `sprint-4-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
 
 ## Commands
 
@@ -91,7 +91,7 @@ Systems that must stay separate and reusable:
 - `SpellData` (Resource) is static configuration: elements, damage, mana, cast interval, projectile stats, `max_hits`. `SpellInstance` (`RefCounted`) is the equipped runtime object and owns current mana and the cooldown. Never put mutable state on `SpellData`, because resources are shared and two copies of a spell must never share mana.
 - `SpellLoadout` (component on the Player) holds five slots and the selected index, selects and cycles, and casts through `try_cast`. A depleted spell stays selected and does nothing (no auto-switch). Slot keys, controller shoulder buttons (`spell_prev`/`spell_next`) and the touch `SpellBar` all end in `select` or `cycle`. `try_cast` instantiates the spell's Area scene (see Sprint 3 below).
 - `MissileArea` takes everything from the `SpellData` it is launched with. `HitboxComponent.max_hits` and `SpellData.max_hits` make piercing a data change.
-- Elemental math lives only in `ElementTable` (configurable multipliers, Fire > Land > Thunder > Sea > Fire) and `DamageSystem.calculate(base, attacker_element, defender_element, table)`. Enemies have no element until Sprint 4, so nothing passes a defender element yet.
+- Elemental math lives only in `ElementTable` (configurable multipliers, Fire > Land > Thunder > Sea > Fire) and `DamageSystem.calculate(base, attacker_element, defender_element, table)`. Since Sprint 4 the multiplier is applied at impact (see Elemental enemies below).
 - `SpellBar` and `SpellSlotWidget` are TEMPORARY HUD. Slot widgets read the loadout and handle touch taps themselves (`emulate_mouse_from_touch` is off) and ignore mouse clicks. F9 (`debug_restore_mana`, handled in `Main`) refills mana for testing.
 
 ## Area architecture (Sprint 3)
@@ -101,3 +101,11 @@ Systems that must stay separate and reusable:
 - Ground-targeted Areas land at `SpellData.clamp_target(origin, target)`. The mouse's target is the cursor and a stick's is a far point along the aim, so a stick lands at full range. Targeting and the `TargetReticle` read `AreaData.needs_ground_target`.
 - All Areas build their hit damage through `AreaEffect._configure_hitbox`, so Sprint 4 moves the elemental multiplier to hit time in one place. Line, Cone and Wave hit each enemy once per cast and Area hits once per tick, through `HitboxComponent.hit_cooldown`.
 - Enemies are clamped to the arena bounds (no negative coordinates), so Area tests cast from an offset origin.
+
+## Elemental enemies (Sprint 4)
+
+- The elemental multiplier is applied when a hit lands. `HitboxComponent.element` is the attacker's element (set from the spell in `AreaEffect._configure_hitbox`, which carries raw damage) and `HurtboxComponent.element` is the defender's. `HurtboxComponent.receive_hit(damage, source_position, knockback, attacker_element)` gets the final damage from `DamageSystem.calculate` and an `ElementTable.Effect` (NEUTRAL, VULNERABLE, RESISTED) from `DamageSystem.effect`, then emits `hit_received(damage, source_position, knockback, effect)`. No other code does elemental math.
+- Rules: an enemy has one element. It takes the strong multiplier from the element that beats it and the weak one from the element it beats. Same element, no element, or an unknown value is normal damage.
+- The player's hurtbox has no element by default and enemy contact hitboxes carry none, so hits on the player are neutral. This is today's default, not a rule: equipment (robes, hats) may later give the player an element through `HurtboxComponent.element`, so never hardcode "the player is neutral".
+- `EnemyData` has `element` (-1 for none), `color` and `spawn_weight`. There is one enemy scene. The five enemies (plain, Fire, Thunder, Land, Sea) differ only in data. `SpawnConfig.enemy_pool` lists them and `EnemySpawner.pick_enemy_data()` picks by weight.
+- `Enemy.damaged(position, amount, effect)` is re-emitted by `EnemySpawner.enemy_damaged`, and `Main` routes it to `DamageNumbers` (TEMPORARY look), a pooled node that draws every number in one `_draw`. Vulnerable hits show larger, yellow and "!", resisted hits smaller and grey.

@@ -1,6 +1,6 @@
 # Sprint 4 Design: Elemental Affinities and Enemy Variety
 
-**Status:** Draft, awaiting the user's approval.
+**Status:** Built. Approved by the user after a fresh builder check, then implemented on branch `sprint-4-elemental-enemies`.
 
 Scope comes from `sprint-development.md` (Sprint 4). Architecture follows `technical-design.md` (section 8), `CLAUDE.md`, and `sprint-0/1/2/3-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 
