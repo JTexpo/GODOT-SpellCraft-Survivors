@@ -36,3 +36,17 @@ func test_debug_key_refills_drained_mana() -> void:
 	event.pressed = true
 	main._unhandled_input(event)
 	assert_eq(player.loadout.selected().current_mana, player.loadout.selected().data.max_mana)
+
+
+func test_dead_player_cannot_change_spell_by_tapping_the_bar() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var player := main.get_node("Player") as Player
+	var bar := main.get_node("Hud/SpellBar") as SpellBar
+	(player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	touch.position = bar.widgets[1].get_global_rect().get_center()
+	bar.widgets[1]._input(touch)
+	assert_eq(player.loadout.selected_index, 0)
+	assert_false(bar.visible)

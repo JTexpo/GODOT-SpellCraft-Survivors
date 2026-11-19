@@ -11,6 +11,8 @@ extends Node2D
 func _ready() -> void:
 	_health_bar.bind(_player.health)
 	_player.died.connect(_death_screen.show_death)
+	# A hidden bar ignores touches, so a dead player can't change spell and the restart tap gets through.
+	_player.died.connect(_spell_bar.hide)
 	_spell_bar.bind(_player.loadout)
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
 
