@@ -1,0 +1,57 @@
+extends GutTest
+
+var _button: InteractButton
+
+
+func _touch(screen_position: Vector2) -> InputEventScreenTouch:
+	var event := InputEventScreenTouch.new()
+	event.index = 0
+	event.pressed = true
+	event.position = screen_position
+	return event
+
+
+func before_each() -> void:
+	_button = load("res://scenes/ui/interact_button.tscn").instantiate() as InteractButton
+	add_child_autofree(_button)
+	_button.position = Vector2(100, 50)
+
+
+func test_stays_hidden_without_a_touchscreen_unless_told_otherwise() -> void:
+	_button.set_available(true)
+	assert_false(_button.visible, "desktop test runs have no touchscreen")
+	_button.require_touchscreen = false
+	_button.set_available(true)
+	assert_true(_button.visible)
+	_button.set_available(false)
+	assert_false(_button.visible)
+
+
+func test_touch_inside_emits_pressed() -> void:
+	_button.require_touchscreen = false
+	_button.set_available(true)
+	watch_signals(_button)
+	_button._input(_touch(_button.get_global_rect().get_center()))
+	assert_signal_emit_count(_button, "pressed", 1)
+
+
+func test_touch_outside_and_hidden_do_nothing() -> void:
+	_button.require_touchscreen = false
+	_button.set_available(true)
+	watch_signals(_button)
+	_button._input(_touch(Vector2(0, 0)))
+	_button.set_available(false)
+	_button._input(_touch(_button.get_global_rect().get_center()))
+	assert_signal_not_emitted(_button, "pressed")
+
+
+func test_mouse_clicks_are_ignored() -> void:
+	_button.require_touchscreen = false
+	_button.set_available(true)
+	watch_signals(_button)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = _button.get_global_rect().get_center()
+	_button._input(click)
+	assert_signal_not_emitted(_button, "pressed")

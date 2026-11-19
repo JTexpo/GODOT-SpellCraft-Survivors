@@ -183,3 +183,30 @@ func test_debug_unlock_key_unlocks_the_next_slot() -> void:
 	main._unhandled_input(event)
 	assert_true(player.loadout.is_unlocked(1))
 	assert_false(player.loadout.is_unlocked(2))
+
+
+func test_main_has_three_lecterns_off_screen_from_the_start() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var player := main.get_node("Player") as Player
+	var lecterns := get_tree().get_nodes_in_group(&"lecterns").filter(func(node): return main.is_ancestor_of(node))
+	assert_eq(lecterns.size(), 3)
+	for lectern in lecterns:
+		assert_gt(lectern.global_position.distance_to(player.global_position), 135.0)
+
+
+func test_interact_button_follows_the_interaction_target() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var player := main.get_node("Player") as Player
+	var button := main.get_node("Hud/InteractButton") as InteractButton
+	button.require_touchscreen = false
+	assert_false(button.visible)
+	var lectern := (load("res://scenes/interactables/lectern.tscn") as PackedScene).instantiate() as Lectern
+	main.add_child(lectern)
+	lectern.global_position = player.global_position + Vector2(10, 0)
+	await wait_physics_frames(4)
+	assert_true(button.visible)
+	lectern.global_position += Vector2(500, 0)
+	await wait_physics_frames(4)
+	assert_false(button.visible)

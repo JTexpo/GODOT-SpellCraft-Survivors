@@ -171,3 +171,19 @@ func test_no_cast_until_the_cast_input_is_released_after_resume() -> void:
 	await wait_physics_frames(4)
 	Input.action_release(&"cast")
 	assert_gt(_projectile_count(), 0, "after a release it casts again")
+
+
+func test_player_has_an_interaction_component() -> void:
+	assert_true(_player.interaction is InteractionComponent)
+	assert_eq(_player.interaction.health, _player.health)
+	assert_eq(_player.interaction.collision_mask, PhysicsLayers.INTERACTABLE)
+
+
+func test_interact_action_uses_the_nearest_lectern() -> void:
+	var lectern := (load("res://scenes/interactables/lectern.tscn") as PackedScene).instantiate() as Lectern
+	_root.add_child(lectern)
+	lectern.global_position = _player.global_position + Vector2(10, 0)
+	await wait_physics_frames(4)
+	watch_signals(lectern)
+	_player._unhandled_input(_action_event(&"interact"))
+	assert_signal_emit_count(lectern, "interacted", 1)

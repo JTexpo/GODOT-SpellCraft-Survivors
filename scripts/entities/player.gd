@@ -16,6 +16,7 @@ const SLOT_ACTIONS: Array[StringName] = [
 @onready var loadout: SpellLoadout = $SpellLoadout
 @onready var inventory: ScrollInventory = $ScrollInventory
 @onready var collector: PickupCollector = $PickupCollector
+@onready var interaction: InteractionComponent = $InteractionComponent
 
 
 var _cast_blocked: bool = false
@@ -53,6 +54,9 @@ func _physics_process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if health.is_dead():
+		return
+	if event.is_action_pressed(&"interact"):
+		interaction.try_interact(self)
 		return
 	for index in SLOT_ACTIONS.size():
 		if event.is_action_pressed(SLOT_ACTIONS[index]):

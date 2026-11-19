@@ -16,6 +16,7 @@ extends Node2D
 @onready var _toast: ScrollToast = $Hud/ScrollToast
 @onready var _inventory_panel: InventoryPanel = $Hud/InventoryPanel
 @onready var _inventory_button: InventoryButton = $Hud/InventoryButton
+@onready var _interact_button: InteractButton = $Hud/InteractButton
 
 
 func _ready() -> void:
@@ -37,6 +38,9 @@ func _ready() -> void:
 	# A hidden button ignores touches, so the restart tap gets through after death.
 	_player.died.connect(_inventory_button.hide)
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
+	_player.interaction.target_changed.connect(_on_interaction_target_changed)
+	_interact_button.pressed.connect(_player.interaction.try_interact.bind(_player))
+	_player.died.connect(_interact_button.hide)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -58,6 +62,10 @@ func _toggle_inventory() -> void:
 	if _player.health.is_dead():
 		return
 	_inventory_panel.toggle()
+
+
+func _on_interaction_target_changed(target: Node) -> void:
+	_interact_button.set_available(target != null)
 
 
 func _on_inventory_changed(_scroll: ScrollData) -> void:
