@@ -23,6 +23,10 @@ func test_spell_bar_is_bound_and_slot_presses_select() -> void:
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	assert_eq(bar.widgets.size(), 5)
 	bar.slot_pressed.emit(1)
+	assert_eq(player.loadout.selected_index, 0, "slot 2 is locked")
+	player.loadout.unlock_next()
+	player.loadout.equip(1, load("res://resources/spells/thunder_cone.tres") as SpellData)
+	bar.slot_pressed.emit(1)
 	assert_eq(player.loadout.selected_index, 1)
 
 
@@ -43,6 +47,8 @@ func test_dead_player_cannot_change_spell_by_tapping_the_bar() -> void:
 	add_child_autofree(main)
 	var player := main.get_node("Player") as Player
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
+	player.loadout.unlock_next()
+	player.loadout.equip(1, load("res://resources/spells/thunder_cone.tres") as SpellData)
 	(player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	var touch := InputEventScreenTouch.new()
 	touch.pressed = true
@@ -165,3 +171,104 @@ func test_player_death_hides_the_inventory_button_so_restart_taps_get_through() 
 	touch.position = Vector2(button.global_position + button.size / 2.0)
 	button._input(touch)
 	assert_signal_not_emitted(button, "pressed")
+
+
+func test_debug_unlock_key_unlocks_the_next_slot() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var player := main.get_node("Player") as Player
+	var event := InputEventAction.new()
+	event.action = &"debug_unlock_slot"
+	event.pressed = true
+	main._unhandled_input(event)
+	assert_true(player.loadout.is_unlocked(1))
+	assert_false(player.loadout.is_unlocked(2))
+
+
+func test_main_has_three_lecterns_off_screen_from_the_start() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var player := main.get_node("Player") as Player
+	var lecterns := get_tree().get_nodes_in_group(&"lecterns").filter(func(node): return main.is_ancestor_of(node))
+	assert_eq(lecterns.size(), 3)
+	for lectern in lecterns:
+		assert_gt(lectern.global_position.distance_to(player.global_position), 135.0)
+
+
+func test_interact_button_follows_the_interaction_target() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var player := main.get_node("Player") as Player
+	var button := main.get_node("Hud/InteractButton") as InteractButton
+	button.require_touchscreen = false
+	assert_false(button.visible)
+	var lectern := (load("res://scenes/interactables/lectern.tscn") as PackedScene).instantiate() as Lectern
+	main.add_child(lectern)
+	lectern.global_position = player.global_position + Vector2(10, 0)
+	await wait_physics_frames(4)
+	assert_true(button.visible)
+	lectern.global_position += Vector2(500, 0)
+	await wait_physics_frames(4)
+	assert_false(button.visible)
+
+
+func _open_main() -> Array:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var screen := main.get_node("CraftingScreen") as CraftingScreen
+	screen.pause_tree = false
+	var lecterns := get_tree().get_nodes_in_group(&"lecterns").filter(func(node): return main.is_ancestor_of(node))
+	return [main, screen, lecterns[0], main.get_node("Player")]
+
+
+func test_interacting_with_a_lectern_opens_the_crafting_screen() -> void:
+	var parts := _open_main()
+	var screen := parts[1] as CraftingScreen
+	(parts[2] as Lectern).interact(parts[3])
+	assert_true(screen.is_open())
+	screen.cancel()
+
+
+func test_dead_player_cannot_open_the_screen() -> void:
+	var parts := _open_main()
+	var screen := parts[1] as CraftingScreen
+	((parts[3] as Player).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	(parts[2] as Lectern).interact(parts[3])
+	assert_false(screen.is_open())
+
+
+func test_closing_the_screen_blocks_casting_until_release() -> void:
+	var parts := _open_main()
+	var main := parts[0] as Main
+	var screen := parts[1] as CraftingScreen
+	var player := parts[3] as Player
+	(parts[2] as Lectern).interact(player)
+	screen.cancel()
+	Input.action_press(&"cast")
+	await wait_physics_frames(6)
+	var fire := player.loadout.slots[0] as SpellInstance
+	var untouched := fire.current_mana == fire.data.max_mana
+	Input.action_release(&"cast")
+	assert_true(untouched, "the held click must not fire after the screen closes")
+	assert_not_null(main)
+
+
+func test_full_craft_through_main() -> void:
+	var parts := _open_main()
+	var main := parts[0] as Main
+	var screen := parts[1] as CraftingScreen
+	var player := parts[3] as Player
+	var event := InputEventAction.new()
+	event.action = &"debug_give_scrolls"
+	event.pressed = true
+	main._unhandled_input(event)
+	(parts[2] as Lectern).interact(player)
+	var thunder := load("res://resources/scrolls/base/thunder.tres") as ScrollData
+	screen.choose_base(thunder)
+	screen.choose_area(load("res://resources/scrolls/area/missile.tres") as ScrollData)
+	screen.confirm()
+	assert_eq(player.loadout.slots[0].data.id, &"thunder_missile_normal")
+	assert_eq(player.inventory.count(thunder), 2)
+	var bar := main.get_node("Hud/SpellBar") as SpellBar
+	assert_eq(bar.widgets[0].element_color, thunder.color)
+	assert_false(screen.is_open())

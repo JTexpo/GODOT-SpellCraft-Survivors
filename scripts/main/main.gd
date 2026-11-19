@@ -16,9 +16,12 @@ extends Node2D
 @onready var _toast: ScrollToast = $Hud/ScrollToast
 @onready var _inventory_panel: InventoryPanel = $Hud/InventoryPanel
 @onready var _inventory_button: InventoryButton = $Hud/InventoryButton
+@onready var _interact_button: InteractButton = $Hud/InteractButton
+@onready var _crafting_screen: CraftingScreen = $CraftingScreen
 
 
 func _ready() -> void:
+	GameTime.reset()
 	_health_bar.bind(_player.health)
 	_player.died.connect(_death_screen.show_death)
 	# A hidden bar ignores touches, so a dead player can't change spell and the restart tap gets through.
@@ -36,6 +39,14 @@ func _ready() -> void:
 	# A hidden button ignores touches, so the restart tap gets through after death.
 	_player.died.connect(_inventory_button.hide)
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
+	_player.interaction.target_changed.connect(_on_interaction_target_changed)
+	_interact_button.pressed.connect(_player.interaction.try_interact.bind(_player))
+	_player.died.connect(_interact_button.hide)
+	for lectern in get_tree().get_nodes_in_group(&"lecterns"):
+		if is_ancestor_of(lectern):
+			lectern.interacted.connect(_open_crafting)
+	# The click that confirmed a craft is probably still held when the world resumes.
+	_crafting_screen.closed.connect(_player.require_cast_release)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -48,12 +59,25 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"debug_give_scrolls"):
 		for scroll in debug_scrolls:
 			_player.inventory.add(scroll, 3)
+	# DEBUG: unlocks the next spell slot, until levels do it (Sprint 8). Delete then.
+	elif event.is_action_pressed(&"debug_unlock_slot"):
+		_player.loadout.unlock_next()
 
 
 func _toggle_inventory() -> void:
 	if _player.health.is_dead():
 		return
 	_inventory_panel.toggle()
+
+
+func _open_crafting(_actor: Node) -> void:
+	if _player.health.is_dead() or _crafting_screen.is_open():
+		return
+	_crafting_screen.open(_player.inventory, _player.loadout)
+
+
+func _on_interaction_target_changed(target: Node) -> void:
+	_interact_button.set_available(target != null)
 
 
 func _on_inventory_changed(_scroll: ScrollData) -> void:

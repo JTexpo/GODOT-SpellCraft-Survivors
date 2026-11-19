@@ -13,6 +13,7 @@ const DEPLETED_TINT := Color(0.4, 0.4, 0.4, 1)
 
 var slot_index: int = 0
 var empty: bool = true
+var locked: bool = false
 var element_color: Color = Color.WHITE
 var ratio: float = 0.0
 var depleted: bool = false
@@ -58,7 +59,7 @@ func _input(event: InputEvent) -> void:
 
 
 func handle_touch(screen_position: Vector2) -> bool:
-	if not is_visible_in_tree() or not get_global_rect().has_point(screen_position):
+	if locked or not is_visible_in_tree() or not get_global_rect().has_point(screen_position):
 		return false
 	pressed.emit(slot_index)
 	return true
@@ -71,6 +72,12 @@ func setup(index: int, spell: SpellData) -> void:
 	element_color = spell.color if spell != null else Color.WHITE
 	ratio = 0.0 if spell == null else 1.0
 	_label.text = str(index + 1)
+	_refresh()
+
+
+## A locked slot is dimmed, marked "x", and ignores taps.
+func set_locked(value: bool) -> void:
+	locked = value
 	_refresh()
 
 
@@ -100,7 +107,8 @@ func _refresh() -> void:
 	if _background == null:
 		return
 	_highlight.visible = selected
-	modulate.a = 0.35 if empty else 1.0
+	modulate.a = 0.2 if locked else (0.35 if empty else 1.0)
+	_label.text = "x" if locked else str(slot_index + 1)
 	_swatch.color = DEPLETED_TINT if depleted else element_color
 	_fill.size.x = (SIZE.x - 2) * ratio
 	_background.color = Color(0.6, 0.1, 0.1, 0.9) if is_flashing() else Color(0.1, 0.1, 0.12, 0.85)

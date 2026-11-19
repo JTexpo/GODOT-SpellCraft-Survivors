@@ -71,6 +71,10 @@ func test_movement_clamped_to_bounds() -> void:
 func test_death_emits_once_and_boxes_deactivate() -> void:
 	var enemy := _make_enemy()
 	watch_signals(enemy)
+	# Creating the enemy loads its drop table and every scroll in it, which can take longer than the
+	# 0.12 s death animation. Let that frame pass first, or the animation's first step swallows it
+	# and the enemy is freed before the checks below.
+	await wait_process_frames(1)
 	var hurtbox := enemy.get_node("HurtboxComponent") as HurtboxComponent
 	hurtbox.receive_hit(1000.0, Vector2.ZERO)
 	hurtbox.receive_hit(1000.0, Vector2.ZERO)

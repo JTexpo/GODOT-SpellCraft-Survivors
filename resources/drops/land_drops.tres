@@ -95,5 +95,5 @@ weight = 0.25
 
 [resource]
 script = ExtResource("1")
-drop_chance = 0.06
+drop_chance = 0.1
 entries = Array[ExtResource("2")]([SubResource("entry_0"), SubResource("entry_1"), SubResource("entry_2"), SubResource("entry_3"), SubResource("entry_4"), SubResource("entry_5"), SubResource("entry_6"), SubResource("entry_7"), SubResource("entry_8"), SubResource("entry_9"), SubResource("entry_10"), SubResource("entry_11"), SubResource("entry_12"), SubResource("entry_13"), SubResource("entry_14")])

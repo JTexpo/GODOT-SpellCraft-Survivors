@@ -240,3 +240,100 @@ func test_depleted_area_spell_spawns_nothing_for_every_slot() -> void:
 		assert_eq(_root.get_child_count(), before, "slot %d" % index)
 		assert_eq(_loadout.selected().current_mana, 0.0, "slot %d" % index)
 		assert_eq(_loadout.selected_index, index)
+
+
+func _make_limited(unlocked: int, spells: Array[SpellData]) -> SpellLoadout:
+	var loadout := SpellLoadout.new()
+	loadout.starting_spells = spells
+	loadout.unlocked_slots = unlocked
+	loadout.projectile_root = _root
+	add_child_autofree(loadout)
+	return loadout
+
+
+func _spell(index: int) -> SpellData:
+	return load(PATHS[index]) as SpellData
+
+
+func test_locked_slots_hold_no_spell_even_if_listed() -> void:
+	var limited := _make_limited(1, _five_spells())
+	assert_not_null(limited.slots[0])
+	for i in range(1, 5):
+		assert_null(limited.slots[i], "slot %d" % i)
+		assert_false(limited.is_unlocked(i))
+	assert_true(limited.is_unlocked(0))
+	assert_false(limited.is_unlocked(-1))
+	assert_false(limited.is_unlocked(5))
+
+
+func test_unlock_next_unlocks_one_slot_and_emits() -> void:
+	var limited := _make_limited(1, _five_spells())
+	watch_signals(limited)
+	assert_true(limited.unlock_next())
+	assert_true(limited.is_unlocked(1))
+	assert_false(limited.is_unlocked(2))
+	assert_signal_emitted_with_parameters(limited, "slot_unlocked", [1])
+	for i in 3:
+		assert_true(limited.unlock_next())
+	assert_false(limited.unlock_next())
+	assert_eq(limited.unlocked_slots, 5)
+	assert_signal_emit_count(limited, "slot_unlocked", 4)
+
+
+func test_equip_into_an_empty_unlocked_slot() -> void:
+	var limited := _make_limited(2, [_spell(0)] as Array[SpellData])
+	watch_signals(limited)
+	var instance := limited.equip(1, _spell(1))
+	assert_not_null(instance)
+	assert_eq(limited.slots[1], instance)
+	assert_eq(instance.current_mana, instance.data.max_mana)
+	assert_signal_emitted_with_parameters(limited, "slot_changed", [1])
+
+
+func test_equip_replaces_with_a_fresh_full_pool() -> void:
+	var old := _loadout.slots[0] as SpellInstance
+	old.current_mana = 1.0
+	watch_signals(_loadout)
+	var fresh := _loadout.equip(0, _spell(3))
+	assert_ne(fresh, old)
+	assert_eq(_loadout.slots[0], fresh)
+	assert_eq(fresh.data, _spell(3))
+	assert_eq(fresh.current_mana, fresh.data.max_mana)
+	assert_eq(old.current_mana, 1.0, "the old instance is left alone")
+	assert_signal_emitted_with_parameters(_loadout, "slot_changed", [0])
+
+
+func test_equip_refuses_locked_out_of_range_and_null() -> void:
+	var limited := _make_limited(1, [_spell(0)] as Array[SpellData])
+	var before := limited.slots.duplicate()
+	watch_signals(limited)
+	assert_null(limited.equip(1, _spell(1)), "locked")
+	assert_null(limited.equip(9, _spell(1)), "out of range")
+	assert_null(limited.equip(-1, _spell(1)), "negative")
+	assert_null(limited.equip(0, null), "no spell")
+	assert_eq(limited.slots, before)
+	assert_signal_not_emitted(limited, "slot_changed")
+
+
+func test_select_and_cycle_skip_locked_slots() -> void:
+	var limited := _make_limited(2, _five_spells())
+	assert_false(limited.select(3))
+	assert_true(limited.cycle(1))
+	assert_eq(limited.selected_index, 1)
+	assert_true(limited.cycle(1))
+	assert_eq(limited.selected_index, 0)
+
+
+func test_selection_survives_replacing_the_selected_slot() -> void:
+	_loadout.select(2)
+	_loadout.selected().current_mana = 0.0
+	watch_signals(_loadout)
+	_loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_signal_emit_count(_loadout, "cast_failed_dry", 1)
+	_loadout.equip(2, _spell(0))
+	assert_eq(_loadout.selected_index, 2)
+	assert_true(_loadout.try_cast(Vector2.ZERO, Vector2.RIGHT), "the new spell casts")
+	_loadout.selected().current_mana = 0.0
+	_loadout._process(10.0)
+	_loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_signal_emit_count(_loadout, "cast_failed_dry", 2)

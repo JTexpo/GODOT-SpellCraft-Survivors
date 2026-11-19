@@ -82,16 +82,32 @@ func test_alive_player_casts_and_spends_mana_from_the_selected_spell() -> void:
 	assert_lt(fire.current_mana, fire.data.max_mana)
 
 
-func test_slot_keys_select_spells() -> void:
+func _unlock_and_equip(index: int) -> void:
+	while not _player.loadout.is_unlocked(index):
+		_player.loadout.unlock_next()
+	_player.loadout.equip(index, load("res://resources/spells/thunder_cone.tres") as SpellData)
+
+
+func test_slot_keys_ignore_locked_slots_and_select_unlocked_ones() -> void:
+	_player._unhandled_input(_action_event(&"spell_slot_2"))
+	assert_eq(_player.loadout.selected_index, 0, "slot 2 is locked")
+	_player._unhandled_input(_action_event(&"spell_slot_5"))
+	assert_eq(_player.loadout.selected_index, 0, "slot 5 is locked")
+	_unlock_and_equip(1)
 	_player._unhandled_input(_action_event(&"spell_slot_2"))
 	assert_eq(_player.loadout.selected_index, 1)
-	_player._unhandled_input(_action_event(&"spell_slot_5"))
-	assert_eq(_player.loadout.selected_index, 4)
 
 
 func test_shoulder_actions_cycle_spells() -> void:
+	_unlock_and_equip(1)
 	_player._unhandled_input(_action_event(&"spell_next"))
 	assert_eq(_player.loadout.selected_index, 1)
+	_player._unhandled_input(_action_event(&"spell_prev"))
+	assert_eq(_player.loadout.selected_index, 0)
+
+
+func test_shoulder_actions_do_nothing_with_one_spell() -> void:
+	_player._unhandled_input(_action_event(&"spell_next"))
 	_player._unhandled_input(_action_event(&"spell_prev"))
 	assert_eq(_player.loadout.selected_index, 0)
 
@@ -120,11 +136,15 @@ func test_player_exposes_its_aim_component() -> void:
 	assert_eq(_player.aim, _player.get_node("AimComponent"))
 
 
-func test_starting_slots_are_the_five_spells_in_order() -> void:
-	var ids := []
-	for slot in _player.loadout.slots:
-		ids.append((slot as SpellInstance).data.id)
-	assert_eq(ids, [&"fire_missile", &"thunder_cone", &"land_area", &"sea_line", &"sea_wave"])
+func test_player_starts_with_only_fire_missile_and_four_locked_slots() -> void:
+	var loadout := _player.loadout
+	assert_eq(loadout.slots[0].data.id, &"fire_missile")
+	assert_eq(loadout.slots[0].data.max_mana, 1000.0)
+	assert_eq(loadout.slots[0].current_mana, 1000.0)
+	assert_eq(loadout.unlocked_slots, 1)
+	for i in range(1, 5):
+		assert_null(loadout.slots[i], "slot %d" % i)
+		assert_false(loadout.is_unlocked(i), "slot %d" % i)
 
 
 func test_player_has_a_scroll_inventory() -> void:
@@ -136,3 +156,34 @@ func test_player_has_a_pickup_collector() -> void:
 	assert_true(_player.collector is PickupCollector)
 	assert_eq(_player.collector.inventory, _player.inventory)
 	assert_eq(_player.collector.collision_mask, PhysicsLayers.PICKUP)
+
+
+func test_no_cast_until_the_cast_input_is_released_after_resume() -> void:
+	_player.require_cast_release()
+	Input.action_press(&"cast")
+	await wait_physics_frames(6)
+	assert_eq(_projectile_count(), 0, "the held click must not fire")
+	var fire := _player.loadout.slots[0] as SpellInstance
+	assert_eq(fire.current_mana, fire.data.max_mana)
+	Input.action_release(&"cast")
+	await wait_physics_frames(3)
+	Input.action_press(&"cast")
+	await wait_physics_frames(4)
+	Input.action_release(&"cast")
+	assert_gt(_projectile_count(), 0, "after a release it casts again")
+
+
+func test_player_has_an_interaction_component() -> void:
+	assert_true(_player.interaction is InteractionComponent)
+	assert_eq(_player.interaction.health, _player.health)
+	assert_eq(_player.interaction.collision_mask, PhysicsLayers.INTERACTABLE)
+
+
+func test_interact_action_uses_the_nearest_lectern() -> void:
+	var lectern := (load("res://scenes/interactables/lectern.tscn") as PackedScene).instantiate() as Lectern
+	_root.add_child(lectern)
+	lectern.global_position = _player.global_position + Vector2(10, 0)
+	await wait_physics_frames(4)
+	watch_signals(lectern)
+	_player._unhandled_input(_action_event(&"interact"))
+	assert_signal_emit_count(lectern, "interacted", 1)

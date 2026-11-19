@@ -20,3 +20,5 @@ enum AreaType { LINE, CONE, AREA, MISSILE, WAVE }
 @export var widen_rate: float = 0.0
 ## True if the spell lands where the player points (the reticle and targeting read this).
 @export var needs_ground_target: bool = false
+## What an Area crafted from this scroll starts with, before Base multipliers and range.
+@export var base_stats: AreaStats

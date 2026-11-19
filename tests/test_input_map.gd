@@ -6,7 +6,7 @@ const ACTIONS: Array[StringName] = [
 	&"spell_slot_1", &"spell_slot_2", &"spell_slot_3", &"spell_slot_4", &"spell_slot_5",
 	&"aim_up", &"aim_down", &"aim_left", &"aim_right", &"restart",
 	&"spell_prev", &"spell_next", &"debug_restore_mana",
-	&"toggle_inventory", &"debug_give_scrolls",
+	&"toggle_inventory", &"debug_give_scrolls", &"debug_unlock_slot",
 ]
 const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left", &"move_right"]
 
@@ -64,3 +64,7 @@ func test_toggle_inventory_has_key_and_joypad() -> void:
 
 func test_debug_give_scrolls_is_a_key() -> void:
 	assert_true(_has_event(&"debug_give_scrolls", InputEventKey))
+
+
+func test_debug_unlock_slot_is_a_key() -> void:
+	assert_true(_has_event(&"debug_unlock_slot", InputEventKey))
