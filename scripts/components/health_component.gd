@@ -13,6 +13,12 @@ func _ready() -> void:
 	current_health = max_health
 
 
+func set_max_health(value: float) -> void:
+	max_health = value
+	current_health = value
+	health_changed.emit(current_health, max_health)
+
+
 func take_damage(amount: float) -> void:
 	if amount <= 0.0 or is_dead():
 		return

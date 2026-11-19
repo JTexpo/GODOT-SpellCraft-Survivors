@@ -22,3 +22,11 @@ func test_zero_direction_stops() -> void:
 	body.velocity = Vector2(50, 50)
 	move.apply(body, Vector2.ZERO)
 	assert_eq(body.velocity, Vector2.ZERO)
+
+
+func test_extra_velocity_added() -> void:
+	var move := MoveComponent.new()
+	add_child_autofree(move)
+	var body := _make_body()
+	move.apply(body, Vector2.ZERO, Vector2(10, 0))
+	assert_eq(body.velocity, Vector2(10, 0))

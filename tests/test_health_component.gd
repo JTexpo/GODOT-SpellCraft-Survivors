@@ -55,3 +55,11 @@ func test_heal_after_death_ignored() -> void:
 	c.heal(5.0)
 	assert_eq(c.current_health, 0.0)
 	assert_true(c.is_dead())
+
+
+func test_set_max_health_resets_current() -> void:
+	var c := _make()
+	c.take_damage(4.0)
+	c.set_max_health(50.0)
+	assert_eq(c.max_health, 50.0)
+	assert_eq(c.current_health, 50.0)

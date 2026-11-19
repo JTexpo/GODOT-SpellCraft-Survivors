@@ -1,11 +1,12 @@
 class_name TouchJoystick
 extends Control
 
-const ACTION_UP := &"move_up"
-const ACTION_DOWN := &"move_down"
-const ACTION_LEFT := &"move_left"
-const ACTION_RIGHT := &"move_right"
-
+@export var action_up: StringName = &"move_up"
+@export var action_down: StringName = &"move_down"
+@export var action_left: StringName = &"move_left"
+@export var action_right: StringName = &"move_right"
+## Optional action held down for as long as the stick is touched (the aim stick uses "cast").
+@export var held_action: StringName = &""
 @export var radius: float = 40.0
 
 var touch_index: int = -1
@@ -56,18 +57,21 @@ func _update(screen_position: Vector2) -> void:
 	var offset := screen_position - get_global_rect().get_center()
 	var vector := (offset / radius).limit_length(1.0)
 	_knob_offset = vector * radius
-	_set_action(ACTION_RIGHT, maxf(vector.x, 0.0))
-	_set_action(ACTION_LEFT, maxf(-vector.x, 0.0))
-	_set_action(ACTION_DOWN, maxf(vector.y, 0.0))
-	_set_action(ACTION_UP, maxf(-vector.y, 0.0))
+	_set_action(action_right, maxf(vector.x, 0.0))
+	_set_action(action_left, maxf(-vector.x, 0.0))
+	_set_action(action_down, maxf(vector.y, 0.0))
+	_set_action(action_up, maxf(-vector.y, 0.0))
+	if held_action != &"":
+		Input.action_press(held_action)
 	queue_redraw()
 
 
 func _release() -> void:
 	touch_index = -1
 	_knob_offset = Vector2.ZERO
-	for action in [ACTION_UP, ACTION_DOWN, ACTION_LEFT, ACTION_RIGHT]:
-		Input.action_release(action)
+	for action in [action_up, action_down, action_left, action_right, held_action]:
+		if action != &"":
+			Input.action_release(action)
 	queue_redraw()
 
 
