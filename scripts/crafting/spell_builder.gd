@@ -17,7 +17,9 @@ static func build(base: ScrollData, area: ScrollData, option: RangeOption) -> Sp
 	var spell := SpellData.new()
 	spell.id = _spell_id(base, area, option)
 	spell.display_name = display_name(base, area, option)
-	spell.elements = [base.element] as Array[SpellData.Element]
+	var elements: Array[SpellData.Element] = []
+	elements.append(base.element as SpellData.Element)
+	spell.elements = elements
 	spell.area_data = area.area_data
 	spell.range_scale = option.range_scale
 	spell.size_scale = 1.0

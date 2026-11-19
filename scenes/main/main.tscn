@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/inventory_button.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://scenes/interactables/lectern.tscn" id="40"]
 [ext_resource type="PackedScene" path="res://scenes/ui/interact_button.tscn" id="41"]
+[ext_resource type="PackedScene" path="res://scenes/ui/crafting_screen.tscn" id="42"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/fire.tres" id="20"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/thunder.tres" id="21"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/land.tres" id="22"]
@@ -131,3 +132,5 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="DeathScreen" parent="." instance=ExtResource("7")]
+
+[node name="CraftingScreen" parent="." instance=ExtResource("42")]

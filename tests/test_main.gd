@@ -210,3 +210,65 @@ func test_interact_button_follows_the_interaction_target() -> void:
 	lectern.global_position += Vector2(500, 0)
 	await wait_physics_frames(4)
 	assert_false(button.visible)
+
+
+func _open_main() -> Array:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var screen := main.get_node("CraftingScreen") as CraftingScreen
+	screen.pause_tree = false
+	var lecterns := get_tree().get_nodes_in_group(&"lecterns").filter(func(node): return main.is_ancestor_of(node))
+	return [main, screen, lecterns[0], main.get_node("Player")]
+
+
+func test_interacting_with_a_lectern_opens_the_crafting_screen() -> void:
+	var parts := _open_main()
+	var screen := parts[1] as CraftingScreen
+	(parts[2] as Lectern).interact(parts[3])
+	assert_true(screen.is_open())
+	screen.cancel()
+
+
+func test_dead_player_cannot_open_the_screen() -> void:
+	var parts := _open_main()
+	var screen := parts[1] as CraftingScreen
+	((parts[3] as Player).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	(parts[2] as Lectern).interact(parts[3])
+	assert_false(screen.is_open())
+
+
+func test_closing_the_screen_blocks_casting_until_release() -> void:
+	var parts := _open_main()
+	var main := parts[0] as Main
+	var screen := parts[1] as CraftingScreen
+	var player := parts[3] as Player
+	(parts[2] as Lectern).interact(player)
+	screen.cancel()
+	Input.action_press(&"cast")
+	await wait_physics_frames(6)
+	var fire := player.loadout.slots[0] as SpellInstance
+	var untouched := fire.current_mana == fire.data.max_mana
+	Input.action_release(&"cast")
+	assert_true(untouched, "the held click must not fire after the screen closes")
+	assert_not_null(main)
+
+
+func test_full_craft_through_main() -> void:
+	var parts := _open_main()
+	var main := parts[0] as Main
+	var screen := parts[1] as CraftingScreen
+	var player := parts[3] as Player
+	var event := InputEventAction.new()
+	event.action = &"debug_give_scrolls"
+	event.pressed = true
+	main._unhandled_input(event)
+	(parts[2] as Lectern).interact(player)
+	var thunder := load("res://resources/scrolls/base/thunder.tres") as ScrollData
+	screen.choose_base(thunder)
+	screen.choose_area(load("res://resources/scrolls/area/missile.tres") as ScrollData)
+	screen.confirm()
+	assert_eq(player.loadout.slots[0].data.id, &"thunder_missile_normal")
+	assert_eq(player.inventory.count(thunder), 2)
+	var bar := main.get_node("Hud/SpellBar") as SpellBar
+	assert_eq(bar.widgets[0].element_color, thunder.color)
+	assert_false(screen.is_open())
