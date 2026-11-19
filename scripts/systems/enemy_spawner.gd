@@ -62,19 +62,29 @@ func spawn_at(position: Vector2) -> Enemy:
 	return enemy
 
 
-## A point just outside the view around `player_position`, clamped into the arena.
-## Returns Vector2.INF when no valid point is found (for example, a cramped corner).
+## A point just outside what the camera can see, clamped into the arena.
+## The camera stops scrolling at the arena edge, so the visible area is the player-centred view
+## pushed back inside the arena. Returns Vector2.INF when no valid point is found.
 func spawn_position(player_position: Vector2) -> Vector2:
-	var view_rect := Rect2(player_position - view_size / 2.0, view_size)
-	var ring_half := view_size / 2.0 + Vector2(config.spawn_margin, config.spawn_margin)
+	var half_view := view_size / 2.0
+	var lowest := arena_bounds.position + half_view
+	var highest := (arena_bounds.end - half_view).max(lowest)
+	var view_center := player_position.clamp(lowest, highest)
+	var view_rect := Rect2(view_center - half_view, view_size)
+	var ring_half := half_view + Vector2(config.spawn_margin, config.spawn_margin)
 	for attempt in SPAWN_ANGLE_ATTEMPTS:
 		var direction := Vector2.from_angle(rng.randf_range(0.0, TAU))
 		var scale := maxf(absf(direction.x) / ring_half.x, absf(direction.y) / ring_half.y)
-		var point := player_position + direction / scale
+		var point := view_center + direction / scale
 		point = point.clamp(arena_bounds.position, arena_bounds.end)
-		if not view_rect.has_point(point):
+		if not _inside_inclusive(view_rect, point):
 			return point
 	return Vector2.INF
+
+
+func _inside_inclusive(rect: Rect2, point: Vector2) -> bool:
+	return point.x >= rect.position.x and point.y >= rect.position.y \
+		and point.x <= rect.end.x and point.y <= rect.end.y
 
 
 func _on_enemy_died(_enemy: Enemy) -> void:

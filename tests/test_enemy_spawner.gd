@@ -55,12 +55,16 @@ func _inside_inclusive(rect: Rect2, point: Vector2) -> bool:
 		and point.x <= rect.end.x and point.y <= rect.end.y
 
 
-func test_spawn_position_inside_bounds_and_outside_view() -> void:
+func test_spawn_position_inside_bounds_and_outside_the_camera_view() -> void:
 	var spots: Array[Vector2] = [
 		Vector2(480, 270), Vector2(0, 0), Vector2(960, 0), Vector2(0, 540), Vector2(960, 540),
+		Vector2(200, 270), Vector2(480, 30), Vector2(940, 520), Vector2(100, 100),
 	]
 	for spot in spots:
-		var view_rect := Rect2(spot - VIEW / 2.0, VIEW)
+		# The camera stops scrolling at the arena edge, so the visible area is the player-centred view
+		# pushed back inside the arena.
+		var view_center := spot.clamp(BOUNDS.position + VIEW / 2.0, BOUNDS.end - VIEW / 2.0)
+		var view_rect := Rect2(view_center - VIEW / 2.0, VIEW)
 		for seed_value in 200:
 			_spawner.rng.seed = seed_value
 			var position := _spawner.spawn_position(spot)
