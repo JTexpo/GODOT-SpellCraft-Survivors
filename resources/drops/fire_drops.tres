@@ -1,0 +1,99 @@
+[gd_resource type="Resource" script_class="DropTable" load_steps=33 format=3]
+
+[ext_resource type="Script" path="res://resources/scrolls/drop_table.gd" id="1"]
+[ext_resource type="Script" path="res://resources/scrolls/drop_entry.gd" id="2"]
+[ext_resource type="Resource" path="res://resources/scrolls/base/fire.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/scrolls/base/thunder.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/scrolls/base/land.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/scrolls/base/sea.tres" id="6"]
+[ext_resource type="Resource" path="res://resources/scrolls/area/line.tres" id="7"]
+[ext_resource type="Resource" path="res://resources/scrolls/area/cone.tres" id="8"]
+[ext_resource type="Resource" path="res://resources/scrolls/area/missile.tres" id="9"]
+[ext_resource type="Resource" path="res://resources/scrolls/area/area.tres" id="10"]
+[ext_resource type="Resource" path="res://resources/scrolls/area/wave.tres" id="11"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/max_mana.tres" id="12"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/damage.tres" id="13"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/double_vulnerability.tres" id="14"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/ignore_resistance.tres" id="15"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/duplicate_area.tres" id="16"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/additional_base.tres" id="17"]
+
+[sub_resource type="Resource" id="entry_0"]
+script = ExtResource("2")
+scroll = ExtResource("3")
+weight = 12.0
+
+[sub_resource type="Resource" id="entry_1"]
+script = ExtResource("2")
+scroll = ExtResource("4")
+weight = 1.0
+
+[sub_resource type="Resource" id="entry_2"]
+script = ExtResource("2")
+scroll = ExtResource("5")
+weight = 1.0
+
+[sub_resource type="Resource" id="entry_3"]
+script = ExtResource("2")
+scroll = ExtResource("6")
+weight = 1.0
+
+[sub_resource type="Resource" id="entry_4"]
+script = ExtResource("2")
+scroll = ExtResource("7")
+weight = 2.0
+
+[sub_resource type="Resource" id="entry_5"]
+script = ExtResource("2")
+scroll = ExtResource("8")
+weight = 2.0
+
+[sub_resource type="Resource" id="entry_6"]
+script = ExtResource("2")
+scroll = ExtResource("9")
+weight = 2.0
+
+[sub_resource type="Resource" id="entry_7"]
+script = ExtResource("2")
+scroll = ExtResource("10")
+weight = 1.0
+
+[sub_resource type="Resource" id="entry_8"]
+script = ExtResource("2")
+scroll = ExtResource("11")
+weight = 1.0
+
+[sub_resource type="Resource" id="entry_9"]
+script = ExtResource("2")
+scroll = ExtResource("12")
+weight = 1.0
+
+[sub_resource type="Resource" id="entry_10"]
+script = ExtResource("2")
+scroll = ExtResource("13")
+weight = 1.0
+
+[sub_resource type="Resource" id="entry_11"]
+script = ExtResource("2")
+scroll = ExtResource("14")
+weight = 0.5
+
+[sub_resource type="Resource" id="entry_12"]
+script = ExtResource("2")
+scroll = ExtResource("15")
+weight = 0.5
+
+[sub_resource type="Resource" id="entry_13"]
+script = ExtResource("2")
+scroll = ExtResource("16")
+weight = 0.5
+
+[sub_resource type="Resource" id="entry_14"]
+script = ExtResource("2")
+scroll = ExtResource("17")
+weight = 0.25
+
+[resource]
+script = ExtResource("1")
+drop_chance = 0.06
+entries = Array[ExtResource("2")]([SubResource("entry_0"), SubResource("entry_1"), SubResource("entry_2"), SubResource("entry_3"), SubResource("entry_4"), SubResource("entry_5"), SubResource("entry_6"), SubResource("entry_7"), SubResource("entry_8"), SubResource("entry_9"), SubResource("entry_10"), SubResource("entry_11"), SubResource("entry_12"), SubResource("entry_13"), SubResource("entry_14")])

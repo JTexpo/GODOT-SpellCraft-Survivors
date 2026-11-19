@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ScrollData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"buff_duplicate_area"
+display_name = "Duplicate Area"
+description = "Creates additional instances of the spell's Area effect."
+category = 2
+rarity = 2
+color = Color(0.75, 0.4, 0.9, 1)
+buff_id = &"duplicate_area"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ScrollData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"buff_max_mana"
+display_name = "Increased Max Mana"
+description = "Increases the spell's maximum mana capacity."
+category = 2
+rarity = 1
+color = Color(0.75, 0.4, 0.9, 1)
+buff_id = &"max_mana"
