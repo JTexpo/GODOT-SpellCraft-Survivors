@@ -26,6 +26,13 @@ func on_enemy_died(enemy: Enemy) -> ScrollPickup:
 	var scroll := enemy.data.drop_table.roll(rng)
 	if scroll == null:
 		return null
+	return place(scroll, enemy.global_position)
+
+
+## Puts a scroll on the ground at a world position. It counts against the cap like any drop.
+func place(scroll: ScrollData, world_position: Vector2) -> ScrollPickup:
+	if scroll == null or pickup_scene == null:
+		return null
 	_forget_gone_pickups()
 	while _pickups.size() >= max_pickups and not _pickups.is_empty():
 		_pickups.pop_front().queue_free()
@@ -33,7 +40,7 @@ func on_enemy_died(enemy: Enemy) -> ScrollPickup:
 	var pickup := pickup_scene.instantiate() as ScrollPickup
 	root.add_child(pickup)
 	pickup.setup(scroll)
-	pickup.global_position = enemy.global_position
+	pickup.global_position = world_position
 	_pickups.append(pickup)
 	return pickup
 

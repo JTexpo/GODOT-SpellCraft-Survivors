@@ -2,10 +2,9 @@ class_name ScrollPickup
 extends Area2D
 ## A scroll lying on the ground. Passive: only the player's PickupCollector looks for it.
 ## The shape depends on the category (round Base, square Area, diamond Buff), so categories
-## can be told apart without colour. It stays until collected.
+## can be told apart without colour. It bobs through a shader (no per-pickup script or tween
+## work) and stays until collected.
 
-const BOB_HEIGHT := 1.5
-const BOB_TIME := 0.7
 const BASE_RADIUS := 5.0
 const AREA_HALF_SIDE := 4.0
 const BUFF_RADIUS := 6.0
@@ -26,9 +25,6 @@ func setup(scroll_data: ScrollData) -> void:
 	scroll = scroll_data
 	_shape.polygon = shape_points(scroll_data.category)
 	_shape.color = scroll_data.color
-	var bob := create_tween().set_loops()
-	bob.tween_property(_shape, "position:y", -BOB_HEIGHT, BOB_TIME).set_trans(Tween.TRANS_SINE)
-	bob.tween_property(_shape, "position:y", BOB_HEIGHT, BOB_TIME).set_trans(Tween.TRANS_SINE)
 
 
 ## Returns the scroll the first time and null every time after.

@@ -133,14 +133,15 @@ Decisions (details in `sprint-5-design.md`):
 Known limitations:
 - The panel and toast are TEMPORARY. The panel does not pause, so enemies keep attacking while it is open.
 - There is no inventory limit, no scroll art, and nothing consumes scrolls yet (Sprint 6).
-- With 100 pickups on the ground, frame time rises noticeably (see below). The suspects are the looping bob tween and the polygon on every pickup. Profile before changing anything, and check it on a phone or the web build, where the margin is much smaller.
+- With 100 pickups on the ground, frame time rises noticeably (see below). The final review measured the cost per pickup at roughly 3-4 µs for a bob tween, 3 µs for its `Area2D` and 1 µs for its polygon, so the bob is now a shader (no tween or script per pickup). The remaining cost is mostly the `Area2D` and polygon on each pickup. Check it on a phone or the web build, where the margin is much smaller, before optimising further.
+- The first stress measurement scattered 100 pickups outside the dropper, so it really measured up to 200. The stress test now places them through `ScrollDropper.place`, so the cap holds.
 
 Stress test after Sprint 5 (300 enemies, each spell firing every 0.05 s, Apple M1, windowed, vsync off). `--drops` makes kills drop real scrolls and starts with 100 pickups on the ground:
 
 | Spell | avg fps | p99 frame ms | with `--drops` avg fps | with `--drops` p99 frame ms |
 |---|---|---|---|---|
-| Missile | 721.4 | 1.85 | 440.2 | 4.55 |
-| Wave | 185.4 | 11.11 | 105.9 | 16.84 |
-| Zone | 439.0 | 4.76 | 304.4 | 6.62 |
+| Missile | 656.8 | 3.96 | 475.8 | 2.38 |
+| Wave | 193.6 | 13.33 | 131.1 | 15.59 |
+| Zone | 415.8 | 6.89 | 324.0 | 6.25 |
 
-The 60 fps target is met everywhere on this machine, but 100 pickups cost roughly 30-45% of the frame rate, more than I expected. Wave with drops is the worst case at 106 fps. Sprint 4 numbers were 673 / 191 / 440 fps for Missile / Wave / Zone.
+The 60 fps target is met everywhere on this machine. With 100 pickups on the ground and kills dropping scrolls, the frame rate falls by about 22-32%, more than I expected. Wave with drops is the worst case at 131 fps. Sprint 4 numbers were 673 / 191 / 440 fps for Missile / Wave / Zone. (These are the numbers after the review fixes: the bob moved to a shader and the scattered pickups now respect the cap.)

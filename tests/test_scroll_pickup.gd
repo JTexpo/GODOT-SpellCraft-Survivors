@@ -54,3 +54,11 @@ func test_collect_returns_the_scroll_once() -> void:
 
 func test_pickup_joins_the_group() -> void:
 	assert_true(_pickup(_scroll()).is_in_group(&"scroll_pickups"))
+
+
+func test_pickup_does_no_per_frame_work_but_still_bobs() -> void:
+	var pickup := _pickup(_scroll())
+	assert_false(pickup.is_processing())
+	assert_false(pickup.is_physics_processing())
+	assert_eq(get_tree().get_processed_tweens().size(), 0, "no tween per pickup")
+	assert_true((pickup.get_node("Shape") as Polygon2D).material is ShaderMaterial, "the bob is a shader")

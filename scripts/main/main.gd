@@ -33,6 +33,8 @@ func _ready() -> void:
 	_inventory_button.set_total(_player.inventory.total_count())
 	_inventory_button.pressed.connect(_toggle_inventory)
 	_player.died.connect(_inventory_panel.set_open.bind(false))
+	# A hidden button ignores touches, so the restart tap gets through after death.
+	_player.died.connect(_inventory_button.hide)
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
 
 

@@ -112,3 +112,16 @@ func test_freed_pickups_do_not_count_against_the_cap() -> void:
 	_dropper.on_enemy_died(_enemy(_sure_drop(), Vector2(30, 0)))
 	assert_false(second.is_queued_for_deletion())
 	assert_eq(_live_pickups().size(), 2)
+
+
+func test_place_puts_a_pickup_down_and_counts_against_the_cap() -> void:
+	_dropper.max_pickups = 2
+	var first := _dropper.place(_scroll, Vector2(10, 10))
+	var second := _dropper.place(_scroll, Vector2(20, 20))
+	var third := _dropper.place(_scroll, Vector2(30, 30))
+	assert_eq(third.global_position, Vector2(30, 30))
+	assert_eq(third.scroll, _scroll)
+	assert_true(first.is_queued_for_deletion())
+	assert_false(second.is_queued_for_deletion())
+	assert_eq(_live_pickups().size(), 2)
+	assert_null(_dropper.place(null, Vector2.ZERO))

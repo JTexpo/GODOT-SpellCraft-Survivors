@@ -101,11 +101,8 @@ func _stress_spell() -> SpellData:
 func _scatter_pickups(count: int) -> void:
 	var entries := _spawner.config.enemy_pool[0].drop_table.entries
 	for i in count:
-		var pickup := _dropper.pickup_scene.instantiate() as ScrollPickup
-		add_child(pickup)
-		pickup.setup(entries[i % entries.size()].scroll)
 		var offset := Vector2.from_angle(_rng.randf_range(0.0, TAU)) * _rng.randf_range(SPAWN_RADIUS_MIN, SPAWN_RADIUS_MAX)
-		pickup.global_position = _player.global_position + offset
+		_dropper.place(entries[i % entries.size()].scroll, _player.global_position + offset)
 
 
 func _spawn_one() -> void:

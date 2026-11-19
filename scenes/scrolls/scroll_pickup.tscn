@@ -1,9 +1,13 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/scrolls/scroll_pickup.gd" id="1"]
+[ext_resource type="Shader" path="res://scenes/scrolls/pickup_bob.gdshader" id="2"]
 
 [sub_resource type="CircleShape2D" id="shape"]
 radius = 6.0
+
+[sub_resource type="ShaderMaterial" id="bob"]
+shader = ExtResource("2")
 
 [node name="ScrollPickup" type="Area2D"]
 collision_layer = 32
@@ -15,3 +19,4 @@ script = ExtResource("1")
 shape = SubResource("shape")
 
 [node name="Shape" type="Polygon2D" parent="."]
+material = SubResource("bob")

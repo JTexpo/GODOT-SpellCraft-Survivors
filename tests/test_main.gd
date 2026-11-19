@@ -151,3 +151,17 @@ func test_player_death_closes_the_panel() -> void:
 	panel.set_open(true)
 	(main.get_node("Player/HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	assert_false(panel.is_open())
+
+
+func test_player_death_hides_the_inventory_button_so_restart_taps_get_through() -> void:
+	var main := _main()
+	var button := main.get_node("Hud/InventoryButton") as InventoryButton
+	assert_true(button.visible)
+	(main.get_node("Player/HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	assert_false(button.visible)
+	watch_signals(button)
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	touch.position = Vector2(button.global_position + button.size / 2.0)
+	button._input(touch)
+	assert_signal_not_emitted(button, "pressed")
