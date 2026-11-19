@@ -7,3 +7,4 @@ const PLAYER_HURTBOX := 2
 const ENEMY_HURTBOX := 4
 const ENEMY_HITBOX := 8
 const PLAYER_PROJECTILE := 16
+const PICKUP := 32
