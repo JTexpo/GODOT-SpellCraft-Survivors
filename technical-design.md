@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This document defines the technical architecture and development conventions for the Wizard Survivor project.
+This document defines the technical architecture and development conventions for the ScrollSmith Survivors project.
 
 The purpose of this document is to establish a consistent approach to implementing the game's systems, ensuring that features remain modular, reusable, and easy to expand.
 

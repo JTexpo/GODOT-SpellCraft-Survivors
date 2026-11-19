@@ -1,4 +1,4 @@
-# Game Design Document
+# ScrollSmith Survivors: Game Design Document
 
 # 1. Game Concept
 

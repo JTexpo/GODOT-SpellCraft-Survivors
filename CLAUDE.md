@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project State
 
-Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation), Sprint 2 (base spell system) and Sprint 3 (spell Areas), Sprint 4 (elemental enemies) and Sprint 5 (scroll collection) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md`, `sprint-3-design.md`, `sprint-4-design.md`, `sprint-5-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
+ScrollSmith Survivors (formerly Wizard Survivor; repo: GODOT-SpellCraft-Survivors until it is renamed) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation), Sprint 2 (base spell system) and Sprint 3 (spell Areas), Sprint 4 (elemental enemies) and Sprint 5 (scroll collection) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md`, `sprint-3-design.md`, `sprint-4-design.md`, `sprint-5-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
 
 ## Commands
 
