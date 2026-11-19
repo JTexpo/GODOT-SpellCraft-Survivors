@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="ScrollData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ScrollData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/crafting/base_modifiers/fire.tres" id="9"]
 
 [resource]
 script = ExtResource("1")
@@ -11,3 +12,4 @@ category = 0
 rarity = 0
 color = Color(1, 0.45, 0.1, 1)
 element = 0
+modifiers = ExtResource("9")

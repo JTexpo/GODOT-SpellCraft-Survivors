@@ -122,7 +122,7 @@ func test_every_catalog_scroll_can_drop() -> void:
 	assert_eq(seen.size(), 15)
 
 
-func test_drop_chance_is_six_percent_everywhere() -> void:
+func test_drop_chance_is_ten_percent_everywhere() -> void:
 	for file in ENEMY_FILES:
 		var data := load(ENEMY_DIR + file + ".tres") as EnemyData
-		assert_eq(data.drop_table.drop_chance, 0.06, file)
+		assert_eq(data.drop_table.drop_chance, 0.1, file)

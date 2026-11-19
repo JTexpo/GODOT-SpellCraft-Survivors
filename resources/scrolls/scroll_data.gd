@@ -19,3 +19,5 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 @export var area_data: AreaData
 ## Buff scrolls: which buff the scroll gives.
 @export var buff_id: StringName
+## Base scrolls: how this element changes an Area's baseline when crafted.
+@export var modifiers: BaseModifiers
