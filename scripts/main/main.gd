@@ -2,6 +2,9 @@ class_name Main
 extends Node2D
 ## Wires the main scene together: health and spell bars to the player, death screen to player death.
 
+## DEBUG: the scrolls F10 hands out (3 of each). Delete with the debug key.
+@export var debug_scrolls: Array[ScrollData] = []
+
 @onready var _player: Player = $Player
 @onready var _death_screen: DeathScreen = $DeathScreen
 @onready var _health_bar: HealthBar = $Hud/HealthBar
@@ -10,6 +13,9 @@ extends Node2D
 @onready var _spawner: EnemySpawner = $EnemySpawner
 @onready var _damage_numbers: DamageNumbers = $DamageNumbers
 @onready var _dropper: ScrollDropper = $ScrollDropper
+@onready var _toast: ScrollToast = $Hud/ScrollToast
+@onready var _inventory_panel: InventoryPanel = $Hud/InventoryPanel
+@onready var _inventory_button: InventoryButton = $Hud/InventoryButton
 
 
 func _ready() -> void:
@@ -21,10 +27,32 @@ func _ready() -> void:
 	_reticle.bind(_player)
 	_spawner.enemy_damaged.connect(_damage_numbers.show_number)
 	_spawner.enemy_died.connect(_dropper.on_enemy_died)
+	_inventory_panel.bind(_player.inventory)
+	_player.collector.collected.connect(_toast.show_scroll)
+	_player.inventory.changed.connect(_on_inventory_changed)
+	_inventory_button.set_total(_player.inventory.total_count())
+	_inventory_button.pressed.connect(_toggle_inventory)
+	_player.died.connect(_inventory_panel.set_open.bind(false))
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
 
 
-# DEBUG: refills every spell's mana. Delete once potions and drops exist.
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"debug_restore_mana"):
+	if event.is_action_pressed(&"toggle_inventory"):
+		_toggle_inventory()
+	# DEBUG: refills every spell's mana. Delete once potions exist.
+	elif event.is_action_pressed(&"debug_restore_mana"):
 		_player.loadout.restore_all_mana()
+	# DEBUG: 3 of every scroll, to try the panel and crafting without grinding. Delete later.
+	elif event.is_action_pressed(&"debug_give_scrolls"):
+		for scroll in debug_scrolls:
+			_player.inventory.add(scroll, 3)
+
+
+func _toggle_inventory() -> void:
+	if _player.health.is_dead():
+		return
+	_inventory_panel.toggle()
+
+
+func _on_inventory_changed(_scroll: ScrollData) -> void:
+	_inventory_button.set_total(_player.inventory.total_count())
