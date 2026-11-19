@@ -7,8 +7,12 @@
 [ext_resource type="Script" path="res://scripts/components/knockback_component.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/components/hit_flash_component.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/components/aim_component.gd" id="7"]
-[ext_resource type="Script" path="res://scripts/components/attack_component.gd" id="8"]
-[ext_resource type="Resource" path="res://resources/attacks/basic_attack.tres" id="9"]
+[ext_resource type="Script" path="res://scripts/components/spell_loadout.gd" id="8"]
+[ext_resource type="Script" path="res://resources/spells/spell_data.gd" id="9"]
+[ext_resource type="Resource" path="res://resources/spells/fire.tres" id="10"]
+[ext_resource type="Resource" path="res://resources/spells/thunder.tres" id="11"]
+[ext_resource type="Resource" path="res://resources/spells/land.tres" id="12"]
+[ext_resource type="Resource" path="res://resources/spells/sea.tres" id="13"]
 
 [sub_resource type="RectangleShape2D" id="shape"]
 size = Vector2(12, 12)
@@ -60,6 +64,6 @@ target = NodePath("../Body")
 [node name="AimComponent" type="Node" parent="."]
 script = ExtResource("7")
 
-[node name="AttackComponent" type="Node" parent="."]
+[node name="SpellLoadout" type="Node" parent="."]
 script = ExtResource("8")
-data = ExtResource("9")
+starting_spells = Array[ExtResource("9")]([ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), null])
