@@ -125,3 +125,8 @@ func test_starting_slots_are_the_five_spells_in_order() -> void:
 	for slot in _player.loadout.slots:
 		ids.append((slot as SpellInstance).data.id)
 	assert_eq(ids, [&"fire_missile", &"thunder_cone", &"land_area", &"sea_line", &"sea_wave"])
+
+
+func test_player_has_a_scroll_inventory() -> void:
+	assert_true(_player.inventory is ScrollInventory)
+	assert_eq(_player.inventory, _player.get_node("ScrollInventory"))

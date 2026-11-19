@@ -14,6 +14,7 @@ const SLOT_ACTIONS: Array[StringName] = [
 @onready var _flash: HitFlashComponent = $HitFlashComponent
 @onready var aim: AimComponent = $AimComponent
 @onready var loadout: SpellLoadout = $SpellLoadout
+@onready var inventory: ScrollInventory = $ScrollInventory
 
 
 func _ready() -> void:
