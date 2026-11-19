@@ -41,3 +41,25 @@ func test_firing_flag_follows_input() -> void:
 	assert_true(_aim.is_firing)
 	_aim.update_aim(Vector2.ZERO, Vector2(1, 0), Vector2.ZERO, false, true)
 	assert_false(_aim.is_firing)
+
+
+func test_mouse_aim_point_is_the_cursor() -> void:
+	_aim.update_aim(Vector2(10, 10), Vector2(10, 50), Vector2.ZERO, false, true)
+	assert_eq(_aim.aim_point, Vector2(10, 50))
+
+
+func test_stick_aim_point_is_far_along_the_direction() -> void:
+	_aim.update_aim(Vector2(5, 5), Vector2(100, 0), Vector2(0, -1), false, true)
+	assert_eq(_aim.aim_point, Vector2(5, 5) + Vector2.UP * AimComponent.FAR_DISTANCE)
+
+
+func test_stick_aim_point_follows_the_origin_after_release() -> void:
+	_aim.update_aim(Vector2(5, 5), Vector2(100, 0), Vector2(0, -1), false, true)
+	_aim.update_aim(Vector2(50, 0), Vector2(100, 0), Vector2.ZERO, false, false)
+	assert_eq(_aim.aim_point, Vector2(50, 0) + Vector2.UP * AimComponent.FAR_DISTANCE)
+
+
+func test_mouse_exactly_on_the_player_keeps_a_finite_aim_point() -> void:
+	_aim.update_aim(Vector2(5, 5), Vector2(5, 5), Vector2.ZERO, false, true)
+	assert_eq(_aim.aim_point, Vector2(5, 5))
+	assert_true(_aim.aim_point.is_finite())

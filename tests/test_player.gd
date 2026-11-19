@@ -113,3 +113,8 @@ func test_depleted_spell_does_nothing_and_does_not_switch() -> void:
 	Input.action_release(&"cast")
 	assert_eq(_projectile_count(), 0)
 	assert_eq(_player.loadout.selected_index, 0)
+
+
+func test_player_exposes_its_aim_component() -> void:
+	assert_true(_player.aim is AimComponent)
+	assert_eq(_player.aim, _player.get_node("AimComponent"))
