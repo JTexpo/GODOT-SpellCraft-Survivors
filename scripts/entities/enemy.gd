@@ -46,11 +46,17 @@ func setup(enemy_data: EnemyData, arena_bounds: Rect2, rng: RandomNumberGenerato
 		_apply_data()
 
 
+## Heads for the player plus a random offset that spreads the horde out while it is far away.
+## The offset fades out as the enemy closes in, so it always ends up touching the player.
 func direction_to_target() -> Vector2:
 	var target := get_tree().get_first_node_in_group(&"player") as Node2D
 	if target == null:
 		return Vector2.ZERO
-	var to_target := (target.global_position + target_offset) - global_position
+	var spread := 1.0
+	if data != null and data.offset_radius > 0.0:
+		var distance := global_position.distance_to(target.global_position)
+		spread = clampf((distance - data.offset_radius) / data.offset_radius, 0.0, 1.0)
+	var to_target := (target.global_position + target_offset * spread) - global_position
 	if to_target.length() < 1.0:
 		return Vector2.ZERO
 	return to_target.normalized()

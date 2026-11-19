@@ -109,3 +109,17 @@ func test_contact_cooldown_outlasts_player_invulnerability() -> void:
 	hurtbox._process(player.get_node("HurtboxComponent").invulnerability_time + 0.1)
 	assert_false(hitbox.try_hit(hurtbox, 600))
 	assert_true(hitbox.try_hit(hurtbox, 1100))
+
+
+func test_enemy_closes_in_until_it_touches_the_player() -> void:
+	var player := Node2D.new()
+	add_child_autofree(player)
+	player.add_to_group(&"player")
+	player.global_position = Vector2(200, 200)
+	var enemy := _make_enemy()
+	enemy.setup(_data(), Rect2(0, 0, 960, 540), _rng(3))
+	enemy.target_offset = Vector2(_data().offset_radius, 0.0)
+	enemy.global_position = Vector2(150, 200)
+	for i in 400:
+		enemy._physics_process(0.05)
+	assert_lt(enemy.global_position.distance_to(player.global_position), 6.0, "enemy stopped short of the player")
