@@ -41,21 +41,27 @@ func tick(delta: float) -> void:
 			return
 
 
-## Picks from the pool by spawn_weight. Null when there is no pool or every weight is zero.
+## Picks from the pool by spawn_weight. Empty slots and zero weights are never picked, and the
+## result is null when there is no pool or nothing is pickable.
 func pick_enemy_data() -> EnemyData:
 	if config == null:
 		return null
 	var total := 0.0
+	var last_pickable: EnemyData = null
 	for data in config.enemy_pool:
-		total += maxf(data.spawn_weight, 0.0)
-	if total <= 0.0:
+		if data != null and data.spawn_weight > 0.0:
+			total += data.spawn_weight
+			last_pickable = data
+	if last_pickable == null:
 		return null
 	var roll := rng.randf() * total
 	for data in config.enemy_pool:
-		roll -= maxf(data.spawn_weight, 0.0)
+		if data == null or data.spawn_weight <= 0.0:
+			continue
+		roll -= data.spawn_weight
 		if roll < 0.0:
 			return data
-	return config.enemy_pool.back()
+	return last_pickable
 
 
 func try_spawn() -> Enemy:

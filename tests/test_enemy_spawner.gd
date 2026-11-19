@@ -174,3 +174,26 @@ func test_enemy_damaged_is_re_emitted() -> void:
 	assert_signal_emit_count(enemy, "damaged", 1)
 	var params = get_signal_parameters(enemy, "damaged")
 	assert_signal_emitted_with_parameters(_spawner, "enemy_damaged", params)
+
+
+func test_empty_pool_slots_are_skipped() -> void:
+	var basic := load(POOL_FILES[0]) as EnemyData
+	var with_gaps: Array[EnemyData] = [null, basic, null]
+	_set_pool(with_gaps)
+	for i in 200:
+		assert_eq(_spawner.pick_enemy_data(), basic)
+	assert_not_null(_spawner.try_spawn())
+	var all_empty: Array[EnemyData] = [null, null]
+	_set_pool(all_empty)
+	assert_null(_spawner.pick_enemy_data())
+	assert_null(_spawner.try_spawn())
+
+
+func test_a_zero_weight_last_entry_is_never_picked() -> void:
+	var live := (load(POOL_FILES[0]) as EnemyData).duplicate() as EnemyData
+	var dead := (load(POOL_FILES[0]) as EnemyData).duplicate() as EnemyData
+	dead.spawn_weight = 0.0
+	var pool: Array[EnemyData] = [live, dead]
+	_set_pool(pool)
+	for i in 500:
+		assert_eq(_spawner.pick_enemy_data(), live)
