@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ScrollData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"base_fire"
+display_name = "Fire"
+description = "Adds Fire damage, strong against Land and weak against Sea."
+category = 0
+rarity = 0
+color = Color(1, 0.45, 0.1, 1)
+element = 0

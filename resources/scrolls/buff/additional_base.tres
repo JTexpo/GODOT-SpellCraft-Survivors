@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ScrollData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"buff_additional_base"
+display_name = "Additional Base"
+description = "Adds another elemental damage type to the spell."
+category = 2
+rarity = 2
+color = Color(0.75, 0.4, 0.9, 1)
+buff_id = &"additional_base"

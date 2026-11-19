@@ -1,0 +1,47 @@
+extends GutTest
+
+var _button: InventoryButton
+
+
+func _touch(screen_position: Vector2) -> InputEventScreenTouch:
+	var event := InputEventScreenTouch.new()
+	event.index = 0
+	event.pressed = true
+	event.position = screen_position
+	return event
+
+
+func before_each() -> void:
+	_button = load("res://scenes/ui/inventory_button.tscn").instantiate() as InventoryButton
+	add_child_autofree(_button)
+	_button.position = Vector2(100, 50)
+
+
+func test_touch_inside_emits_pressed() -> void:
+	watch_signals(_button)
+	_button._input(_touch(_button.get_global_rect().get_center()))
+	assert_signal_emit_count(_button, "pressed", 1)
+
+
+func test_touch_outside_and_hidden_do_nothing() -> void:
+	watch_signals(_button)
+	_button._input(_touch(Vector2(0, 0)))
+	_button.hide()
+	_button._input(_touch(_button.get_global_rect().get_center()))
+	assert_signal_not_emitted(_button, "pressed")
+
+
+func test_mouse_clicks_are_ignored() -> void:
+	watch_signals(_button)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = _button.get_global_rect().get_center()
+	_button._input(click)
+	assert_signal_not_emitted(_button, "pressed")
+
+
+func test_set_total_updates_the_label() -> void:
+	_button.set_total(7)
+	assert_eq(_button.total, 7)
+	assert_true(_button.label_text().contains("7"))

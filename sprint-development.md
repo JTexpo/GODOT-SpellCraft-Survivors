@@ -307,28 +307,28 @@ Players can now discover spell-scrolls during an adventure.
 
 #### Scroll Architecture
 
-- [ ] Create a reusable Scroll data structure.
-- [ ] Implement Base scrolls.
-- [ ] Implement Area scrolls.
-- [ ] Implement Buff scrolls.
-- [ ] Assign scroll categories.
-- [ ] Implement scroll pickup interactions.
+- [x] Create a reusable Scroll data structure.
+- [x] Implement Base scrolls.
+- [x] Implement Area scrolls.
+- [x] Implement Buff scrolls.
+- [x] Assign scroll categories.
+- [x] Implement scroll pickup interactions.
 
 #### Enemy Drops
 
-- [ ] Implement enemy scroll drops.
-- [ ] Implement configurable drop chances.
-- [ ] Implement scroll drop tables.
-- [ ] Implement scroll pickup visuals.
-- [ ] Implement scroll collection feedback.
+- [x] Implement enemy scroll drops.
+- [x] Implement configurable drop chances.
+- [x] Implement scroll drop tables.
+- [x] Implement scroll pickup visuals.
+- [x] Implement scroll collection feedback.
 
 #### Inventory
 
-- [ ] Create a scroll inventory.
-- [ ] Display collected scrolls.
-- [ ] Implement scroll stacking where appropriate.
-- [ ] Display scroll categories.
-- [ ] Implement inventory limits if required.
+- [x] Create a scroll inventory.
+- [x] Display collected scrolls.
+- [x] Implement scroll stacking where appropriate.
+- [x] Display scroll categories.
+- [x] Implement inventory limits if required.
 
 ### Deliverable
 
@@ -341,6 +341,8 @@ Enemies can drop scrolls, and the player can collect and store them.
 - Scrolls are stored correctly.
 - Different scroll categories are distinguishable.
 - Collected scrolls persist for the duration of the run.
+
+**Built note:** 15 scrolls (4 Base, 5 Area including Wave, 6 Buff) are data. Buff scrolls are collectible only: their effects arrive in Sprint 7. Drops come from per-enemy drop tables with themed weights (an elemental enemy heavily favours its own element's Base scroll, never guaranteed). Pickup is automatic by walking over a scroll. The inventory is a per-run component with no limit, and the display is a toggleable temporary panel plus a "+ Fire Scroll" toast.
 
 ---
 

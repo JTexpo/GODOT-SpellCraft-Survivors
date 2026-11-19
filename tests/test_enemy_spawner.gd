@@ -197,3 +197,11 @@ func test_a_zero_weight_last_entry_is_never_picked() -> void:
 	_set_pool(pool)
 	for i in 500:
 		assert_eq(_spawner.pick_enemy_data(), live)
+
+
+func test_enemy_died_is_re_emitted() -> void:
+	var enemy := _spawner.try_spawn()
+	watch_signals(_spawner)
+	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	assert_signal_emit_count(_spawner, "enemy_died", 1)
+	assert_signal_emitted_with_parameters(_spawner, "enemy_died", [enemy])

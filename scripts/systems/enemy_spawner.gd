@@ -3,6 +3,7 @@ extends Node
 ## Spawns enemies on a ring just outside the player's view, inside the arena.
 
 signal enemy_damaged(position: Vector2, amount: float, effect: int)
+signal enemy_died(enemy: Enemy)
 
 const MAX_SPAWNS_PER_TICK := 4
 const SPAWN_ANGLE_ATTEMPTS := 8
@@ -116,5 +117,6 @@ func _inside_inclusive(rect: Rect2, point: Vector2) -> bool:
 		and point.x <= rect.end.x and point.y <= rect.end.y
 
 
-func _on_enemy_died(_enemy: Enemy) -> void:
+func _on_enemy_died(enemy: Enemy) -> void:
 	alive = maxi(alive - 1, 0)
+	enemy_died.emit(enemy)

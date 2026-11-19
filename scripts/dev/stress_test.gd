@@ -24,6 +24,8 @@ const AREA_SPELLS := {
 @export var run_seconds: float = 0.0
 ## Empty means the default stress spell. Otherwise a key of AREA_SPELLS.
 @export var area_name: String = ""
+## --drops: kills drop real scrolls, and the arena starts with a full 100 pickups on the ground.
+@export var drops: bool = false
 
 var _frame_ms: Array[float] = []
 var _physics_ms_total: float = 0.0
@@ -40,6 +42,7 @@ var _rng := RandomNumberGenerator.new()
 @onready var _loadout: SpellLoadout = $Player/SpellLoadout
 @onready var _label: Label = $Hud/Label
 @onready var _damage_numbers: DamageNumbers = $DamageNumbers
+@onready var _dropper: ScrollDropper = $ScrollDropper
 
 
 func _ready() -> void:
@@ -47,6 +50,9 @@ func _ready() -> void:
 	_rng.randomize()
 	_spawner.set_process(false)
 	_spawner.enemy_damaged.connect(_damage_numbers.show_number)
+	if drops:
+		_spawner.enemy_died.connect(_dropper.on_enemy_died)
+		_scatter_pickups(_dropper.max_pickups)
 	_player.health.set_max_health(1.0e9)
 	_loadout.slots[0] = SpellInstance.new(_stress_spell())
 	_loadout.select(0)
@@ -91,6 +97,14 @@ func _stress_spell() -> SpellData:
 	return spell
 
 
+## Puts `count` scrolls from the plain enemy's drop table on the ground around the player.
+func _scatter_pickups(count: int) -> void:
+	var entries := _spawner.config.enemy_pool[0].drop_table.entries
+	for i in count:
+		var offset := Vector2.from_angle(_rng.randf_range(0.0, TAU)) * _rng.randf_range(SPAWN_RADIUS_MIN, SPAWN_RADIUS_MAX)
+		_dropper.place(entries[i % entries.size()].scroll, _player.global_position + offset)
+
+
 func _spawn_one() -> void:
 	var offset := Vector2.from_angle(_rng.randf_range(0.0, TAU)) * _rng.randf_range(SPAWN_RADIUS_MIN, SPAWN_RADIUS_MAX)
 	var enemy := _spawner.spawn_at(_player.global_position + offset)
@@ -107,6 +121,8 @@ func _read_command_line() -> void:
 			enemy_count = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--seconds="):
 			run_seconds = float(argument.get_slice("=", 1))
+		elif argument == "--drops":
+			drops = true
 		elif argument.begins_with("--area="):
 			area_name = argument.get_slice("=", 1)
 

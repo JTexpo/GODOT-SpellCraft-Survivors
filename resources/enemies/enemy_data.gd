@@ -18,3 +18,5 @@ extends Resource
 @export var color: Color = Color(0.75, 0.75, 0.75)
 ## How often the spawner picks this enemy, relative to the others in the pool.
 @export var spawn_weight: float = 1.0
+## What this enemy can drop when it dies. Null drops nothing.
+@export var drop_table: DropTable

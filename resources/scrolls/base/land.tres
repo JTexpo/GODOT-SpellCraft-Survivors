@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ScrollData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"base_land"
+display_name = "Land"
+description = "Adds Land damage, strong against Thunder and weak against Fire."
+category = 0
+rarity = 0
+color = Color(0.6, 0.4, 0.2, 1)
+element = 2

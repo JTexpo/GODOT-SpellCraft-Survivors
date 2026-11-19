@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ScrollData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/spells/areas/zone_area.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"area_area"
+display_name = "Area"
+description = "Creates an area-of-effect attack at a chosen location."
+category = 1
+rarity = 1
+color = Color(0.85, 0.85, 0.9, 1)
+area_data = ExtResource("2")
