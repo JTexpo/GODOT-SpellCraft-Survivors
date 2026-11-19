@@ -457,6 +457,8 @@ The Crafting System must validate:
 
 Invalid combinations must not consume scrolls.
 
+Built in Sprint 6: `SpellBuilder` (static) builds the spell from a Base scroll, an Area scroll and a range option, using baselines on each Area (`AreaStats`) and multipliers on each Base scroll (`BaseModifiers`). `CraftingSystem` (static) validates a `CraftingRequest`, consumes the scrolls all-or-nothing and equips the spell through `SpellLoadout.equip`. `CraftingSession` holds the screen's choices with no UI, and `CraftingScreen` is a thin pausing layer over it. The rule linking range to mana cost lives in `SpellBuilder` and the range options live in `CraftingRules`. Buffs are not craftable yet (Sprint 7).
+
 ---
 
 # 8. Elemental Damage System

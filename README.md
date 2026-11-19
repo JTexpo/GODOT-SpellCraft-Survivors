@@ -216,9 +216,12 @@ The player can:
 1. Select an existing spell or an empty spell slot.
 2. Insert a Base scroll.
 3. Insert an Area scroll.
-4. Add any available Buff scrolls.
-5. Review the resulting spell's damage, mana capacity, and mana consumption.
-6. Confirm the combination.
+4. Choose how far the spell reaches. A longer range costs more mana per cast and a shorter range costs less.
+5. Add any available Buff scrolls.
+6. Review the resulting spell's damage, mana capacity, and mana consumption, next to the spell it would replace.
+7. Confirm the combination.
+
+The world pauses while the crafting screen is open, so players can compare options without being rushed. The player begins with a single spell, and more spell slots unlock at higher levels. Crafting replaces the spell in the chosen slot, and the old spell's remaining mana is lost.
 
 Crafting should be quick enough that players aren't spending excessive time away from the action.
 

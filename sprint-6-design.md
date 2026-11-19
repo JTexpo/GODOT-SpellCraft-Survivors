@@ -1,6 +1,6 @@
 # Sprint 6 Design: Arcane Lectern and Spell Crafting
 
-**Status:** Draft, awaiting the user's approval.
+**Status:** Built. Approved by the user after a fresh builder check, then implemented on branch `sprint-6-crafting`.
 
 Scope comes from `sprint-development.md` (Sprint 6). Architecture follows `technical-design.md` (sections 5 and 7), `CLAUDE.md`, and `sprint-0` to `sprint-5-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 

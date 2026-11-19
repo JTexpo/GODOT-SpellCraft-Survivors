@@ -354,31 +354,31 @@ Enemies can drop scrolls, and the player can collect and store them.
 
 #### Lectern
 
-- [ ] Create the Arcane Lectern entity.
-- [ ] Implement Lectern interaction.
-- [ ] Implement the crafting interface.
-- [ ] Implement player proximity requirements.
-- [ ] Implement crafting confirmation.
+- [x] Create the Arcane Lectern entity.
+- [x] Implement Lectern interaction.
+- [x] Implement the crafting interface.
+- [x] Implement player proximity requirements.
+- [x] Implement crafting confirmation.
 
 #### Spell Crafting
 
-- [ ] Allow selection of a Base scroll.
-- [ ] Allow selection of an Area scroll.
-- [ ] Allow optional Buff scrolls.
-- [ ] Validate spell combinations.
-- [ ] Calculate resulting spell statistics.
-- [ ] Calculate resulting mana requirements.
-- [ ] Generate the resulting spell.
-- [ ] Consume the appropriate scrolls.
-- [ ] Allow crafted spells to replace existing spells.
+- [x] Allow selection of a Base scroll.
+- [x] Allow selection of an Area scroll.
+- [x] Allow optional Buff scrolls.
+- [x] Validate spell combinations.
+- [x] Calculate resulting spell statistics.
+- [x] Calculate resulting mana requirements.
+- [x] Generate the resulting spell.
+- [x] Consume the appropriate scrolls.
+- [x] Allow crafted spells to replace existing spells.
 
 #### Spell Management
 
-- [ ] Display currently equipped spells.
-- [ ] Allow spells to be equipped.
-- [ ] Allow spells to be replaced.
-- [ ] Respect the player's available spell slots.
-- [ ] Display individual spell mana.
+- [x] Display currently equipped spells.
+- [x] Allow spells to be equipped.
+- [x] Allow spells to be replaced.
+- [x] Respect the player's available spell slots.
+- [x] Display individual spell mana.
 
 ### Deliverable
 
@@ -391,6 +391,8 @@ Players can collect scrolls and craft their own spells using Arcane Lecterns.
 - Scrolls are consumed correctly.
 - Crafted spells function in combat.
 - Spell statistics update according to their components.
+
+**Built note:** a static `SpellBuilder` turns a Base scroll, an Area scroll and a range option into a spell (each Area carries baseline numbers and each Base scroll carries multipliers), and a static `CraftingSystem` validates, consumes the scrolls all-or-nothing and equips the spell. The crafting screen is one workbench screen with a live preview beside the spell it replaces, and the world pauses while it is open. The player now starts with one spell (Fire Missile, 100 casts) and four locked slots, and Sprint 8 will unlock more. Buff scrolls show locked in the screen until Sprint 7. Three Lecterns sit off-screen in the arena.
 
 ---
 
