@@ -41,7 +41,7 @@ func test_receive_hit_damages_health_and_emits() -> void:
 	watch_signals(target)
 	assert_true(target.receive_hit(4.0, Vector2(-10, 0), 50.0))
 	assert_eq(target.health.current_health, 6.0)
-	assert_signal_emitted_with_parameters(target, "hit_received", [4.0, Vector2(-10, 0), 50.0])
+	assert_signal_emitted_with_parameters(target, "hit_received", [4.0, Vector2(-10, 0), 50.0, ElementTable.Effect.NEUTRAL])
 
 
 func test_invulnerable_after_hit_rejects_second() -> void:
@@ -167,3 +167,28 @@ func test_one_shot_still_finishes_after_one_hit() -> void:
 	hitbox.one_shot = true
 	assert_true(hitbox.try_hit(target, 0))
 	assert_true(hitbox.is_finished())
+
+
+func test_hit_applies_the_multiplier_at_impact() -> void:
+	var cases := [
+		[SpellData.Element.LAND, 15.0, ElementTable.Effect.VULNERABLE],
+		[SpellData.Element.SEA, 5.0, ElementTable.Effect.RESISTED],
+		[SpellData.Element.FIRE, 10.0, ElementTable.Effect.NEUTRAL],
+		[SpellData.NO_ELEMENT, 10.0, ElementTable.Effect.NEUTRAL],
+	]
+	for case in cases:
+		var target := _make_target(Vector2.ZERO, 30.0)
+		target.element = case[0]
+		watch_signals(target)
+		target.receive_hit(10.0, Vector2.ZERO, 0.0, SpellData.Element.FIRE)
+		assert_eq(target.health.current_health, 30.0 - case[1], "defender %d" % case[0])
+		assert_signal_emitted_with_parameters(target, "hit_received", [case[1], Vector2.ZERO, 0.0, case[2]])
+
+
+func test_hitbox_passes_its_element_to_the_hurtbox() -> void:
+	var target := _make_target(Vector2.ZERO, 30.0)
+	target.element = SpellData.Element.LAND
+	var hitbox := _make_hitbox(10.0)
+	hitbox.element = SpellData.Element.FIRE
+	assert_true(hitbox.try_hit(target))
+	assert_eq(target.health.current_health, 15.0)

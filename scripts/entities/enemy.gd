@@ -4,6 +4,8 @@ extends Node2D
 ## its passive hurtbox and contact hitbox.
 
 signal died(enemy: Enemy)
+## A hit landed. `amount` is the final damage and `effect` an ElementTable.Effect.
+signal damaged(position: Vector2, amount: float, effect: int)
 
 @export var data: EnemyData
 
@@ -18,6 +20,7 @@ var _dead: bool = false
 @onready var _hitbox: HitboxComponent = $ContactHitbox
 @onready var _knockback: KnockbackComponent = $KnockbackComponent
 @onready var _flash: HitFlashComponent = $HitFlashComponent
+@onready var _body: ColorRect = $Body
 
 
 func _ready() -> void:
@@ -67,11 +70,14 @@ func _apply_data() -> void:
 	_hitbox.damage = data.contact_damage
 	_hitbox.hit_cooldown = data.contact_cooldown
 	_hitbox.knockback = data.contact_knockback
+	_hurtbox.element = data.element
+	_body.color = data.color
 
 
-func _on_hit_received(_damage: float, source_position: Vector2, knockback: float) -> void:
+func _on_hit_received(damage: float, source_position: Vector2, knockback: float, effect: int) -> void:
 	_knockback.apply_impulse(global_position - source_position, knockback)
 	_flash.flash()
+	damaged.emit(global_position, damage, effect)
 
 
 func _on_died() -> void:

@@ -482,6 +482,8 @@ The Damage System should calculate final damage using:
 - Enemy vulnerabilities.
 - Active Buffs.
 
+Built in Sprint 4: each enemy has one element, and its vulnerability (the element that beats it) and resistance (the element it beats) come from the element table. The multiplier is applied when a hit lands. Per-enemy overrides of vulnerability and resistance, and giving the player an element through equipment, are left for later sprints.
+
 A centralized damage calculation prevents inconsistent behavior across different spell types.
 
 Elemental multipliers should be configurable rather than hardcoded throughout the project.

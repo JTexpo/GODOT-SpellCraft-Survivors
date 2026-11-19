@@ -57,8 +57,21 @@ func test_missile_is_tinted_by_the_spell() -> void:
 func test_hitbox_carries_spell_damage_and_knockback() -> void:
 	var spell := _fire()
 	var hitbox := _missile(spell).get_node("Hitbox") as HitboxComponent
-	assert_eq(hitbox.damage, DamageSystem.calculate(spell.damage, spell.primary_element()))
+	assert_eq(hitbox.damage, spell.damage)
+	assert_eq(hitbox.element, SpellData.Element.FIRE)
 	assert_eq(hitbox.knockback, spell.knockback)
+
+
+func test_fire_missile_is_multiplied_when_it_lands() -> void:
+	var strong := _enemy(Vector2(300, 100))
+	var weak := _enemy(Vector2(300, 300))
+	(strong.get_node("HurtboxComponent") as HurtboxComponent).element = SpellData.Element.LAND
+	(weak.get_node("HurtboxComponent") as HurtboxComponent).element = SpellData.Element.SEA
+	_missile(_fire(), Vector2(300, 100))
+	_missile(_fire(), Vector2(300, 300))
+	await wait_physics_frames(6)
+	assert_eq(_health(strong).current_health, _health(strong).max_health - 15.0)
+	assert_eq(_health(weak).current_health, _health(weak).max_health - 5.0)
 
 
 func test_single_hit_spell_hits_one_of_two_and_is_freed() -> void:

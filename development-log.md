@@ -90,3 +90,30 @@ Stress test after Sprint 3 (300 enemies, each Area firing every 0.05 s, Apple M1
 | Wave | 312.8 | 3.20 | 4.76 |
 
 The 60 fps target is met by a wide margin for every Area. Wave is the most expensive. The Line and Cone p99 spikes (about 9-10 ms) are worth watching if enemy counts grow.
+
+
+## 2026-11-19: Sprint 4 (elemental enemies)
+
+Decisions (details in `sprint-4-design.md`):
+
+- The elemental multiplier now applies at impact. The hitbox carries the attacker's element and the hurtbox holds the defender's, so the Sprint 2 limitation (multiplier at cast time) is gone. `AreaEffect._configure_hitbox` sets raw damage and element.
+- Rules, decided with the user: same element is normal damage (no same-type disadvantage). An enemy takes the strong multiplier (1.5) from the element that beats it and the weak one (0.5) from the one it beats. The README example that said a Fire enemy resists Fire was corrected to match.
+- `ElementTable.Effect` (NEUTRAL, VULNERABLE, RESISTED) rides on `hit_received` as a fourth parameter, so feedback now and buffs later (Ignore Resistance, Double Vulnerability) can use it.
+- Five enemies, one scene, different data: plain (grey) 20 hp / 10 dmg / speed 40, Fire 16 / 12 / 55, Thunder 12 / 8 / 75, Land 50 / 14 / 28, Sea 24 / 10 / 42. Spawn weights: plain 1, elements 2 each. `SpawnConfig.enemy_data` became `enemy_pool`.
+- Damage numbers: one pooled node (64), one `_draw`, only processes while numbers are alive. Neutral white, vulnerable larger yellow with "!", resisted smaller grey. Hit flash is unchanged.
+- The player has no element by default (so hits on the player are neutral), but that is only a default: the hurtbox `element` property lets equipment give the player resistances or vulnerabilities later.
+- During the MCP run a shadowing warning appeared (`position` parameter on a `Node2D`), fixed by renaming it `world_position`.
+
+Known limitations:
+- Overkill hits show the full damage dealt (a 15-damage hit on a 3 health enemy shows "15"). The user is happy with this.
+- Nothing in the game teaches the element cycle. Players learn from the numbers and enemy colours. A legend belongs to a later UI sprint.
+
+Stress test after Sprint 4 (300 enemies, elemental pool, damage numbers on, Apple M1, windowed, vsync off):
+
+| Spell | avg fps | avg frame ms | p99 frame ms | Sprint 3 avg fps |
+|---|---|---|---|---|
+| Missile | 673.1 | 1.49 | 1.52 | 720.1 |
+| Wave | 191.4 | 5.23 | 8.33 | 312.8 |
+| Zone | 439.7 | 2.27 | 5.56 | 471.7 |
+
+The 60 fps target is still met by a wide margin. Wave dropped the most (about 40%), because it hits many enemies per cast and each hit now draws a number. Worth watching if numbers get fancier.

@@ -2,6 +2,8 @@ class_name EnemySpawner
 extends Node
 ## Spawns enemies on a ring just outside the player's view, inside the arena.
 
+signal enemy_damaged(position: Vector2, amount: float, effect: int)
+
 const MAX_SPAWNS_PER_TICK := 4
 const SPAWN_ANGLE_ATTEMPTS := 8
 
@@ -39,6 +41,29 @@ func tick(delta: float) -> void:
 			return
 
 
+## Picks from the pool by spawn_weight. Empty slots and zero weights are never picked, and the
+## result is null when there is no pool or nothing is pickable.
+func pick_enemy_data() -> EnemyData:
+	if config == null:
+		return null
+	var total := 0.0
+	var last_pickable: EnemyData = null
+	for data in config.enemy_pool:
+		if data != null and data.spawn_weight > 0.0:
+			total += data.spawn_weight
+			last_pickable = data
+	if last_pickable == null:
+		return null
+	var roll := rng.randf() * total
+	for data in config.enemy_pool:
+		if data == null or data.spawn_weight <= 0.0:
+			continue
+		roll -= data.spawn_weight
+		if roll < 0.0:
+			return data
+	return last_pickable
+
+
 func try_spawn() -> Enemy:
 	if config == null or alive >= config.max_alive:
 		return null
@@ -52,13 +77,17 @@ func try_spawn() -> Enemy:
 
 
 func spawn_at(position: Vector2) -> Enemy:
+	var data := pick_enemy_data()
+	if data == null:
+		return null
 	var enemy := config.enemy_scene.instantiate() as Enemy
-	enemy.setup(config.enemy_data, arena_bounds, rng)
+	enemy.setup(data, arena_bounds, rng)
 	var root := spawn_root if spawn_root != null else get_parent()
 	root.add_child(enemy)
 	enemy.global_position = position
 	alive += 1
 	enemy.died.connect(_on_enemy_died)
+	enemy.damaged.connect(enemy_damaged.emit)
 	return enemy
 
 

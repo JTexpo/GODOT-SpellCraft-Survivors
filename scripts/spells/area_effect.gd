@@ -9,9 +9,10 @@ func launch(_spell: SpellData, _origin: Vector2, _direction: Vector2, _target: V
 	push_error("AreaEffect.launch must be overridden")
 
 
-## The one place an Area turns a spell into hit damage, so Sprint 4 can move the elemental
-## multiplier to the moment of impact here.
+## The one place an Area turns a spell into hit damage. The hitbox carries the raw damage and
+## the spell's element, and the target's hurtbox applies the elemental multiplier on impact.
 func _configure_hitbox(hitbox: HitboxComponent, spell: SpellData, hit_cooldown: float) -> void:
-	hitbox.damage = DamageSystem.calculate(spell.damage, spell.primary_element())
+	hitbox.damage = spell.damage
+	hitbox.element = spell.primary_element()
 	hitbox.knockback = spell.knockback
 	hitbox.hit_cooldown = hit_cooldown

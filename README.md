@@ -457,7 +457,7 @@ Every enemy can have an elemental affinity.
 
 This creates opportunities for players to adapt their spell loadouts based on the enemies they encounter.
 
-For example, a Fire enemy may resist Fire damage but be vulnerable to Sea damage.
+For example, a Fire enemy takes extra damage from Sea, reduced damage from Land, and normal damage from Fire and Thunder (an enemy takes normal damage from its own element).
 
 # 8. Bosses and Encounters
 

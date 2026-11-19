@@ -27,7 +27,7 @@ func _make_spawner(max_alive: int) -> EnemySpawner:
 	config.max_alive = max_alive
 	config.spawn_margin = 24.0
 	config.enemy_scene = load("res://scenes/enemies/base_enemy.tscn")
-	config.enemy_data = load("res://resources/enemies/basic_enemy.tres")
+	config.enemy_pool = [load("res://resources/enemies/basic_enemy.tres") as EnemyData]
 	var spawner := EnemySpawner.new()
 	spawner.config = config
 	spawner.arena_bounds = BOUNDS
@@ -91,3 +91,109 @@ func test_tick_respects_interval() -> void:
 	assert_eq(_spawner.alive, 0)
 	_spawner.tick(0.2)
 	assert_eq(_spawner.alive, 1)
+
+
+const POOL_FILES := [
+	"res://resources/enemies/basic_enemy.tres",
+	"res://resources/enemies/fire_enemy.tres",
+	"res://resources/enemies/thunder_enemy.tres",
+	"res://resources/enemies/land_enemy.tres",
+	"res://resources/enemies/sea_enemy.tres",
+]
+
+
+func _set_pool(pool: Array[EnemyData]) -> void:
+	_spawner.config.enemy_pool = pool
+
+
+func _file_pool() -> Array[EnemyData]:
+	var pool: Array[EnemyData] = []
+	for path in POOL_FILES:
+		pool.append(load(path) as EnemyData)
+	return pool
+
+
+func test_pick_covers_every_pool_entry() -> void:
+	var pool := _file_pool()
+	_set_pool(pool)
+	var seen := {}
+	for i in 500:
+		seen[_spawner.pick_enemy_data()] = true
+	assert_eq(seen.size(), 5)
+	for data in pool:
+		assert_true(seen.has(data))
+
+
+func test_pick_respects_weights() -> void:
+	var light := (load(POOL_FILES[0]) as EnemyData).duplicate() as EnemyData
+	var heavy := (load(POOL_FILES[0]) as EnemyData).duplicate() as EnemyData
+	light.spawn_weight = 1.0
+	heavy.spawn_weight = 3.0
+	var pool: Array[EnemyData] = [light, heavy]
+	_set_pool(pool)
+	var counts := {light: 0, heavy: 0}
+	for i in 1000:
+		counts[_spawner.pick_enemy_data()] += 1
+	assert_gt(counts[heavy], counts[light] * 2)
+
+
+func test_single_entry_pool_always_picks_it() -> void:
+	for i in 20:
+		assert_eq(_spawner.pick_enemy_data(), _spawner.config.enemy_pool[0])
+
+
+func test_empty_pool_and_zero_weights_spawn_nothing() -> void:
+	var empty: Array[EnemyData] = []
+	_set_pool(empty)
+	assert_null(_spawner.pick_enemy_data())
+	assert_null(_spawner.try_spawn())
+	var dead := (load(POOL_FILES[0]) as EnemyData).duplicate() as EnemyData
+	dead.spawn_weight = 0.0
+	var zero: Array[EnemyData] = [dead, dead]
+	_set_pool(zero)
+	assert_null(_spawner.pick_enemy_data())
+	assert_null(_spawner.try_spawn())
+	assert_eq(_spawner.alive, 0)
+
+
+func test_spawned_enemy_uses_data_from_the_pool() -> void:
+	var pool := _file_pool()
+	_set_pool(pool)
+	_spawner.config.max_alive = 20
+	for i in 10:
+		var enemy := _spawner.try_spawn()
+		assert_true(pool.has(enemy.data))
+
+
+func test_enemy_damaged_is_re_emitted() -> void:
+	var enemy := _spawner.try_spawn()
+	watch_signals(_spawner)
+	watch_signals(enemy)
+	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(10.0, Vector2.ZERO, 0.0, SpellData.Element.FIRE)
+	assert_signal_emit_count(_spawner, "enemy_damaged", 1)
+	assert_signal_emit_count(enemy, "damaged", 1)
+	var params = get_signal_parameters(enemy, "damaged")
+	assert_signal_emitted_with_parameters(_spawner, "enemy_damaged", params)
+
+
+func test_empty_pool_slots_are_skipped() -> void:
+	var basic := load(POOL_FILES[0]) as EnemyData
+	var with_gaps: Array[EnemyData] = [null, basic, null]
+	_set_pool(with_gaps)
+	for i in 200:
+		assert_eq(_spawner.pick_enemy_data(), basic)
+	assert_not_null(_spawner.try_spawn())
+	var all_empty: Array[EnemyData] = [null, null]
+	_set_pool(all_empty)
+	assert_null(_spawner.pick_enemy_data())
+	assert_null(_spawner.try_spawn())
+
+
+func test_a_zero_weight_last_entry_is_never_picked() -> void:
+	var live := (load(POOL_FILES[0]) as EnemyData).duplicate() as EnemyData
+	var dead := (load(POOL_FILES[0]) as EnemyData).duplicate() as EnemyData
+	dead.spawn_weight = 0.0
+	var pool: Array[EnemyData] = [live, dead]
+	_set_pool(pool)
+	for i in 500:
+		assert_eq(_spawner.pick_enemy_data(), live)

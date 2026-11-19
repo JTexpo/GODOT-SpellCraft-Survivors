@@ -7,4 +7,5 @@ extends Resource
 ## How far outside the visible area enemies appear.
 @export var spawn_margin: float = 24.0
 @export var enemy_scene: PackedScene
-@export var enemy_data: EnemyData
+## The enemies the spawner picks from, by each one's spawn_weight.
+@export var enemy_pool: Array[EnemyData] = []

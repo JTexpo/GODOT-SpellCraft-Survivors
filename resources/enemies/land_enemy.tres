@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemies/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+max_health = 50.0
+contact_damage = 14.0
+contact_cooldown = 1.0
+contact_knockback = 80.0
+speed = 28.0
+speed_variation = 0.15
+offset_radius = 24.0
+element = 2
+color = Color(0.6, 0.4, 0.2, 1)
+spawn_weight = 2.0
