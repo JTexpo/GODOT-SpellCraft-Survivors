@@ -392,7 +392,7 @@ Players can collect scrolls and craft their own spells using Arcane Lecterns.
 - Crafted spells function in combat.
 - Spell statistics update according to their components.
 
-**Built note:** a static `SpellBuilder` turns a Base scroll, an Area scroll and a range option into a spell (each Area carries baseline numbers and each Base scroll carries multipliers), and a static `CraftingSystem` validates, consumes the scrolls all-or-nothing and equips the spell. The crafting screen is one workbench screen with a live preview beside the spell it replaces, and the world pauses while it is open. The player now starts with one spell (Fire Missile, 100 casts) and four locked slots, and Sprint 8 will unlock more. Buff scrolls show locked in the screen until Sprint 7. Three Lecterns sit off-screen in the arena.
+**Built note:** a static `SpellBuilder` turns a Base scroll, an Area scroll and a range option into a spell (each Area carries baseline numbers and each Base scroll carries multipliers), and a static `CraftingSystem` validates, consumes the scrolls all-or-nothing and equips the spell. The crafting screen is one workbench screen with a live preview beside the spell it replaces, and the world pauses while it is open. The player now starts with one spell (Fire Missile, 1000 casts) and four locked slots, and Sprint 8 will unlock more. Buff scrolls show locked in the screen until Sprint 7. Three Lecterns sit off-screen in the arena.
 
 ---
 

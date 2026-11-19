@@ -131,9 +131,9 @@ func test_current_stats_show_the_target_slot() -> void:
 
 func test_replace_note_variants() -> void:
 	var session := _session()
-	assert_eq(session.replace_note(), "Replaces Fire Missile (100 / 100 mana left)")
+	assert_eq(session.replace_note(), "Replaces Fire Missile (1000 / 1000 mana left)")
 	_loadout.slots[0].current_mana = 12.0
-	assert_eq(session.replace_note(), "Replaces Fire Missile (12 / 100 mana left)")
+	assert_eq(session.replace_note(), "Replaces Fire Missile (12 / 1000 mana left)")
 	_loadout.slots[0].current_mana = 0.0
 	assert_eq(session.replace_note(), "Replaces Fire Missile (empty)")
 	_loadout = _make_loadout(2)

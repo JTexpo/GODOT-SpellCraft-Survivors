@@ -139,8 +139,8 @@ func test_player_exposes_its_aim_component() -> void:
 func test_player_starts_with_only_fire_missile_and_four_locked_slots() -> void:
 	var loadout := _player.loadout
 	assert_eq(loadout.slots[0].data.id, &"fire_missile")
-	assert_eq(loadout.slots[0].data.max_mana, 100.0)
-	assert_eq(loadout.slots[0].current_mana, 100.0)
+	assert_eq(loadout.slots[0].data.max_mana, 1000.0)
+	assert_eq(loadout.slots[0].current_mana, 1000.0)
 	assert_eq(loadout.unlocked_slots, 1)
 	for i in range(1, 5):
 		assert_null(loadout.slots[i], "slot %d" % i)

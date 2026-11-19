@@ -22,14 +22,17 @@ func _normal() -> RangeOption:
 	return _rules.option(_rules.normal_index())
 
 
-func test_fire_missile_at_normal_equals_the_starting_spell() -> void:
+func test_fire_missile_at_normal_equals_the_starting_spell_except_its_bigger_pool() -> void:
 	var built := SpellBuilder.build(_base("fire"), _area("missile"), _normal())
 	var starting := load("res://resources/spells/fire_missile.tres") as SpellData
 	assert_not_null(built)
 	assert_eq(built.damage, starting.damage)
 	assert_eq(built.cast_interval, starting.cast_interval)
 	assert_eq(built.mana_cost, starting.mana_cost)
-	assert_eq(built.max_mana, starting.max_mana)
+	# The player's first spell has a generous pool (1000) so a run has time to find scrolls.
+	# Crafted spells use the Area baseline (100).
+	assert_eq(starting.max_mana, 1000.0)
+	assert_eq(built.max_mana, 100.0)
 	assert_eq(built.projectile_speed, starting.projectile_speed)
 	assert_eq(built.knockback, starting.knockback)
 	assert_eq(built.max_hits, starting.max_hits)
