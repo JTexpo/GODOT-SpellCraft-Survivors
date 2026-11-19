@@ -103,3 +103,67 @@ func test_one_shot_hits_only_one_of_two_overlapping() -> void:
 			damaged += 1
 	assert_eq(damaged, 1)
 	assert_false(hitbox.monitoring)
+
+
+func _make_active_hitbox(max_hits: int, cooldown: float = 0.0) -> HitboxComponent:
+	var hitbox := HitboxComponent.new()
+	hitbox.damage = 4.0
+	hitbox.max_hits = max_hits
+	hitbox.hit_cooldown = cooldown
+	hitbox.collision_layer = PhysicsLayers.PLAYER_PROJECTILE
+	hitbox.collision_mask = PhysicsLayers.ENEMY_HURTBOX
+	hitbox.monitoring = true
+	_add_circle(hitbox, 30.0)
+	add_child_autofree(hitbox)
+	return hitbox
+
+
+func _damaged_count(targets: Array) -> int:
+	var damaged := 0
+	for target in targets:
+		if target.health.current_health < 10.0:
+			damaged += 1
+	return damaged
+
+
+func test_max_hits_two_lands_exactly_two_of_three() -> void:
+	var targets := [_make_target(Vector2(5, 0)), _make_target(Vector2(-5, 0)), _make_target(Vector2(0, 5))]
+	var hitbox := _make_active_hitbox(2)
+	await wait_physics_frames(4)
+	assert_eq(_damaged_count(targets), 2)
+	assert_true(hitbox.is_finished())
+	assert_false(hitbox.monitoring)
+
+
+func test_max_hits_one_behaves_like_one_shot() -> void:
+	var targets := [_make_target(Vector2(5, 0)), _make_target(Vector2(-5, 0))]
+	var hitbox := _make_active_hitbox(1)
+	await wait_physics_frames(4)
+	assert_eq(_damaged_count(targets), 1)
+	assert_true(hitbox.is_finished())
+
+
+func test_max_hits_zero_is_unlimited() -> void:
+	var targets := [_make_target(Vector2(5, 0)), _make_target(Vector2(-5, 0)), _make_target(Vector2(0, 5))]
+	var hitbox := _make_active_hitbox(0)
+	await wait_physics_frames(4)
+	assert_eq(_damaged_count(targets), 3)
+	assert_false(hitbox.is_finished())
+
+
+func test_piercing_hitbox_never_double_hits_one_target() -> void:
+	var target := _make_target(Vector2.ZERO, 100.0)
+	var hitbox := _make_hitbox(4.0, 1000.0)
+	hitbox.max_hits = 3
+	assert_true(hitbox.try_hit(target, 0))
+	assert_false(hitbox.try_hit(target, 10))
+	assert_eq(target.health.current_health, 96.0)
+	assert_false(hitbox.is_finished())
+
+
+func test_one_shot_still_finishes_after_one_hit() -> void:
+	var target := _make_target(Vector2.ZERO, 100.0)
+	var hitbox := _make_hitbox(4.0)
+	hitbox.one_shot = true
+	assert_true(hitbox.try_hit(target, 0))
+	assert_true(hitbox.is_finished())
