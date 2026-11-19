@@ -1,10 +1,11 @@
 extends GutTest
 
 const PATHS := [
-	"res://resources/spells/fire.tres",
-	"res://resources/spells/thunder.tres",
-	"res://resources/spells/land.tres",
-	"res://resources/spells/sea.tres",
+	"res://resources/spells/fire_missile.tres",
+	"res://resources/spells/thunder_cone.tres",
+	"res://resources/spells/land_area.tres",
+	"res://resources/spells/sea_line.tres",
+	"res://resources/spells/sea_wave.tres",
 ]
 
 var _root: Node2D
@@ -18,7 +19,6 @@ func before_each() -> void:
 	var spells: Array[SpellData] = []
 	for path in PATHS:
 		spells.append(load(path) as SpellData)
-	spells.append(null)
 	_loadout = SpellLoadout.new()
 	_loadout.starting_spells = spells
 	_loadout.projectile_root = _root
@@ -40,12 +40,11 @@ func _touch(position: Vector2) -> InputEventScreenTouch:
 	return event
 
 
-func test_five_widgets_with_colours_and_an_empty_slot() -> void:
+func test_five_widgets_with_the_spell_colours() -> void:
 	assert_eq(_bar.widgets.size(), 5)
-	for i in 4:
+	for i in 5:
 		assert_eq(_bar.widgets[i].element_color, (load(PATHS[i]) as SpellData).color)
 		assert_false(_bar.widgets[i].empty)
-	assert_true(_bar.widgets[4].empty)
 
 
 func test_mana_ratio_follows_casts() -> void:
@@ -111,6 +110,15 @@ func test_mouse_click_on_a_widget_is_ignored() -> void:
 
 
 func test_touching_the_empty_slot_is_ignored_by_the_loadout() -> void:
-	_bar.slot_pressed.connect(_loadout.select)
-	_bar.widgets[4]._input(_touch(_bar.widgets[4].get_global_rect().get_center()))
-	assert_eq(_loadout.selected_index, 0)
+	var spells: Array[SpellData] = [load(PATHS[0]) as SpellData, null, null, null, null]
+	var sparse := SpellLoadout.new()
+	sparse.starting_spells = spells
+	sparse.projectile_root = _root
+	add_child_autofree(sparse)
+	var sparse_bar := load("res://scenes/ui/spell_bar.tscn").instantiate() as SpellBar
+	add_child_autofree(sparse_bar)
+	sparse_bar.bind(sparse)
+	sparse_bar.slot_pressed.connect(sparse.select)
+	assert_true(sparse_bar.widgets[1].empty)
+	sparse_bar.widgets[1]._input(_touch(sparse_bar.widgets[1].get_global_rect().get_center()))
+	assert_eq(sparse.selected_index, 0)

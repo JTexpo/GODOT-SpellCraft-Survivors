@@ -1,6 +1,6 @@
 extends AreaTestBase
 
-const FIRE_PATH := "res://resources/spells/fire.tres"
+const FIRE_PATH := "res://resources/spells/fire_missile.tres"
 
 
 func _fire(max_hits: int = 1) -> SpellData:

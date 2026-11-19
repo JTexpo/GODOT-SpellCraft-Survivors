@@ -82,11 +82,11 @@ func test_alive_player_casts_and_spends_mana_from_the_selected_spell() -> void:
 	assert_lt(fire.current_mana, fire.data.max_mana)
 
 
-func test_slot_keys_select_spells_and_empty_slot_is_ignored() -> void:
+func test_slot_keys_select_spells() -> void:
 	_player._unhandled_input(_action_event(&"spell_slot_2"))
 	assert_eq(_player.loadout.selected_index, 1)
 	_player._unhandled_input(_action_event(&"spell_slot_5"))
-	assert_eq(_player.loadout.selected_index, 1)
+	assert_eq(_player.loadout.selected_index, 4)
 
 
 func test_shoulder_actions_cycle_spells() -> void:
@@ -118,3 +118,10 @@ func test_depleted_spell_does_nothing_and_does_not_switch() -> void:
 func test_player_exposes_its_aim_component() -> void:
 	assert_true(_player.aim is AimComponent)
 	assert_eq(_player.aim, _player.get_node("AimComponent"))
+
+
+func test_starting_slots_are_the_five_spells_in_order() -> void:
+	var ids := []
+	for slot in _player.loadout.slots:
+		ids.append((slot as SpellInstance).data.id)
+	assert_eq(ids, [&"fire_missile", &"thunder_cone", &"land_area", &"sea_line", &"sea_wave"])
