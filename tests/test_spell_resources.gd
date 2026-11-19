@@ -16,7 +16,8 @@ func test_spells_match_starting_values() -> void:
 		assert_not_null(spell, row[0])
 		assert_eq(spell.elements, [row[1]], row[0])
 		assert_eq(spell.primary_element(), row[1], row[0])
-		assert_eq(spell.area, SpellData.AreaType.MISSILE, row[0])
+		assert_eq(spell.area_type(), AreaData.AreaType.MISSILE, row[0])
+		assert_eq(spell.effective_range(), 264.0, row[0])
 		assert_eq(spell.max_hits, 1, row[0])
 		assert_eq(spell.damage, row[2], row[0])
 		assert_eq(spell.cast_interval, row[3], row[0])
@@ -24,7 +25,6 @@ func test_spells_match_starting_values() -> void:
 		assert_eq(spell.max_mana, row[5], row[0])
 		assert_eq(spell.projectile_speed, row[6], row[0])
 		assert_eq(spell.knockback, row[7], row[0])
-		assert_eq(spell.projectile_lifetime, 1.2, row[0])
 		assert_true(spell.mana_cost <= spell.max_mana, row[0])
 
 

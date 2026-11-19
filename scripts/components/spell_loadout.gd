@@ -10,6 +10,8 @@ signal cast_fired(index: int)
 signal cast_failed_dry(index: int)
 
 const SLOT_COUNT := 5
+## Stands in for "far away" when a cast has no target point.
+const FAR_TARGET_DISTANCE := 10000.0
 
 ## Index = slot. A null entry is an empty slot.
 @export var starting_spells: Array[SpellData] = []
@@ -58,7 +60,9 @@ func cycle(step: int) -> bool:
 	return false
 
 
-func try_cast(origin: Vector2, direction: Vector2) -> bool:
+## `target` is where the player points (the mouse, or far along a stick). A non-finite target
+## means "far along direction". Ground-targeted Areas clamp it to their own range.
+func try_cast(origin: Vector2, direction: Vector2, target: Vector2 = Vector2.INF) -> bool:
 	var spell := selected()
 	if spell == null or direction == Vector2.ZERO:
 		return false
@@ -67,13 +71,16 @@ func try_cast(origin: Vector2, direction: Vector2) -> bool:
 			_dry_latched = true
 			cast_failed_dry.emit(selected_index)
 		return false
+	if spell.data.area_data == null or spell.data.area_data.scene == null:
+		return false
 	if not spell.cast():
 		return false
+	if not target.is_finite():
+		target = origin + direction * FAR_TARGET_DISTANCE
 	var root := projectile_root if projectile_root != null else get_parent().get_parent()
-	var projectile := spell.data.projectile_scene.instantiate() as SpellProjectile
-	root.add_child(projectile)
-	projectile.global_position = origin
-	projectile.launch(direction, spell.data)
+	var effect := spell.data.area_data.scene.instantiate() as AreaEffect
+	root.add_child(effect)
+	effect.launch(spell.data, origin, direction, target)
 	cast_fired.emit(selected_index)
 	return true
 

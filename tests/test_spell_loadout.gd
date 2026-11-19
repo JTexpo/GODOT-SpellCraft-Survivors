@@ -30,7 +30,7 @@ func _four_spells() -> Array[SpellData]:
 func _projectile_count() -> int:
 	var count := 0
 	for child in _root.get_children():
-		if child is SpellProjectile:
+		if child is MissileArea:
 			count += 1
 	return count
 
@@ -97,7 +97,7 @@ func test_cast_spawns_projectile_and_spends_only_selected_slot() -> void:
 	var land := _loadout.slots[2] as SpellInstance
 	assert_true(_loadout.try_cast(Vector2(5, 5), Vector2.RIGHT))
 	assert_eq(_projectile_count(), 1)
-	var projectile := _root.get_child(_root.get_child_count() - 1) as SpellProjectile
+	var projectile := _root.get_child(_root.get_child_count() - 1) as MissileArea
 	assert_eq(projectile.global_position, Vector2(5, 5))
 	assert_eq(projectile.direction, Vector2.RIGHT)
 	assert_eq(land.current_mana, land.data.max_mana - land.data.mana_cost)
@@ -171,3 +171,47 @@ func test_two_loadouts_from_same_spells_do_not_share_mana() -> void:
 	var theirs := other.slots[0] as SpellInstance
 	assert_lt(mine.current_mana, mine.data.max_mana)
 	assert_eq(theirs.current_mana, theirs.data.max_mana)
+
+
+func _stub_spell() -> SpellData:
+	var node := StubAreaEffect.new()
+	var scene := PackedScene.new()
+	scene.pack(node)
+	node.free()
+	var area := AreaData.new()
+	area.scene = scene
+	var spell := SpellData.new()
+	spell.area_data = area
+	return spell
+
+
+func _stub_loadout() -> SpellLoadout:
+	var spells: Array[SpellData] = [_stub_spell(), null, null, null, null]
+	return _make_loadout(spells)
+
+
+func test_try_cast_launches_the_spells_own_area_scene() -> void:
+	var loadout := _stub_loadout()
+	assert_true(loadout.try_cast(Vector2(5, 5), Vector2.RIGHT, Vector2(50, 5)))
+	var stub := _root.get_child(_root.get_child_count() - 1) as StubAreaEffect
+	assert_not_null(stub)
+	assert_eq(stub.launched_spell, loadout.selected().data)
+	assert_eq(stub.launched_origin, Vector2(5, 5))
+	assert_eq(stub.launched_direction, Vector2.RIGHT)
+	assert_eq(stub.launched_target, Vector2(50, 5))
+
+
+func test_non_finite_target_becomes_a_far_point_along_direction() -> void:
+	var loadout := _stub_loadout()
+	loadout.try_cast(Vector2(5, 5), Vector2.RIGHT)
+	var stub := _root.get_child(_root.get_child_count() - 1) as StubAreaEffect
+	assert_eq(stub.launched_target, Vector2(5, 5) + Vector2.RIGHT * 10000.0)
+
+
+func test_spell_without_area_casts_nothing_and_spends_nothing() -> void:
+	var spells: Array[SpellData] = [SpellData.new(), null, null, null, null]
+	var loadout := _make_loadout(spells)
+	var before := _root.get_child_count()
+	assert_false(loadout.try_cast(Vector2.ZERO, Vector2.RIGHT))
+	assert_eq(_root.get_child_count(), before)
+	assert_eq(loadout.selected().current_mana, loadout.selected().data.max_mana)

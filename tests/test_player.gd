@@ -68,7 +68,7 @@ func _action_event(action: StringName) -> InputEventAction:
 func _projectile_count() -> int:
 	var count := 0
 	for child in _root.get_children():
-		if child is SpellProjectile and not child.is_queued_for_deletion():
+		if child is MissileArea and not child.is_queued_for_deletion():
 			count += 1
 	return count
 
