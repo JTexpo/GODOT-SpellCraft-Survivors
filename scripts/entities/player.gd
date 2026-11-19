@@ -45,7 +45,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		loadout.cycle(1)
 
 
-func _on_hit_received(_damage: float, source_position: Vector2, knockback: float) -> void:
+func _on_hit_received(_damage: float, source_position: Vector2, knockback: float, _effect: int) -> void:
 	_knockback.apply_impulse(global_position - source_position, knockback)
 	_flash.flash()
 

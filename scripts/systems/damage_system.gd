@@ -12,3 +12,12 @@ static func calculate(
 ) -> float:
 	var element_table := table if table != null else ElementTable.default_table()
 	return maxf(base_damage * element_table.multiplier(attacker_element, defender_element), 0.0)
+
+
+static func effect(
+	attacker_element: int,
+	defender_element: int,
+	table: ElementTable = null,
+) -> ElementTable.Effect:
+	var element_table := table if table != null else ElementTable.default_table()
+	return element_table.effect(attacker_element, defender_element)

@@ -3,6 +3,10 @@ extends Resource
 ## Elemental damage multipliers. Fire > Land > Thunder > Sea > Fire.
 ## Each element is strong against the one it beats and weak against the one that beats it.
 
+## How a hit went: VULNERABLE (the attacker's element beats the defender's), RESISTED (the
+## defender's beats the attacker's) or NEUTRAL (same element, or either side has none).
+enum Effect { NEUTRAL, VULNERABLE, RESISTED }
+
 const DEFAULT_PATH := "res://resources/spells/element_table.tres"
 const BEATS := {
 	SpellData.Element.FIRE: SpellData.Element.LAND,
@@ -20,11 +24,20 @@ static func default_table() -> ElementTable:
 	return load(DEFAULT_PATH) as ElementTable
 
 
-func multiplier(attacker: int, defender: int) -> float:
+func effect(attacker: int, defender: int) -> Effect:
 	if attacker == SpellData.NO_ELEMENT or defender == SpellData.NO_ELEMENT:
-		return neutral_multiplier
+		return Effect.NEUTRAL
 	if BEATS.get(attacker) == defender:
-		return strong_multiplier
+		return Effect.VULNERABLE
 	if BEATS.get(defender) == attacker:
-		return weak_multiplier
+		return Effect.RESISTED
+	return Effect.NEUTRAL
+
+
+func multiplier(attacker: int, defender: int) -> float:
+	match effect(attacker, defender):
+		Effect.VULNERABLE:
+			return strong_multiplier
+		Effect.RESISTED:
+			return weak_multiplier
 	return neutral_multiplier

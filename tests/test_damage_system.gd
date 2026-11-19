@@ -25,3 +25,9 @@ func test_custom_table_is_used() -> void:
 	var table := ElementTable.new()
 	table.strong_multiplier = 2.0
 	assert_eq(DamageSystem.calculate(10.0, SpellData.Element.FIRE, SpellData.Element.LAND, table), 20.0)
+
+
+func test_effect_helper_uses_the_default_table() -> void:
+	assert_eq(DamageSystem.effect(SpellData.Element.FIRE, SpellData.Element.LAND), ElementTable.Effect.VULNERABLE)
+	assert_eq(DamageSystem.effect(SpellData.Element.FIRE, SpellData.Element.SEA), ElementTable.Effect.RESISTED)
+	assert_eq(DamageSystem.effect(SpellData.Element.FIRE, SpellData.NO_ELEMENT), ElementTable.Effect.NEUTRAL)
