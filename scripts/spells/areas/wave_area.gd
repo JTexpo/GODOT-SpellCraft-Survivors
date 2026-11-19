@@ -1,0 +1,68 @@
+class_name WaveArea
+extends AreaEffect
+## The Wave Area: a wide crescent that travels outward like a Missile and hits every enemy it
+## passes through once. Width is the spell's effective size and grows while it travels.
+
+const THICKNESS := 8.0
+const BULGE_RATIO := 0.25
+const ARC_POINTS := 10
+
+var direction: Vector2 = Vector2.RIGHT
+
+var _speed: float = 0.0
+var _range: float = 0.0
+var _travelled: float = 0.0
+var _elapsed: float = 0.0
+var _base_width: float = 1.0
+var _widen_rate: float = 0.0
+
+@onready var _hitbox: HitboxComponent = $Hitbox
+@onready var _shape: CollisionPolygon2D = $Hitbox/Shape
+@onready var _visual: Polygon2D = $Visual
+
+
+func _physics_process(delta: float) -> void:
+	_elapsed += delta
+	var step := _speed * delta
+	global_position += direction * step
+	_travelled += step
+	var stretch := current_width() / _base_width
+	_hitbox.scale.y = stretch
+	_visual.scale.y = stretch
+	if _travelled >= _range:
+		queue_free()
+
+
+func launch(spell: SpellData, origin: Vector2, launch_direction: Vector2, _target: Vector2) -> void:
+	global_position = origin
+	direction = launch_direction.normalized()
+	rotation = direction.angle()
+	_speed = spell.projectile_speed
+	_range = spell.effective_range()
+	_base_width = spell.effective_size()
+	_widen_rate = spell.area_data.widen_rate
+	var crescent := _crescent(_base_width)
+	_shape.polygon = crescent
+	_visual.polygon = crescent
+	_visual.color = spell.color
+	# One hit per enemy for the wave's whole trip, and hits never stop it.
+	_configure_hitbox(_hitbox, spell, _range / maxf(_speed, 0.001) + 1.0)
+	_hitbox.max_hits = 0
+
+
+func current_width() -> float:
+	return _base_width * (1.0 + _widen_rate * _elapsed)
+
+
+## A thin curved band bulging forward (+x), `width` tip to tip along y.
+static func _crescent(width: float) -> PackedVector2Array:
+	var bulge := width * BULGE_RATIO
+	var outer := PackedVector2Array()
+	var inner := PackedVector2Array()
+	for i in ARC_POINTS + 1:
+		var t := lerpf(-1.0, 1.0, float(i) / ARC_POINTS)
+		var x := bulge * (1.0 - t * t)
+		outer.append(Vector2(x, t * width * 0.5))
+		inner.append(Vector2(x - THICKNESS, t * width * 0.5))
+	inner.reverse()
+	return outer + inner

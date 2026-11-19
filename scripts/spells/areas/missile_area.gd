@@ -1,7 +1,7 @@
-class_name SpellProjectile
-extends Node2D
-## A spell's straight-line missile. Speed, damage, tint and how many enemies it can hit all
-## come from the SpellData it was launched with.
+class_name MissileArea
+extends AreaEffect
+## The Missile Area: one projectile that flies in a straight line. Speed, range, size,
+## damage, tint and how many enemies it can hit all come from the SpellData it is launched with.
 
 var direction: Vector2 = Vector2.RIGHT
 var hits: int = 0
@@ -25,18 +25,16 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 
-## Call after the projectile is in the tree.
-func launch(launch_direction: Vector2, spell: SpellData) -> void:
+func launch(spell: SpellData, origin: Vector2, launch_direction: Vector2, _target: Vector2) -> void:
+	global_position = origin
 	direction = launch_direction.normalized()
 	_speed = spell.projectile_speed
-	_life_left = spell.projectile_lifetime
+	_life_left = spell.effective_range() / maxf(_speed, 0.001)
 	_max_hits = spell.max_hits
+	scale = Vector2.ONE * spell.effective_size()
 	_body.color = spell.color
-	_hitbox.damage = DamageSystem.calculate(spell.damage, spell.primary_element())
-	_hitbox.knockback = spell.knockback
+	_configure_hitbox(_hitbox, spell, _life_left + 1.0)
 	_hitbox.max_hits = spell.max_hits
-	# Longer than its own lifetime, so one projectile never hits the same enemy twice.
-	_hitbox.hit_cooldown = spell.projectile_lifetime + 1.0
 
 
 func _on_hit_landed(_target: HurtboxComponent) -> void:

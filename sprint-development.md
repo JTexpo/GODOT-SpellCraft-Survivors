@@ -190,53 +190,61 @@ This sprint introduces the Area system, allowing spells to behave differently de
 
 #### Line
 
-- [ ] Implement Line targeting.
-- [ ] Implement directional damage.
-- [ ] Implement configurable line length.
-- [ ] Implement configurable line width.
+- [x] Implement Line targeting.
+- [x] Implement directional damage.
+- [x] Implement configurable line length.
+- [x] Implement configurable line width.
 
 #### Cone
 
-- [ ] Implement Cone targeting.
-- [ ] Implement directional cone attacks.
-- [ ] Implement configurable cone angle.
-- [ ] Implement configurable cone range.
+- [x] Implement Cone targeting.
+- [x] Implement directional cone attacks.
+- [x] Implement configurable cone angle.
+- [x] Implement configurable cone range.
 
 #### Area
 
-- [ ] Implement targeted Area attacks.
-- [ ] Implement mouse/joystick targeting.
-- [ ] Implement area-of-effect damage.
-- [ ] Implement configurable radius.
-- [ ] Implement configurable duration.
+- [x] Implement targeted Area attacks.
+- [x] Implement mouse/joystick targeting.
+- [x] Implement area-of-effect damage.
+- [x] Implement configurable radius.
+- [x] Implement configurable duration.
 
 #### Missile
 
-- [ ] Implement projectile spawning.
-- [ ] Implement projectile direction.
-- [ ] Implement projectile movement.
-- [ ] Implement projectile collision.
-- [ ] Implement projectile lifetime.
-- [ ] Implement configurable projectile speed.
-- [ ] Implement configurable projectile range.
+- [x] Implement projectile spawning.
+- [x] Implement projectile direction.
+- [x] Implement projectile movement.
+- [x] Implement projectile collision.
+- [x] Implement projectile lifetime.
+- [x] Implement configurable projectile speed.
+- [x] Implement configurable projectile range.
+
+#### Wave (added in Sprint 3 at the user's request)
+
+- [x] Implement a wide crescent that travels outward.
+- [x] Hit every enemy it passes through once.
+- [x] Implement configurable width, speed and range.
 
 #### Spell Configuration
 
-- [ ] Allow Base and Area combinations.
-- [ ] Allow different mana costs for different Areas.
+- [x] Allow Base and Area combinations.
+- [x] Allow different mana costs for different Areas.
 - [ ] Allow different damage values for different Areas.
 
 ### Deliverable
 
-A functional spell system supporting all four Area types.
+A functional spell system supporting all five Area types (Line, Cone, Area, Missile, Wave).
 
 ### Completion Criteria
 
-- All four Areas behave as intended.
+- All five Areas behave as intended.
 - Spells can use any Base type with any Area type.
 - Area size and range are configurable.
 - Mana consumption reflects the configured spell.
 - Spells interact correctly with enemies.
+
+**Built note:** every Area is its own scene behind one `launch` call, with defaults in an `AreaData` resource and a per-spell `range_scale` and `size_scale` for Sprint 6 crafting to set. The rule linking range to mana cost is left to the Spell Builder (Sprint 6). The starting loadout is Fire Missile, Thunder Cone, Land Area, Sea Line and Sea Wave. "Spells interact correctly with enemies" is true for damage and knockback. Elemental effects arrive in Sprint 4.
 
 ---
 

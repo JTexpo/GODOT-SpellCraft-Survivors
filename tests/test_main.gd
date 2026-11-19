@@ -50,3 +50,12 @@ func test_dead_player_cannot_change_spell_by_tapping_the_bar() -> void:
 	bar.widgets[1]._input(touch)
 	assert_eq(player.loadout.selected_index, 0)
 	assert_false(bar.visible)
+
+
+func test_main_has_a_bound_target_reticle() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var reticle := main.get_node("TargetReticle") as TargetReticle
+	assert_not_null(reticle)
+	reticle._process(0.0)
+	assert_false(reticle.visible)

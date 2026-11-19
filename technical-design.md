@@ -529,6 +529,15 @@ Each Area implementation should expose a consistent interface for casting.
 - Supports configurable speed and range.
 - Applies damage on collision.
 
+## 9.5 Wave
+
+- Originates from the player.
+- Travels in the selected direction as a wide crescent that widens as it moves.
+- Hits every enemy it passes through once.
+- Supports configurable width, speed and range.
+
+Each Area is its own scene behind one `launch(spell, origin, direction, target)` call, with its default range and size in an `AreaData` resource. A spell points at an `AreaData` and scales its range and size, so crafting only has to change those two numbers.
+
 Each Area implementation should support additional modifiers where appropriate.
 
 For example, Duplicate Area should not require rewriting the individual Area implementations.

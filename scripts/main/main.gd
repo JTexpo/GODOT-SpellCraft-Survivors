@@ -6,6 +6,7 @@ extends Node2D
 @onready var _death_screen: DeathScreen = $DeathScreen
 @onready var _health_bar: HealthBar = $Hud/HealthBar
 @onready var _spell_bar: SpellBar = $Hud/SpellBar
+@onready var _reticle: TargetReticle = $TargetReticle
 
 
 func _ready() -> void:
@@ -14,6 +15,7 @@ func _ready() -> void:
 	# A hidden bar ignores touches, so a dead player can't change spell and the restart tap gets through.
 	_player.died.connect(_spell_bar.hide)
 	_spell_bar.bind(_player.loadout)
+	_reticle.bind(_player)
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
 
 

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/spells/spell_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/spells/areas/wave_area.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"sea_wave"
+display_name = "Sea Wave"
+elements = Array[int]([3])
+area_data = ExtResource("2")
+max_mana = 60.0
+mana_cost = 3.0
+damage = 12.0
+cast_interval = 0.8
+projectile_speed = 140.0
+knockback = 100.0
+max_hits = 1
+color = Color(0.2, 0.55, 1, 1)

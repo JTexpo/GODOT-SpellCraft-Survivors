@@ -12,7 +12,7 @@ const SLOT_ACTIONS: Array[StringName] = [
 @onready var _hurtbox: HurtboxComponent = $HurtboxComponent
 @onready var _knockback: KnockbackComponent = $KnockbackComponent
 @onready var _flash: HitFlashComponent = $HitFlashComponent
-@onready var _aim: AimComponent = $AimComponent
+@onready var aim: AimComponent = $AimComponent
 @onready var loadout: SpellLoadout = $SpellLoadout
 
 
@@ -26,8 +26,8 @@ func _physics_process(delta: float) -> void:
 		return
 	var direction := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	_move.apply(self, direction, _knockback.update(delta))
-	if _aim.is_firing:
-		loadout.try_cast(global_position, _aim.aim_direction)
+	if aim.is_firing:
+		loadout.try_cast(global_position, aim.aim_direction, aim.aim_point)
 	else:
 		loadout.end_cast()
 
