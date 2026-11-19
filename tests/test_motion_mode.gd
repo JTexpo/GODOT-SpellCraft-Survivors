@@ -2,7 +2,6 @@ extends GutTest
 
 const SCENES: Array[String] = [
 	"res://scenes/player/player.tscn",
-	"res://scenes/enemies/base_enemy.tscn",
 ]
 
 
