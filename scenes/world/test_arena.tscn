@@ -9,6 +9,7 @@ size = Vector2(20, 580)
 [node name="TestArena" type="Node2D"]
 
 [node name="Floor" type="ColorRect" parent="."]
+mouse_filter = 2
 offset_right = 960.0
 offset_bottom = 540.0
 color = Color(0.16, 0.2, 0.17, 1)

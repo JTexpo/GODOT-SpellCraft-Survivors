@@ -190,3 +190,13 @@ The 60 fps target is met everywhere by a wide margin. Wave and Missile are uncha
 - The export is small: the game package is about 225 KB and the engine file is about 39 MB uncompressed. Whether GitHub Pages compresses the `.wasm` file (which would make it about a quarter of that on a phone) is still to be checked after the first deploy.
 - Decisions: single-threaded (GitHub Pages cannot send the headers a threaded build needs), PWA mode off (so a phone never serves a stale build while testing), and downloads are checked against Godot's published SHA-512 sums.
 - Known limits: the debug keys (F9, F10, F11) are keyboard-only, so a phone cannot give itself scrolls or unlock slots, and touch testing means playing for drops. The game is landscape, so a phone has to be rotated. Touch input on the real web build, and on a real phone, is still untested.
+
+
+## 2026-11-19: Tap to restart did nothing on a phone
+
+- **Found by the user on the GitHub Pages build:** after dying, "tap to restart" did nothing on a phone, while pressing R worked.
+- **Cause:** the arena floor is a `ColorRect`, and Godot's `ColorRect` stops mouse and touch input by default. It covers the whole screen, so every tap was swallowed before the death screen, which listened in `_unhandled_input`, could hear it. The player and enemy bodies, the Lectern parts and the missile body had the same default.
+- **Proven on a real window** with a throwaway script that kills the player and sends a genuine touch: the original code did not restart, the floor fix alone did, and both fixes together did.
+- **Fix, in two layers:** every decorative `ColorRect` in the world scenes now ignores input, and the death screen listens in `_input`, which runs before any control, so a future screen-sized control cannot break restart again. A guard test fails if a world scene gets a Control that stops touches.
+- **A test-environment finding:** in headless test runs, mouse and touch events never reach `_unhandled_input`, so a headless test cannot show this class of bug. The headless test therefore guards only the `_input` layer, and the root cause is guarded by the world-scene check.
+- Still untested on a real phone: the other touch paths on the web build (the Interact button, the crafting screen, the inventory button). The user reports the sticks, aiming and slot taps work.

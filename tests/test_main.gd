@@ -272,3 +272,28 @@ func test_full_craft_through_main() -> void:
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	assert_eq(bar.widgets[0].element_color, thunder.color)
 	assert_false(screen.is_open())
+
+
+func test_tapping_the_death_screen_restarts_through_the_real_input_pipeline() -> void:
+	# Real touches go through the viewport (controls first, then unhandled input), not straight to
+	# DeathScreen.handle_event. The root cause of the phone bug was a screen-sized ColorRect that
+	# swallowed taps (see test_world_input.gd), which only a real-window check can show, because in
+	# headless mode pointer events never reach _unhandled_input at all. This test therefore guards
+	# the second layer: the death screen listens in _input, which runs before any control.
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var death_screen := main.get_node("DeathScreen") as DeathScreen
+	death_screen.input_delay_msec = 0
+	death_screen.restart_scene_path = "res://this_scene_does_not_exist.tscn"
+	var player := main.get_node("Player") as Player
+	(player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	assert_true(death_screen.visible)
+	await wait_process_frames(2)
+	watch_signals(death_screen)
+	var touch := InputEventScreenTouch.new()
+	touch.index = 0
+	touch.pressed = true
+	touch.position = Vector2(get_window().size) / 2.0
+	Input.parse_input_event(touch)
+	await wait_process_frames(2)
+	assert_signal_emit_count(death_screen, "restart_requested", 1, "a tap on the death screen must restart")

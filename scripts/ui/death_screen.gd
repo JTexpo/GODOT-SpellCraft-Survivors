@@ -15,7 +15,10 @@ func _ready() -> void:
 	visible = false
 
 
-func _unhandled_input(event: InputEvent) -> void:
+## Listens in _input, which runs before any control sees the event. _unhandled_input would never hear
+## a tap that a control under the finger swallowed, and a screen-sized control would silently break
+## "tap to restart" on a phone.
+func _input(event: InputEvent) -> void:
 	handle_event(event)
 
 
