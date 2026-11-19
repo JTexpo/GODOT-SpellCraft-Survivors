@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3"]
 [ext_resource type="Script" path="res://scripts/systems/enemy_spawner.gd" id="4"]
 [ext_resource type="Resource" path="res://resources/spawning/default_spawn_config.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/damage_numbers.gd" id="6"]
 
 [node name="StressTest" type="Node2D"]
 script = ExtResource("1")
@@ -23,6 +24,9 @@ limit_left = 0
 limit_top = 0
 limit_right = 960
 limit_bottom = 540
+
+[node name="DamageNumbers" type="Node2D" parent="."]
+script = ExtResource("6")
 
 [node name="Hud" type="CanvasLayer" parent="."]
 

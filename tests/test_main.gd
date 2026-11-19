@@ -59,3 +59,16 @@ func test_main_has_a_bound_target_reticle() -> void:
 	assert_not_null(reticle)
 	reticle._process(0.0)
 	assert_false(reticle.visible)
+
+
+func test_enemy_hits_show_damage_numbers_but_player_hits_do_not() -> void:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	add_child_autofree(main)
+	var numbers := main.get_node("DamageNumbers") as DamageNumbers
+	var spawner := main.get_node("EnemySpawner") as EnemySpawner
+	var enemy := spawner.spawn_at(Vector2(100, 100))
+	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(10.0, Vector2.ZERO, 0.0, SpellData.Element.FIRE)
+	assert_eq(numbers.active_count(), 1)
+	var player := main.get_node("Player") as Player
+	(player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(10.0, Vector2.ZERO)
+	assert_eq(numbers.active_count(), 1)

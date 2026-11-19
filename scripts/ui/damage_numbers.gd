@@ -44,13 +44,13 @@ func _draw() -> void:
 		draw_string(font, at, number["text"], HORIZONTAL_ALIGNMENT_CENTER, LABEL_WIDTH, style["size"], color)
 
 
-## `position` is global. `effect` is an ElementTable.Effect.
-func show_number(position: Vector2, amount: float, effect: int) -> void:
+## `world_position` is global. `effect` is an ElementTable.Effect.
+func show_number(world_position: Vector2, amount: float, effect: int) -> void:
 	var style := style_for(effect)
 	if _numbers.size() >= POOL_SIZE:
 		_numbers.remove_at(0)
 	_numbers.append({
-		"position": position,
+		"position": world_position,
 		"text": str(maxi(roundi(amount), 1)) + style["suffix"],
 		"style": style,
 		"age": 0.0,

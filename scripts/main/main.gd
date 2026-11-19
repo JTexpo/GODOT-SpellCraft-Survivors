@@ -7,6 +7,8 @@ extends Node2D
 @onready var _health_bar: HealthBar = $Hud/HealthBar
 @onready var _spell_bar: SpellBar = $Hud/SpellBar
 @onready var _reticle: TargetReticle = $TargetReticle
+@onready var _spawner: EnemySpawner = $EnemySpawner
+@onready var _damage_numbers: DamageNumbers = $DamageNumbers
 
 
 func _ready() -> void:
@@ -16,6 +18,7 @@ func _ready() -> void:
 	_player.died.connect(_spell_bar.hide)
 	_spell_bar.bind(_player.loadout)
 	_reticle.bind(_player)
+	_spawner.enemy_damaged.connect(_damage_numbers.show_number)
 	_spell_bar.slot_pressed.connect(_player.loadout.select)
 
 

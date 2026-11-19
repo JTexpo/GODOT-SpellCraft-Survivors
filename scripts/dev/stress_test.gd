@@ -39,12 +39,14 @@ var _rng := RandomNumberGenerator.new()
 @onready var _player: Player = $Player
 @onready var _loadout: SpellLoadout = $Player/SpellLoadout
 @onready var _label: Label = $Hud/Label
+@onready var _damage_numbers: DamageNumbers = $DamageNumbers
 
 
 func _ready() -> void:
 	_read_command_line()
 	_rng.randomize()
 	_spawner.set_process(false)
+	_spawner.enemy_damaged.connect(_damage_numbers.show_number)
 	_player.health.set_max_health(1.0e9)
 	_loadout.slots[0] = SpellInstance.new(_stress_spell())
 	_loadout.select(0)
