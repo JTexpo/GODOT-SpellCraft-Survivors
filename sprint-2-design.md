@@ -1,6 +1,6 @@
 # Sprint 2 Design: Base Spell System
 
-**Status:** Reviewed by a fresh builder check, and its answers are folded in. Awaiting the user's approval. Nothing is built yet.
+**Status:** Built. Approved by the user after a fresh builder check, then implemented on branch `sprint-2-base-spells`.
 
 Scope comes from `sprint-development.md` (Sprint 2). Architecture follows `technical-design.md` (section 5), `CLAUDE.md`, `sprint-0-design.md` and `sprint-1-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 

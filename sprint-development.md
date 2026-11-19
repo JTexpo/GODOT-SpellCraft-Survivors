@@ -129,40 +129,42 @@ At this stage, spells are created directly through development tools or predefin
 
 #### Spell Architecture
 
-- [ ] Create a reusable Spell data structure.
-- [ ] Implement spell Base types.
-- [ ] Implement spell damage.
-- [ ] Implement spell mana capacity.
-- [ ] Implement current spell mana.
-- [ ] Implement mana consumption.
-- [ ] Prevent casting when mana is depleted.
-- [ ] Implement spell casting intervals.
-- [ ] Implement spell cooldowns or casting delays where applicable.
+- [x] Create a reusable Spell data structure.
+- [x] Implement spell Base types.
+- [x] Implement spell damage.
+- [x] Implement spell mana capacity.
+- [x] Implement current spell mana.
+- [x] Implement mana consumption.
+- [x] Prevent casting when mana is depleted.
+- [x] Implement spell casting intervals.
+- [x] Implement spell cooldowns or casting delays where applicable.
 
 #### Base Elements
 
-- [ ] Implement Fire.
-- [ ] Implement Thunder.
-- [ ] Implement Land.
-- [ ] Implement Sea.
-- [ ] Create configurable elemental damage modifiers.
+- [x] Implement Fire.
+- [x] Implement Thunder.
+- [x] Implement Land.
+- [x] Implement Sea.
+- [x] Create configurable elemental damage modifiers.
 
 #### Spell Casting
 
-- [ ] Implement basic spell casting.
-- [ ] Implement spell targeting.
-- [ ] Implement spell damage application.
-- [ ] Implement spell visual effects.
-- [ ] Implement spell impact feedback.
+- [x] Implement basic spell casting.
+- [x] Implement spell targeting.
+- [x] Implement spell damage application.
+- [x] Implement spell visual effects.
+- [x] Implement spell impact feedback.
 
 #### Mana
 
-- [ ] Implement individual spell mana pools.
-- [ ] Display spell mana in the UI.
-- [ ] Prevent spells from casting without sufficient mana.
-- [ ] Implement explicit mana restoration through test/debug tools.
+- [x] Implement individual spell mana pools.
+- [x] Display spell mana in the UI.
+- [x] Prevent spells from casting without sufficient mana.
+- [x] Implement explicit mana restoration through test/debug tools.
 
 **Important:** Mana does not naturally regenerate. Once depleted, a spell remains unusable until something explicitly restores its mana.
+
+**Built note:** "spell targeting" is the aim direction, and "spell visual effects" is the element tint on the projectile. The elemental modifier table is built and tested, but it only takes effect once enemies have elements (Sprint 4).
 
 ### Deliverable
 
