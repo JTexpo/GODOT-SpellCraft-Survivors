@@ -1,0 +1,92 @@
+name: Deploy web build to GitHub Pages
+
+# Builds the "Web" export preset with Godot and publishes it, so the game can be played in a
+# browser (including on a phone). Runs when main changes, and by hand from the Actions tab.
+#
+# One-time setup: repository Settings > Pages > Build and deployment > Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and let a running deploy finish instead of cancelling it half way.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # Keep these in step with the Godot version the project is developed in (see CLAUDE.md).
+  GODOT_VERSION: "4.7.2"
+  GODOT_RELEASE: "4.7.2-stable"
+  EXPORT_PRESET: "Web"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the project
+        uses: actions/checkout@v4
+
+      - name: Restore Godot and the web export templates
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot-bin
+            ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-${{ env.GODOT_RELEASE }}-web-templates
+
+      - name: Download Godot and the web export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}"
+          editor="Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          templates="Godot_v${GODOT_RELEASE}_export_templates.tpz"
+          mkdir -p /tmp/godot-download
+          cd /tmp/godot-download
+          curl -fsSL -O "${base}/SHA512-SUMS.txt"
+          curl -fsSL -O "${base}/${editor}"
+          curl -fsSL -O "${base}/${templates}"
+          # Refuse anything that does not match the checksums Godot published.
+          grep -F -e "${editor}" -e "${templates}" SHA512-SUMS.txt | sha512sum -c -
+          mkdir -p "${HOME}/godot-bin"
+          unzip -q "${editor}" -d "${HOME}/godot-bin"
+          # The .tpz is a zip of every platform's templates. Keep only the single-threaded web ones.
+          unzip -q "${templates}" 'templates/web_nothreads_*' 'templates/version.txt' -d extracted
+          dest="${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "${dest}"
+          mv extracted/templates/* "${dest}/"
+
+      - name: Import the project and export the web build
+        run: |
+          set -euo pipefail
+          godot="${HOME}/godot-bin/Godot_v${GODOT_RELEASE}_linux.x86_64"
+          chmod +x "${godot}"
+          mkdir -p build/web
+          "${godot}" --headless --import
+          "${godot}" --headless --export-release "${EXPORT_PRESET}" build/web/index.html
+          test -f build/web/index.html
+          ls -l build/web
+
+      - name: Upload the web build
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

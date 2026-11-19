@@ -181,3 +181,12 @@ Stress test after Sprint 6 (300 enemies, each spell firing every 0.05 s, Apple M
 | Zone | 415.7 | 291.5 | 415.8 | 324.0 |
 
 The 60 fps target is met everywhere by a wide margin. Wave and Missile are unchanged, and Zone without drops is identical. Zone with `--drops` fell about 10% (324 to 292 fps), probably because the scroll drop chance rose from 6% to 10%, so more pickups are created. Single runs on this machine can vary a lot under background load: plain Missile read 210 and 242 fps in two single runs and 663-683 fps in the three-run set, with identical code. Use medians.
+
+
+## 2026-11-19: GitHub Pages web build
+
+- The game can be played in a browser, including on a phone. A GitHub Actions workflow (`.github/workflows/deploy-web.yml`) builds the `Web` export preset with Godot 4.7.2 and publishes it to GitHub Pages whenever `main` changes. The one-time step is a repository setting (Settings > Pages > Source: GitHub Actions).
+- Verified locally before pushing, without installing anything into the Godot folder: the 4.7.2 export templates (1.28 GB, checksum checked) were downloaded to a scratch folder, only the two single-threaded web templates were unpacked, and a throwaway copy of the project, whose preset pointed at those files, exported cleanly (exit 0, no errors or warnings) and was served from localhost with the right file types. Everything was deleted afterwards.
+- The export is small: the game package is about 225 KB and the engine file is about 39 MB uncompressed. Whether GitHub Pages compresses the `.wasm` file (which would make it about a quarter of that on a phone) is still to be checked after the first deploy.
+- Decisions: single-threaded (GitHub Pages cannot send the headers a threaded build needs), PWA mode off (so a phone never serves a stale build while testing), and downloads are checked against Godot's published SHA-512 sums.
+- Known limits: the debug keys (F9, F10, F11) are keyboard-only, so a phone cannot give itself scrolls or unlock slots, and touch testing means playing for drops. The game is landscape, so a phone has to be rotated. Touch input on the real web build, and on a real phone, is still untested.
