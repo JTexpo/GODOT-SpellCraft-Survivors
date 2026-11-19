@@ -117,3 +117,30 @@ Stress test after Sprint 4 (300 enemies, elemental pool, damage numbers on, Appl
 | Zone | 439.7 | 2.27 | 5.56 | 471.7 |
 
 The 60 fps target is still met by a wide margin. Wave dropped the most (about 40%), because it hits many enemies per cast and each hit now draws a number. Worth watching if numbers get fancier.
+
+
+## 2026-11-19: Sprint 5 (scroll collection)
+
+Decisions (details in `sprint-5-design.md`):
+
+- One `ScrollData` class with a category and optional category fields (the user chose this over a class per category). 15 scrolls: 4 Base, 5 Area (Wave included, since the user added it) and 6 Buff. Buff scrolls are only collectible this sprint. Rarity is data for display, and drop weights are authored per table.
+- Themed drops (the user's idea, with the condition that the Base scroll is heavily preferred but never guaranteed): each enemy has its own `DropTable`. An elemental enemy weights its own Base scroll 12 and the others 1, which is 80% of its Base drops and about 45% of all its drops. Every table has a 6% drop chance. Area scrolls weigh 1-2 and Buff scrolls 0.25-1.
+- Pickup is automatic by walking over the scroll (the user's call). One `PickupCollector` on the player is the only active detector, and scrolls on the ground are passive. Cap 100: a new drop removes the oldest.
+- The inventory is a Player component, per run, stacking by id, with no limit. `remove` is all or nothing so crafting can never half-consume a recipe.
+- Display is a toggleable panel (key `I`, controller button Y, touch button), as the user chose, plus a "+ Fire Scroll" toast. The panel does not pause the game. F10 gives 3 of every scroll (DEBUG, delete later).
+- Starting numbers (tune by playing): `drop_chance` 0.06 everywhere, weights as above. Pickup radius 14 px.
+
+Known limitations:
+- The panel and toast are TEMPORARY. The panel does not pause, so enemies keep attacking while it is open.
+- There is no inventory limit, no scroll art, and nothing consumes scrolls yet (Sprint 6).
+- With 100 pickups on the ground, frame time rises noticeably (see below). The suspects are the looping bob tween and the polygon on every pickup. Profile before changing anything, and check it on a phone or the web build, where the margin is much smaller.
+
+Stress test after Sprint 5 (300 enemies, each spell firing every 0.05 s, Apple M1, windowed, vsync off). `--drops` makes kills drop real scrolls and starts with 100 pickups on the ground:
+
+| Spell | avg fps | p99 frame ms | with `--drops` avg fps | with `--drops` p99 frame ms |
+|---|---|---|---|---|
+| Missile | 721.4 | 1.85 | 440.2 | 4.55 |
+| Wave | 185.4 | 11.11 | 105.9 | 16.84 |
+| Zone | 439.0 | 4.76 | 304.4 | 6.62 |
+
+The 60 fps target is met everywhere on this machine, but 100 pickups cost roughly 30-45% of the frame rate, more than I expected. Wave with drops is the worst case at 106 fps. Sprint 4 numbers were 673 / 191 / 440 fps for Missile / Wave / Zone.

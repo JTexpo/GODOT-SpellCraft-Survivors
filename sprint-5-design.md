@@ -1,6 +1,6 @@
 # Sprint 5 Design: Spell Scroll Collection
 
-**Status:** Draft, awaiting the user's approval.
+**Status:** Built. Approved by the user after a fresh builder check, then implemented on branch `sprint-5-scroll-collection`.
 
 Scope comes from `sprint-development.md` (Sprint 5). Architecture follows `technical-design.md` (sections 6 and 7), `CLAUDE.md`, and `sprint-0/1/2/3/4-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 

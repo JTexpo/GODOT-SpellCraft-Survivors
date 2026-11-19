@@ -365,6 +365,7 @@ Three categories exist:
 - Cone
 - Area
 - Missile
+- Wave
 
 ### Buff Scrolls
 
@@ -388,6 +389,8 @@ Each scroll should contain:
 - Icon reference.
 
 Scrolls should be data-driven so that additional scroll types can be introduced without rewriting the inventory or crafting systems.
+
+Built in Sprint 5: one `ScrollData` class with a category and optional category fields (`element` for Base, `area_data` for Area, `buff_id` for Buff). The inventory and drop tables only ever hold `ScrollData`.
 
 ## 6.3 Scroll Inventory
 

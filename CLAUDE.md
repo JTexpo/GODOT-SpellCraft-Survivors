@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project State
 
-Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation), Sprint 2 (base spell system) and Sprint 3 (spell Areas) and Sprint 4 (elemental enemies) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md`, `sprint-3-design.md`, `sprint-4-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
+Wizard Survivor (repo: SpellCraft Survivors) is an 8-bit, top-down survival roguelite in the style of Vampire Survivors, built with **Godot 4.x and GDScript** (2D). Sprint 0 (foundation), Sprint 1 (movement and combat foundation), Sprint 2 (base spell system) and Sprint 3 (spell Areas), Sprint 4 (elemental enemies) and Sprint 5 (scroll collection) are done. See `sprint-0-design.md`, `sprint-1-design.md`, `sprint-2-design.md`, `sprint-3-design.md`, `sprint-4-design.md`, `sprint-5-design.md` and `docs/superpowers/plans/`. Decisions and measurements are logged in `development-log.md`.
 
 ## Commands
 
@@ -109,3 +109,11 @@ Systems that must stay separate and reusable:
 - The player's hurtbox has no element by default and enemy contact hitboxes carry none, so hits on the player are neutral. This is today's default, not a rule: equipment (robes, hats) may later give the player an element through `HurtboxComponent.element`, so never hardcode "the player is neutral".
 - `EnemyData` has `element` (-1 for none), `color` and `spawn_weight`. There is one enemy scene. The five enemies (plain, Fire, Thunder, Land, Sea) differ only in data. `SpawnConfig.enemy_pool` lists them and `EnemySpawner.pick_enemy_data()` picks by weight.
 - `Enemy.damaged(position, amount, effect)` is re-emitted by `EnemySpawner.enemy_damaged`, and `Main` routes it to `DamageNumbers` (TEMPORARY look), a pooled node that draws every number in one `_draw`. Vulnerable hits show larger, yellow and "!", resisted hits smaller and grey.
+
+## Scrolls (Sprint 5)
+
+- `ScrollData` is one class with a category (BASE, AREA, BUFF), a rarity, a placeholder colour, and optional category fields: `element` (Base), `area_data` (Area, the Sprint 3 `AreaData`), `buff_id` (Buff, its effect arrives in Sprint 7). The 15 scrolls live in `resources/scrolls/{base,area,buff}/`. Adding a scroll is a new `.tres` plus a drop-table entry, with no code change. The inventory, drop tables and crafting only ever hold `ScrollData`.
+- Drops: `EnemyData.drop_table` (a `DropTable` of `DropEntry` scroll and weight pairs, plus `drop_chance`). `DropTable.roll(rng)` never picks null, scroll-less or zero-weight entries. Tables are themed: an elemental enemy weights its own element's Base scroll 12 and the other Bases 1, so it is heavily preferred but never guaranteed. Enemies carry data only. `EnemySpawner.enemy_died` is re-emitted, `Main` routes it to `ScrollDropper`, which rolls the table and places a pickup. The cap is 100 pickups, and a new drop removes the oldest.
+- Pickups: `ScrollPickup` is a passive `Area2D` on layer 6 (`PhysicsLayers.PICKUP`), shaped by category (round Base, square Area, diamond Buff). One `PickupCollector` on the Player is the only active detector. Collection is automatic, a pickup can only be collected once, and a dead player collects nothing.
+- `ScrollInventory` is a component on the Player (per run, stacks by scroll id, no limit): `add`, `remove` (all or nothing), `count`, `has`, `by_category`, `total_count`, and a `changed` signal. Crafting (Sprint 6) reads and consumes it through those methods.
+- `ScrollToast`, `InventoryPanel` (key `I`, controller button Y) and `InventoryButton` are TEMPORARY HUD. The panel does not pause the game. F10 (`debug_give_scrolls`, handled in `Main`, DEBUG) gives 3 of every scroll.
