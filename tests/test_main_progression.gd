@@ -31,12 +31,17 @@ func _new_main(save_path: String) -> Main:
 	return main
 
 
-func _save_at_level(level: int, picks: Dictionary = {}) -> void:
+func _save_at_level(level: int) -> void:
 	var profile := PlayerProfile.new()
 	profile.total_xp = _track.xp_for_level(level)
-	for reward_level in picks:
-		profile.set_pick(reward_level, picks[reward_level])
 	SaveGame.save_profile(profile, _path())
+
+
+func _stack_total(spell: SpellData) -> int:
+	var total := 0
+	for id in spell.buff_stacks:
+		total += int(spell.buff_stacks[id])
+	return total
 
 
 func _player(main: Main) -> Player:
@@ -59,14 +64,14 @@ func test_fresh_run_starts_at_level_one_with_one_slot() -> void:
 
 
 func test_saved_level_ten_profile_starts_with_three_slots_and_the_bonuses() -> void:
-	_save_at_level(10, {7: &"buff_damage"})
+	_save_at_level(10)
 	var main := _new_main(_path())
 	var player := _player(main)
 	assert_eq(player.loadout.unlocked_slots, 3)
 	assert_almost_eq(_speed(main), 90.0 * 1.16, 0.001)
 	assert_almost_eq(player.health.max_health, 140.0, 0.001)
 	assert_almost_eq(player.loadout.mana_bonus, 0.3, 0.0001)
-	assert_almost_eq(player.loadout.slots[0].data.damage, 15.0, 0.0001)
+	assert_eq(_stack_total(player.loadout.slots[0].data), 1, "level 7 gave one random buff")
 	assert_eq((main.get_node("Hud/XpBar") as XpBar).level_text(), "Lv 10")
 
 
@@ -109,31 +114,34 @@ func test_death_saves_the_profile_and_shows_the_summary() -> void:
 	assert_eq((main.get_node("DeathScreen") as DeathScreen).summary_text(), "+20 XP this run, level 1")
 
 
-func test_random_buff_reward_stores_a_pick_when_reached() -> void:
+func test_random_buff_reward_mid_run_changes_nothing_until_next_run() -> void:
 	var main := _new_main("")
 	_player(main).progress.add_xp(_track.xp_for_level(7))
-	assert_ne(main.profile.pick(7), &"")
+	assert_eq(_stack_total(_player(main).loadout.slots[0].data), 0)
 	var toast := main.get_node("Hud/LevelToast") as LevelToast
 	assert_string_contains(toast.text, "Level 7!")
-	assert_string_contains(toast.text, "gains")
+	assert_string_contains(toast.text, "Next run")
 
 
 func test_owed_chosen_buff_opens_the_pick_screen_before_the_run_and_applies_after_choosing() -> void:
-	_save_at_level(12, {7: &"buff_damage"})
+	_save_at_level(12)
 	var main := _new_main(_path())
 	var screen := main.get_node("BuffPickScreen") as BuffPickScreen
+	watch_signals(screen)
 	assert_true(screen.is_open())
-	assert_eq(screen.option_count(), 5)
+	assert_gte(screen.option_count(), 4)
 	screen.choose(0)
 	assert_false(screen.is_open())
+	var picked := get_signal_parameters(screen, "chosen")[0] as ScrollData
 	var spell := _player(main).loadout.slots[0].data
-	assert_eq(spell.buff_stacks[&"buff_damage"], 1)
-	assert_eq(spell.buff_stacks[&"buff_max_mana"], 1)
-	assert_eq(SaveGame.load_profile(_path()).pick(12), &"buff_max_mana")
+	assert_eq(_stack_total(spell), 2, "the random buff of level 7 and the chosen one of level 12")
+	assert_gte(int(spell.buff_stacks.get(picked.id, 0)), 1)
+	_player(main).progress.add_xp(30)
+	assert_false(FileAccess.get_file_as_string(_path()).contains("buff_picks"))
 
 
 func test_unchosen_buff_is_asked_again_next_run() -> void:
-	_save_at_level(12, {7: &"buff_damage"})
+	_save_at_level(12)
 	var first := _new_main(_path())
 	assert_true((first.get_node("BuffPickScreen") as BuffPickScreen).is_open())
 	first.free()
@@ -141,11 +149,32 @@ func test_unchosen_buff_is_asked_again_next_run() -> void:
 	assert_true((second.get_node("BuffPickScreen") as BuffPickScreen).is_open())
 
 
-func test_old_save_with_an_unrolled_random_buff_gets_one_at_run_start() -> void:
+func test_random_buffs_are_rolled_every_run_and_never_saved() -> void:
+	_save_at_level(7)
+	var first := _new_main(_path())
+	assert_eq(_stack_total(_player(first).loadout.slots[0].data), 1)
+	_player(first).progress.add_xp(30)
+	assert_false(FileAccess.get_file_as_string(_path()).contains("buff_picks"))
+	first.free()
+	var second := _new_main(_path())
+	assert_eq(_stack_total(_player(second).loadout.slots[0].data), 1)
+
+
+func test_chosen_buff_is_asked_every_run_even_after_choosing() -> void:
+	_save_at_level(12)
+	var first := _new_main(_path())
+	(first.get_node("BuffPickScreen") as BuffPickScreen).choose(0)
+	first.free()
+	var second := _new_main(_path())
+	assert_true((second.get_node("BuffPickScreen") as BuffPickScreen).is_open())
+
+
+func test_run_start_toast_names_the_rolled_buff() -> void:
 	_save_at_level(7)
 	var main := _new_main(_path())
-	assert_ne(main.profile.pick(7), &"")
-	assert_gt(_player(main).loadout.slots[0].data.buff_stacks.size(), 0)
+	var toast := main.get_node("Hud/LevelToast") as LevelToast
+	assert_true(toast.is_showing())
+	assert_string_contains(toast.text, "Starting spell gains")
 
 
 func test_second_run_keeps_the_xp_from_the_first() -> void:
@@ -178,7 +207,7 @@ func test_f12_gives_100_xp() -> void:
 
 
 func test_spell_bar_shows_the_saved_slots_as_unlocked_at_run_start() -> void:
-	_save_at_level(10, {7: &"buff_damage"})
+	_save_at_level(10)
 	var main := _new_main(_path())
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	for i in 5:

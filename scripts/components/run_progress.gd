@@ -11,8 +11,6 @@ var profile: PlayerProfile
 var track: LevelTrack
 ## XP collected since this run began.
 var run_xp: int = 0
-## Called with the reward's level when a RANDOM_BUFF reward is reached, so Main can roll and store it.
-var starting_buffs_hook: Callable
 
 var _player: Player
 
@@ -47,9 +45,6 @@ func _apply(reached: int, reward: LevelReward) -> void:
 			_player.apply_stat_bonuses(StatBonuses.for_level(track, reached), true)
 		LevelReward.Kind.SLOT:
 			_player.loadout.unlock_next()
-		LevelReward.Kind.RANDOM_BUFF:
-			if starting_buffs_hook.is_valid():
-				starting_buffs_hook.call(reached)
 		_:
-			# CHOSEN_BUFF and SECOND_SPELL are applied at the start of the next run.
+			# Random buff, chosen buff and second spell are applied at the start of the next run.
 			pass

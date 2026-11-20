@@ -38,14 +38,25 @@ func test_missing_file_gives_a_fresh_profile() -> void:
 	assert_false(FileAccess.file_exists(_path()))
 
 
-func test_save_then_load_round_trips_xp_and_picks() -> void:
+func test_save_then_load_round_trips_xp() -> void:
 	var profile := PlayerProfile.new()
 	profile.add_xp(321)
-	profile.set_pick(7, &"buff_damage")
 	assert_true(SaveGame.save_profile(profile, _path()))
-	var loaded := SaveGame.load_profile(_path())
-	assert_eq(loaded.total_xp, 321)
-	assert_eq(loaded.pick(7), &"buff_damage")
+	assert_eq(SaveGame.load_profile(_path()).total_xp, 321)
+
+
+func test_saved_file_has_no_buff_picks() -> void:
+	SaveGame.save_profile(PlayerProfile.new(), _path())
+	assert_false(_read(_path()).contains("buff_picks"))
+
+
+func test_an_old_file_with_buff_picks_loads_and_loses_the_field_when_saved_again() -> void:
+	_write('{"version": 1, "total_xp": 90, "buff_picks": {"7": "buff_damage"}}')
+	var profile := SaveGame.load_profile(_path())
+	assert_eq(profile.total_xp, 90)
+	assert_false(FileAccess.file_exists(_path() + ".bak"))
+	SaveGame.save_profile(profile, _path())
+	assert_false(_read(_path()).contains("buff_picks"))
 
 
 func test_large_xp_survives_exactly() -> void:

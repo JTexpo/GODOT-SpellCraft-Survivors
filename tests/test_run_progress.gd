@@ -122,8 +122,14 @@ func test_run_xp_counts_only_this_run() -> void:
 	assert_eq(_profile.total_xp, 120)
 
 
-func test_random_buff_reward_calls_the_hook_with_its_level() -> void:
-	var seen: Array[int] = []
-	_progress.starting_buffs_hook = func(level: int) -> void: seen.append(level)
-	_progress.add_xp(_track.xp_for_level(17))
-	assert_eq(seen, [7, 17] as Array[int])
+func test_random_buff_level_changes_nothing_mid_run() -> void:
+	_progress.add_xp(_track.xp_for_level(6))
+	var speed := _speed()
+	var slots := _player.loadout.unlocked_slots
+	var data := _player.loadout.slots[0].data
+	_progress.add_xp(_track.xp_for_level(7) - _track.xp_for_level(6))
+	assert_eq(_progress.level(), 7)
+	assert_eq(_speed(), speed)
+	assert_eq(_player.loadout.unlocked_slots, slots)
+	assert_eq(_player.loadout.slots[0].data, data)
+	assert_true(data.buff_stacks.is_empty())

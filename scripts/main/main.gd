@@ -79,7 +79,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_player.progress.add_xp(100)
 
 
-## Loads the profile, wires XP and saving, asks for any owed buff pick, then sets the run up. With
+## Loads the profile, wires XP and saving, rolls the random starting buffs, asks for each owed chosen
+## buff, then sets the run up. Nothing about the buffs is saved: this happens at every run start. With
 ## nothing to ask it finishes straight away. With a pick owed it waits on the pick screen (the world
 ## is paused meanwhile), so the run starts with the choice already applied.
 func _begin_progression() -> void:
@@ -88,7 +89,6 @@ func _begin_progression() -> void:
 	profile = SaveGame.load_profile(save_path) if not save_path.is_empty() else PlayerProfile.new()
 	var progress := _player.progress
 	progress.bind(_player, profile, track)
-	progress.starting_buffs_hook = _on_random_buff_reached
 	_saver.bind(profile, save_path)
 	_xp_bar.bind(progress)
 	_player.collector.xp_collected.connect(progress.add_xp)
@@ -96,23 +96,19 @@ func _begin_progression() -> void:
 	progress.xp_changed.connect(_on_xp_changed)
 	progress.leveled_up.connect(_on_leveled_up)
 	_player.died.connect(_on_player_died)
+	var run_buffs := RunBuffs.new()
 	var level := profile.level(track)
-	if not StartingBuffs.settle_random(profile, track, level, _rng).is_empty():
-		_saver.mark_dirty()
-	for reward_level in StartingBuffs.unresolved_levels(profile, track, level, LevelReward.Kind.CHOSEN_BUFF):
-		var options := StartingBuffs.options_for(profile, track, reward_level)
+	var rolled := StartingBuffs.roll_random(run_buffs, track, level, _rng)
+	for reward_level in StartingBuffs.unresolved_levels(run_buffs, track, level, LevelReward.Kind.CHOSEN_BUFF):
+		var options := StartingBuffs.options_for(run_buffs, track, reward_level)
 		if options.is_empty():
 			continue
 		_pick_screen.open(options, "Level %d: choose a buff for your starting spell" % reward_level)
 		var picked: ScrollData = await _pick_screen.chosen
-		profile.set_pick(reward_level, picked.id)
-		_saver.save_now()
-	RunStart.prepare(_player, profile, track)
-
-
-func _on_random_buff_reached(_reward_level: int) -> void:
-	StartingBuffs.settle_random(profile, track, _player.progress.level(), _rng)
-	_saver.mark_dirty()
+		run_buffs.set_pick(reward_level, picked.id)
+	RunStart.prepare(_player, profile, track, run_buffs)
+	for reward_level in rolled:
+		_level_toast.show_message(_rolled_notice(run_buffs, reward_level))
 
 
 func _on_xp_changed(_total_xp: int, _level: int) -> void:
@@ -120,19 +116,16 @@ func _on_xp_changed(_total_xp: int, _level: int) -> void:
 
 
 func _on_leveled_up(level: int, reward: LevelReward) -> void:
-	_level_toast.show_level_up(level, reward, _buff_notice(level, reward))
+	_level_toast.show_level_up(level, reward)
 	_saver.save_now()
 
 
-## For a random buff: what the starting spell will gain next run. Empty for any other reward.
-func _buff_notice(level: int, reward: LevelReward) -> String:
-	if reward.kind != LevelReward.Kind.RANDOM_BUFF:
-		return ""
-	var scroll := StartingBuffs.find_scroll(track, profile.pick(level))
-	if scroll == null:
-		return ""
+## "Starting spell gains Increased Damage": what a random reward rolled for this run.
+func _rolled_notice(run_buffs: RunBuffs, reward_level: int) -> String:
+	var reward := track.reward_for_level(reward_level)
+	var scroll := StartingBuffs.find_scroll(track, run_buffs.pick(reward_level))
 	var spell_name := "Starting spell" if reward.spell_index == 0 else "Second spell"
-	return "%s gains %s next run" % [spell_name, scroll.display_name]
+	return "%s gains %s" % [spell_name, scroll.display_name if scroll != null else "a buff"]
 
 
 func _on_player_died() -> void:
