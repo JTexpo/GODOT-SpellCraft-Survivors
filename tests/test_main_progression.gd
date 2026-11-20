@@ -111,7 +111,7 @@ func test_death_saves_the_profile_and_shows_the_summary() -> void:
 	assert_false(FileAccess.file_exists(_path()), "20 XP is no level-up, so nothing is saved yet")
 	(_player(main).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	assert_eq(SaveGame.load_profile(_path()).total_xp, 20)
-	assert_eq((main.get_node("DeathScreen") as DeathScreen).summary_text(), "+20 XP this run, level 1")
+	assert_eq((main.get_node("DeathScreen") as DeathScreen).summary_text(), "+20 XP, +0 Gold this run, level 1")
 
 
 func test_random_buff_reward_mid_run_changes_nothing_until_next_run() -> void:
@@ -220,3 +220,27 @@ func test_killing_an_enemy_drops_both_a_gem_and_a_coin() -> void:
 	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	assert_eq(get_tree().get_nodes_in_group(&"xp_gems").size(), 1)
 	assert_eq(get_tree().get_nodes_in_group(&"gold_coins").size(), 1)
+
+
+func test_collecting_a_coin_banks_gold_and_marks_the_profile_for_saving() -> void:
+	var main := _new_main(_path())
+	var player := _player(main)
+	var coin := (load("res://scenes/progression/gold_coin.tscn") as PackedScene).instantiate() as ValueGem
+	main.add_child(coin)
+	coin.setup(6)
+	coin.global_position = player.global_position
+	await wait_physics_frames(4)
+	assert_eq(main.profile.gold, 6)
+	assert_eq((main.get_node("Hud/GoldCounter") as GoldCounter).gold_text(), "Gold 6")
+	assert_true((main.get_node("ProfileSaver") as ProfileSaver).is_dirty())
+
+
+func test_gold_survives_death_and_a_new_run() -> void:
+	var first := _new_main(_path())
+	_player(first).progress.add_gold(40)
+	(_player(first).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	assert_eq((first.get_node("DeathScreen") as DeathScreen).summary_text(), "+0 XP, +40 Gold this run, level 1")
+	first.free()
+	var second := _new_main(_path())
+	assert_eq(second.profile.gold, 40)
+	assert_eq((second.get_node("Hud/GoldCounter") as GoldCounter).gold_text(), "Gold 40")

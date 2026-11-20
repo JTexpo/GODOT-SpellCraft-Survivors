@@ -25,9 +25,9 @@ func _input(event: InputEvent) -> void:
 	handle_event(event)
 
 
-## Adds a line under "You died": the XP gained this run and the level reached.
-func set_run_summary(run_xp: int, level: int) -> void:
-	_summary.text = "+%d XP this run, level %d" % [run_xp, level]
+## Adds a line under "You died": the XP and Gold gained this run and the level reached.
+func set_run_summary(run_xp: int, level: int, run_gold: int = 0) -> void:
+	_summary.text = "+%d XP, +%d Gold this run, level %d" % [run_xp, run_gold, level]
 	_summary.visible = true
 
 

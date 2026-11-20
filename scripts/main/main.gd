@@ -24,6 +24,7 @@ extends Node2D
 @onready var _pick_screen: BuffPickScreen = $BuffPickScreen
 @onready var _xp_bar: XpBar = $Hud/XpBar
 @onready var _level_toast: LevelToast = $Hud/LevelToast
+@onready var _gold_counter: GoldCounter = $Hud/GoldCounter
 
 ## Where the profile is saved. Empty means "do not load or save": tests set it before adding Main to
 ## the tree so they never touch the player's real save.
@@ -92,10 +93,13 @@ func _begin_progression() -> void:
 	progress.bind(_player, profile, track)
 	_saver.bind(profile, save_path)
 	_xp_bar.bind(progress)
+	_gold_counter.bind(progress)
 	_player.collector.xp_collected.connect(progress.add_xp)
+	_player.collector.gold_collected.connect(progress.add_gold)
 	_spawner.enemy_died.connect(_xp_dropper.on_enemy_died)
 	_spawner.enemy_died.connect(_gold_dropper.on_enemy_died)
 	progress.xp_changed.connect(_on_xp_changed)
+	progress.gold_changed.connect(_on_gold_changed)
 	progress.leveled_up.connect(_on_leveled_up)
 	_player.died.connect(_on_player_died)
 	var run_buffs := RunBuffs.new()
@@ -117,6 +121,10 @@ func _on_xp_changed(_total_xp: int, _level: int) -> void:
 	_saver.mark_dirty()
 
 
+func _on_gold_changed(_total_gold: int) -> void:
+	_saver.mark_dirty()
+
+
 func _on_leveled_up(level: int, reward: LevelReward) -> void:
 	_level_toast.show_level_up(level, reward)
 	_saver.save_now()
@@ -131,7 +139,7 @@ func _rolled_notice(run_buffs: RunBuffs, reward_level: int) -> String:
 
 
 func _on_player_died() -> void:
-	_death_screen.set_run_summary(_player.progress.run_xp, _player.progress.level())
+	_death_screen.set_run_summary(_player.progress.run_xp, _player.progress.level(), _player.progress.run_gold)
 	_saver.save_now()
 
 

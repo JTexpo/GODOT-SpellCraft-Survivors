@@ -6,11 +6,14 @@ extends Node
 
 signal xp_changed(total_xp: int, level: int)
 signal leveled_up(level: int, reward: LevelReward)
+signal gold_changed(total_gold: int)
 
 var profile: PlayerProfile
 var track: LevelTrack
 ## XP collected since this run began.
 var run_xp: int = 0
+## Gold collected since this run began.
+var run_gold: int = 0
 
 var _player: Player
 
@@ -37,6 +40,15 @@ func add_xp(amount: int) -> void:
 		var reward := track.reward_for_level(reached)
 		_apply(reached, reward)
 		leveled_up.emit(reached, reward)
+
+
+## Banks Gold the moment it is collected. Ignores amounts at or below 0 and a dead player.
+func add_gold(amount: int) -> void:
+	if amount <= 0 or profile == null or _player.health.is_dead():
+		return
+	profile.add_gold(amount)
+	run_gold += amount
+	gold_changed.emit(profile.gold)
 
 
 func _apply(reached: int, reward: LevelReward) -> void:

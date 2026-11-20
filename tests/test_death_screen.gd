@@ -60,7 +60,7 @@ func test_restart_with_missing_path_fails_safely_every_time() -> void:
 
 func test_run_summary_text_shows_xp_and_level() -> void:
 	_screen.set_run_summary(120, 7)
-	assert_eq(_screen.summary_text(), "+120 XP this run, level 7")
+	assert_eq(_screen.summary_text(), "+120 XP, +0 Gold this run, level 7")
 
 
 func test_death_screen_without_a_summary_shows_no_extra_line() -> void:
@@ -74,3 +74,8 @@ func test_restart_still_works_with_a_summary() -> void:
 	watch_signals(_screen)
 	_screen.handle_event(_restart_action())
 	assert_signal_emitted(_screen, "restart_requested")
+
+
+func test_summary_includes_gold() -> void:
+	_screen.set_run_summary(120, 7, 45)
+	assert_eq(_screen.summary_text(), "+120 XP, +45 Gold this run, level 7")

@@ -133,3 +133,33 @@ func test_random_buff_level_changes_nothing_mid_run() -> void:
 	assert_eq(_player.loadout.unlocked_slots, slots)
 	assert_eq(_player.loadout.slots[0].data, data)
 	assert_true(data.buff_stacks.is_empty())
+
+func test_add_gold_banks_it_in_the_profile_and_this_run() -> void:
+	_progress.add_gold(7)
+	_progress.add_gold(5)
+	assert_eq(_profile.gold, 12)
+	assert_eq(_progress.run_gold, 12)
+
+
+func test_gold_from_an_earlier_run_is_kept_but_not_counted_as_this_run() -> void:
+	_profile.add_gold(100)
+	_progress.add_gold(3)
+	assert_eq(_profile.gold, 103)
+	assert_eq(_progress.run_gold, 3)
+
+
+func test_zero_negative_and_dead_player_bank_no_gold() -> void:
+	_progress.add_gold(0)
+	_progress.add_gold(-5)
+	assert_eq(_profile.gold, 0)
+	(_player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	_progress.add_gold(50)
+	assert_eq(_profile.gold, 0)
+	assert_eq(_progress.run_gold, 0)
+
+
+func test_gold_changed_reports_the_total() -> void:
+	_profile.add_gold(10)
+	watch_signals(_progress)
+	_progress.add_gold(4)
+	assert_signal_emitted_with_parameters(_progress, "gold_changed", [14])
