@@ -62,3 +62,44 @@ func test_dead_player_collects_nothing() -> void:
 	await wait_physics_frames(6)
 	assert_eq(_player.inventory.total_count(), 0)
 	assert_false(pickup.is_queued_for_deletion())
+
+
+func _gem(at: Vector2, amount: int) -> XpGem:
+	var gem := (load("res://scenes/progression/xp_gem.tscn") as PackedScene).instantiate() as XpGem
+	_root.add_child(gem)
+	gem.setup(amount)
+	gem.global_position = at
+	return gem
+
+
+func test_walking_over_a_gem_emits_xp_collected_with_its_value() -> void:
+	watch_signals(_player.collector)
+	var gem := _gem(_player.global_position, 6)
+	await wait_physics_frames(4)
+	assert_signal_emit_count(_player.collector, "xp_collected", 1)
+	assert_signal_emitted_with_parameters(_player.collector, "xp_collected", [6])
+	assert_true(not is_instance_valid(gem) or gem.is_queued_for_deletion())
+
+
+func test_a_gem_is_collected_without_an_inventory() -> void:
+	_player.collector.inventory = null
+	watch_signals(_player.collector)
+	_gem(_player.global_position, 3)
+	await wait_physics_frames(4)
+	assert_signal_emitted_with_parameters(_player.collector, "xp_collected", [3])
+
+
+func test_a_gem_is_never_collected_twice() -> void:
+	watch_signals(_player.collector)
+	_gem(_player.global_position, 5)
+	await wait_physics_frames(14)
+	assert_signal_emit_count(_player.collector, "xp_collected", 1)
+
+
+func test_a_dead_player_collects_no_gems() -> void:
+	(_player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	watch_signals(_player.collector)
+	var gem := _gem(_player.global_position, 4)
+	await wait_physics_frames(6)
+	assert_signal_not_emitted(_player.collector, "xp_collected")
+	assert_false(gem.is_queued_for_deletion())

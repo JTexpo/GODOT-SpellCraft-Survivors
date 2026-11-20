@@ -1,0 +1,90 @@
+extends GutTest
+
+const GEM_SCENE := "res://scenes/progression/xp_gem.tscn"
+const FIRE_ENEMY := "res://resources/enemies/fire_enemy.tres"
+
+var _root: Node2D
+var _dropper: XpDropper
+
+
+func before_each() -> void:
+	_root = Node2D.new()
+	add_child_autofree(_root)
+	_dropper = XpDropper.new()
+	_dropper.gem_scene = load(GEM_SCENE) as PackedScene
+	_dropper.drop_root = _root
+	add_child_autofree(_dropper)
+
+
+func _enemy(xp: int, at: Vector2 = Vector2(40, 50)) -> Enemy:
+	var enemy := (load("res://scenes/enemies/base_enemy.tscn") as PackedScene).instantiate() as Enemy
+	var data := (load(FIRE_ENEMY) as EnemyData).duplicate() as EnemyData
+	data.xp_reward = xp
+	enemy.setup(data, Rect2(0, 0, 960, 540), RandomNumberGenerator.new())
+	_root.add_child(enemy)
+	enemy.global_position = at
+	return enemy
+
+
+func _total_value() -> int:
+	var total := 0
+	for gem in get_tree().get_nodes_in_group(&"xp_gems"):
+		total += (gem as XpGem).value
+	return total
+
+
+func test_enemy_death_drops_a_gem_with_its_xp() -> void:
+	var data := load(FIRE_ENEMY) as EnemyData
+	assert_eq(data.xp_reward, 4)
+	var enemy := _enemy(data.xp_reward, Vector2(60, 70))
+	var gem := _dropper.on_enemy_died(enemy)
+	assert_not_null(gem)
+	assert_eq(gem.value, 4)
+	assert_eq(gem.global_position, Vector2(60, 70))
+	assert_eq(_dropper.gem_count(), 1)
+
+
+func test_enemy_with_zero_or_missing_xp_drops_nothing() -> void:
+	assert_null(_dropper.on_enemy_died(_enemy(0)))
+	assert_null(_dropper.on_enemy_died(_enemy(-3)))
+	assert_null(_dropper.on_enemy_died(null))
+	var bare := (load("res://scenes/enemies/base_enemy.tscn") as PackedScene).instantiate() as Enemy
+	autofree(bare)
+	bare.data = null
+	assert_null(_dropper.on_enemy_died(bare))
+	assert_eq(_dropper.gem_count(), 0)
+
+
+func test_cap_merges_the_value_into_the_oldest_gem() -> void:
+	_dropper.max_gems = 3
+	for amount in [2, 3, 4]:
+		_dropper.place(amount, Vector2(10, 10))
+	var merged := _dropper.place(5, Vector2(90, 90))
+	assert_eq(_dropper.gem_count(), 3)
+	assert_eq(merged.value, 7)
+	_dropper.place(6, Vector2(50, 50))
+	assert_eq(_dropper.gem_count(), 3)
+	assert_eq(_total_value(), 20)
+
+
+func test_total_xp_is_never_lost_at_the_cap() -> void:
+	_dropper.max_gems = 150
+	var dropped := 0
+	for i in 400:
+		var amount := 1 + i % 7
+		dropped += amount
+		_dropper.place(amount, Vector2(i % 90, i % 50))
+	assert_eq(_dropper.gem_count(), 150)
+	assert_eq(_total_value(), dropped)
+
+
+func test_collected_gems_free_their_slot() -> void:
+	_dropper.max_gems = 2
+	var first := _dropper.place(1, Vector2.ZERO)
+	_dropper.place(2, Vector2.ZERO)
+	first.collect()
+	await wait_frames(2)
+	assert_eq(_dropper.gem_count(), 1)
+	var third := _dropper.place(3, Vector2.ZERO)
+	assert_eq(third.value, 3)
+	assert_eq(_dropper.gem_count(), 2)
