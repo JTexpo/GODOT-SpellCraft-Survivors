@@ -363,3 +363,16 @@ func test_huge_stacks_keep_the_preview_readable() -> void:
 	assert_false(text.contains("inf"), text)
 	assert_false(text.contains("nan"), text)
 	assert_true(text.contains("too costly"), text)
+
+
+func test_focus_survives_a_stepper_becoming_disabled() -> void:
+	var damage := _own("buff/damage")
+	_screen.open(_inventory, _loadout)
+	var plus := _screen._buff_grid.find_children("*", "Button", true, false).filter(
+		func(button: Node) -> bool: return str(button.get_meta(&"key", "")) == "buff+:%s" % damage.id)[0] as Button
+	plus.grab_focus()
+	plus.pressed.emit()
+	await wait_process_frames(2)
+	var owner := _screen.get_viewport().gui_get_focus_owner()
+	assert_not_null(owner, "the last owned stack disabled the plus button")
+	assert_false((owner as Button).disabled)

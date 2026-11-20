@@ -267,3 +267,8 @@ func test_bad_buffs_return_null() -> void:
 		assert_null(_fire_missile([bad]), "buff entry %s" % [bad])
 	assert_null(SpellBuilder.build([], _area("missile"), _normal()), "no Base scrolls")
 	assert_null(SpellBuilder.build([_base("fire"), _area("missile")], _area("missile"), _normal()), "an Area scroll among the Bases")
+
+
+func test_whole_casts_round_down() -> void:
+	var spell := _fire_missile([_buff("damage")])
+	assert_eq(SpellBuilder.describe(spell)["whole_casts"], 66)

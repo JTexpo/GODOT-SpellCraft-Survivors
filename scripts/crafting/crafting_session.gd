@@ -181,8 +181,8 @@ func drawbacks() -> Array[String]:
 	var multiplier := snappedf(buffed.mana_cost / plain.mana_cost, 0.1) if plain.mana_cost > 0.0 else 1.0
 	lines.append("Buffs: costs %.1fx per cast, %d casts become %d." % [
 		multiplier,
-		roundi(plain.max_mana / plain.mana_cost) if plain.mana_cost > 0.0 else 0,
-		roundi(buffed.max_mana / buffed.mana_cost) if buffed.mana_cost > 0.0 else 0,
+		SpellBuilder.whole_casts(plain),
+		SpellBuilder.whole_casts(buffed),
 	])
 	if not SpellBuilder.can_cast(buffed):
 		lines.append(CraftingSystem.REASON_TOO_COSTLY)

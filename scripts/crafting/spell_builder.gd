@@ -74,6 +74,7 @@ static func describe(spell: SpellData) -> Dictionary:
 		"cost": spell.mana_cost,
 		"pool": spell.max_mana,
 		"casts": spell.max_mana / spell.mana_cost if spell.mana_cost > 0.0 else 0.0,
+		"whole_casts": whole_casts(spell),
 		"range": spell.effective_range(),
 		"area": str(AreaData.AreaType.keys()[spell.area_type()]).capitalize(),
 		"elements": "+".join(names),
@@ -89,6 +90,11 @@ static func element_name(element: int) -> String:
 	if element < 0 or element >= names.size():
 		return "None"
 	return str(names[element]).capitalize()
+
+
+## How many casts the pool really pays for (a cast needs the full cost, so this rounds down).
+static func whole_casts(spell: SpellData) -> int:
+	return floori(spell.max_mana / spell.mana_cost + 1e-6) if spell.mana_cost > 0.0 else 0
 
 
 ## A spell whose cost is above its whole pool could never be cast once.

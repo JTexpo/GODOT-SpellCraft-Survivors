@@ -155,7 +155,7 @@ func preview_text() -> String:
 		lines.append_array(session.drawbacks())
 	var current := session.current_stats()
 	if not current.is_empty():
-		lines.append("Now: %s  (casts %d)" % [current["name"], roundi(current["casts"])])
+		lines.append("Now: %s  (casts %d)" % [current["name"], current["whole_casts"]])
 	lines.append(session.replace_note())
 	return "\n".join(lines)
 
@@ -359,7 +359,7 @@ func _stat_lines(stats: Dictionary) -> Array[String]:
 	var lines: Array[String] = [
 		"  Damage %.1f  Every %.2fs" % [stats["damage"], stats["interval"]],
 		"  Mana/cast %.1f  Pool %d" % [stats["cost"], roundi(stats["pool"])],
-		"  Casts %d  Range %d" % [roundi(stats["casts"]), roundi(stats["range"])],
+		"  Casts %d  Range %d" % [stats["whole_casts"], roundi(stats["range"])],
 		"  Elements %s  Shots %d" % [stats["elements"], stats["copies"]],
 	]
 	if stats["vulnerability"] > 1.0:
@@ -391,11 +391,17 @@ func _focus_key() -> String:
 func _restore_focus(key: String) -> void:
 	if key.is_empty():
 		return
-	for container in [_slot_row, _base_column, _area_column, _range_column, _buff_grid]:
-		for child in container.find_children("*", "Button", true, false):
-			if str(child.get_meta(&"key", "")) == key and not child.disabled:
-				child.grab_focus()
-				return
+	var keys := [key]
+	# A stepper that just went disabled (the last owned stack, or zero stacks) hands focus to its pair.
+	if key.begins_with("buff+:") or key.begins_with("buff-:"):
+		keys.append(("buff-:" if key.begins_with("buff+:") else "buff+:") + key.get_slice(":", 1))
+	for wanted in keys:
+		for container in [_slot_row, _base_column, _area_column, _range_column, _buff_grid]:
+			for child in container.find_children("*", "Button", true, false):
+				if str(child.get_meta(&"key", "")) == wanted and not child.disabled:
+					child.grab_focus()
+					return
+	_focus_first()
 
 
 func _focus_first() -> void:

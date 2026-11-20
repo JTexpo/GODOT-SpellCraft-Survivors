@@ -361,3 +361,15 @@ func test_huge_stacks_keep_the_numbers_finite() -> void:
 	var stats := session.new_stats()
 	for key in ["damage", "cost", "pool", "casts"]:
 		assert_true(is_finite(stats[key]), key)
+
+
+func test_drawbacks_count_whole_casts_only() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_missile)
+	_own(damage)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	session.add_buff(damage)
+	assert_eq(session.drawbacks()[0], "Buffs: costs 1.5x per cast, 100 casts become 66.", "a 67th cast would not have the mana")
