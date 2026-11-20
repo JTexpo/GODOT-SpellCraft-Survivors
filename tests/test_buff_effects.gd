@@ -1,0 +1,59 @@
+extends GutTest
+
+# file, damage x, pool x, cost x, vulnerability bonus, ignores resistance, extra copies, extra bases, max stacks
+const BUFFS := [
+	["damage", 1.5, 1.0, 1.5, 0.0, false, 0, 0, 0],
+	["max_mana", 1.0, 1.5, 1.25, 0.0, false, 0, 0, 0],
+	["double_vulnerability", 1.0, 1.0, 1.25, 1.0, false, 0, 0, 0],
+	["ignore_resistance", 1.0, 1.0, 1.25, 0.0, true, 0, 0, 1],
+	["duplicate_area", 1.0, 1.0, 2.0, 0.0, false, 1, 0, 4],
+	["additional_base", 1.0, 1.0, 1.8, 0.0, false, 0, 1, 3],
+]
+
+
+func _scroll(file: String) -> ScrollData:
+	return load("res://resources/scrolls/buff/%s.tres" % file) as ScrollData
+
+
+func test_each_buff_scroll_references_its_effect_with_the_table_numbers() -> void:
+	for row in BUFFS:
+		var scroll := _scroll(row[0])
+		assert_not_null(scroll.buff, row[0])
+		var effect := scroll.buff
+		assert_eq(effect.damage_multiplier, row[1], row[0])
+		assert_eq(effect.max_mana_multiplier, row[2], row[0])
+		assert_eq(effect.cost_multiplier, row[3], row[0])
+		assert_eq(effect.vulnerability_bonus, row[4], row[0])
+		assert_eq(effect.ignores_resistance, row[5], row[0])
+		assert_eq(effect.extra_copies, row[6], row[0])
+		assert_eq(effect.extra_bases, row[7], row[0])
+		assert_eq(effect.max_stacks, row[8], row[0])
+
+
+func test_other_scrolls_have_no_buff_effect() -> void:
+	for path in ["base/fire", "base/sea", "area/line", "area/missile", "area/wave"]:
+		assert_null((load("res://resources/scrolls/%s.tres" % path) as ScrollData).buff, path)
+
+
+func test_damage_and_copies_never_cost_less_than_what_they_buy() -> void:
+	var damage := _scroll("damage").buff
+	assert_gte(damage.cost_multiplier, damage.damage_multiplier)
+	var duplicate := _scroll("duplicate_area").buff
+	for stacks in range(1, duplicate.max_stacks + 1):
+		assert_gte(pow(duplicate.cost_multiplier, stacks), float(stacks + 1), "%d stacks buy %d shots" % [stacks, stacks + 1])
+
+
+func test_stack_caps() -> void:
+	assert_eq(_scroll("duplicate_area").buff.max_stacks, 4)
+	assert_eq(_scroll("additional_base").buff.max_stacks, 3)
+	assert_eq(_scroll("ignore_resistance").buff.max_stacks, 1)
+	for file in ["damage", "max_mana", "double_vulnerability"]:
+		assert_eq(_scroll(file).buff.max_stacks, 0, file)
+
+
+func test_spell_data_defaults() -> void:
+	var spell := SpellData.new()
+	assert_eq(spell.copies, 1)
+	assert_eq(spell.vulnerability_scale, 1.0)
+	assert_false(spell.ignores_resistance)
+	assert_true(spell.buff_stacks.is_empty())

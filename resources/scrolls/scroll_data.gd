@@ -21,3 +21,5 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 @export var buff_id: StringName
 ## Base scrolls: how this element changes an Area's baseline when crafted.
 @export var modifiers: BaseModifiers
+## Buff scrolls: what each stack of this buff does to a crafted spell.
+@export var buff: BuffEffect

@@ -30,6 +30,14 @@ const MIN_SIZE := 0.1
 ## Enemies one Missile can hit before it is freed.
 @export var max_hits: int = 1
 @export var color: Color = Color.WHITE
+## Shots per cast (Duplicate Area makes it more than 1). Crafting sets it.
+@export var copies: int = 1
+## Scales a strong (vulnerable) hit's bonus: 1.0 is the plain table, 2.0 doubles the bonus.
+@export var vulnerability_scale: float = 1.0
+## A resisted hit counts as a neutral one.
+@export var ignores_resistance: bool = false
+## Buff scroll id to the number of stacks used, for display.
+var buff_stacks: Dictionary = {}
 
 
 func primary_element() -> int:
