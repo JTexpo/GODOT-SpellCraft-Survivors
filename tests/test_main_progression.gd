@@ -83,9 +83,9 @@ func test_killing_an_enemy_drops_a_gem_that_adds_xp_when_collected() -> void:
 	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	var gems := get_tree().get_nodes_in_group(&"xp_gems")
 	assert_eq(gems.size(), 1)
-	var value := (gems[0] as XpGem).value
+	var value := (gems[0] as ValueGem).value
 	assert_gt(value, 0)
-	player.global_position = (gems[0] as XpGem).global_position
+	player.global_position = (gems[0] as ValueGem).global_position
 	await wait_physics_frames(4)
 	assert_eq(main.profile.total_xp, value)
 
@@ -212,3 +212,11 @@ func test_spell_bar_shows_the_saved_slots_as_unlocked_at_run_start() -> void:
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	for i in 5:
 		assert_eq(bar.widgets[i].locked, i >= 3, "slot %d" % (i + 1))
+
+
+func test_killing_an_enemy_drops_both_a_gem_and_a_coin() -> void:
+	var main := _new_main("")
+	var enemy := (main.get_node("EnemySpawner") as EnemySpawner).spawn_at(Vector2(300, 300))
+	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	assert_eq(get_tree().get_nodes_in_group(&"xp_gems").size(), 1)
+	assert_eq(get_tree().get_nodes_in_group(&"gold_coins").size(), 1)

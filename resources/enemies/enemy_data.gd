@@ -22,3 +22,5 @@ extends Resource
 @export var drop_table: DropTable
 ## XP the enemy drops as a gem when it dies.
 @export var xp_reward: int = 5
+## Gold the enemy drops as a coin when it dies.
+@export var gold_reward: int = 1

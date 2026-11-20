@@ -25,7 +25,7 @@ const AREA_SPELLS := {
 @export var run_seconds: float = 0.0
 ## Empty means the default stress spell. Otherwise a key of AREA_SPELLS.
 @export var area_name: String = ""
-## --drops: kills drop real scrolls and XP gems, and the arena starts with a full 100 pickups on the ground.
+## --drops: kills drop real scrolls, XP gems and Gold coins, and the arena starts with a full 100 pickups on the ground.
 @export var drops: bool = false
 ## --copies=N makes the stress spell fire N copies per cast (Duplicate Area), as a ring.
 @export var copies: int = 1
@@ -48,7 +48,8 @@ var _rng := RandomNumberGenerator.new()
 @onready var _label: Label = $Hud/Label
 @onready var _damage_numbers: DamageNumbers = $DamageNumbers
 @onready var _dropper: ScrollDropper = $ScrollDropper
-@onready var _xp_dropper: XpDropper = $XpDropper
+@onready var _xp_dropper: ValueDropper = $XpDropper
+@onready var _gold_dropper: ValueDropper = $GoldDropper
 
 
 func _ready() -> void:
@@ -59,6 +60,7 @@ func _ready() -> void:
 	if drops:
 		_spawner.enemy_died.connect(_dropper.on_enemy_died)
 		_spawner.enemy_died.connect(_xp_dropper.on_enemy_died)
+		_spawner.enemy_died.connect(_gold_dropper.on_enemy_died)
 		_scatter_pickups(_dropper.max_pickups)
 	_player.health.set_max_health(1.0e9)
 	_loadout.slots[0] = SpellInstance.new(_stress_spell())

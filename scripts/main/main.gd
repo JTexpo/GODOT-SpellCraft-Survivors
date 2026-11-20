@@ -18,7 +18,8 @@ extends Node2D
 @onready var _inventory_button: InventoryButton = $Hud/InventoryButton
 @onready var _interact_button: InteractButton = $Hud/InteractButton
 @onready var _crafting_screen: CraftingScreen = $CraftingScreen
-@onready var _xp_dropper: XpDropper = $XpDropper
+@onready var _xp_dropper: ValueDropper = $XpDropper
+@onready var _gold_dropper: ValueDropper = $GoldDropper
 @onready var _saver: ProfileSaver = $ProfileSaver
 @onready var _pick_screen: BuffPickScreen = $BuffPickScreen
 @onready var _xp_bar: XpBar = $Hud/XpBar
@@ -93,6 +94,7 @@ func _begin_progression() -> void:
 	_xp_bar.bind(progress)
 	_player.collector.xp_collected.connect(progress.add_xp)
 	_spawner.enemy_died.connect(_xp_dropper.on_enemy_died)
+	_spawner.enemy_died.connect(_gold_dropper.on_enemy_died)
 	progress.xp_changed.connect(_on_xp_changed)
 	progress.leveled_up.connect(_on_leveled_up)
 	_player.died.connect(_on_player_died)

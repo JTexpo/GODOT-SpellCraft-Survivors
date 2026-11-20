@@ -64,8 +64,8 @@ func test_dead_player_collects_nothing() -> void:
 	assert_false(pickup.is_queued_for_deletion())
 
 
-func _gem(at: Vector2, amount: int) -> XpGem:
-	var gem := (load("res://scenes/progression/xp_gem.tscn") as PackedScene).instantiate() as XpGem
+func _gem(at: Vector2, amount: int) -> ValueGem:
+	var gem := (load("res://scenes/progression/xp_gem.tscn") as PackedScene).instantiate() as ValueGem
 	_root.add_child(gem)
 	gem.setup(amount)
 	gem.global_position = at
@@ -103,3 +103,39 @@ func test_a_dead_player_collects_no_gems() -> void:
 	await wait_physics_frames(6)
 	assert_signal_not_emitted(_player.collector, "xp_collected")
 	assert_false(gem.is_queued_for_deletion())
+
+
+func _coin(at: Vector2, amount: int) -> ValueGem:
+	var coin := (load("res://scenes/progression/gold_coin.tscn") as PackedScene).instantiate() as ValueGem
+	_root.add_child(coin)
+	coin.setup(amount)
+	coin.global_position = at
+	return coin
+
+
+func test_walking_over_a_coin_emits_gold_collected_with_its_value() -> void:
+	watch_signals(_player.collector)
+	var coin := _coin(_player.global_position, 3)
+	await wait_physics_frames(4)
+	assert_signal_emit_count(_player.collector, "gold_collected", 1)
+	assert_signal_emitted_with_parameters(_player.collector, "gold_collected", [3])
+	assert_true(not is_instance_valid(coin) or coin.is_queued_for_deletion())
+
+
+func test_a_coin_does_not_emit_xp_collected_and_a_gem_does_not_emit_gold() -> void:
+	watch_signals(_player.collector)
+	_coin(_player.global_position, 3)
+	_gem(_player.global_position, 6)
+	await wait_physics_frames(4)
+	assert_signal_emit_count(_player.collector, "gold_collected", 1)
+	assert_signal_emit_count(_player.collector, "xp_collected", 1)
+	assert_signal_emitted_with_parameters(_player.collector, "xp_collected", [6])
+
+
+func test_a_dead_player_collects_no_coins() -> void:
+	(_player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	watch_signals(_player.collector)
+	var coin := _coin(_player.global_position, 4)
+	await wait_physics_frames(6)
+	assert_signal_not_emitted(_player.collector, "gold_collected")
+	assert_false(coin.is_queued_for_deletion())

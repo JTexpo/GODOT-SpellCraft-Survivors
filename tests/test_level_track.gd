@@ -121,3 +121,10 @@ func test_every_enemy_has_an_xp_reward() -> void:
 	for name in expected:
 		var data := load("res://resources/enemies/%s_enemy.tres" % name) as EnemyData
 		assert_eq(data.xp_reward, expected[name], name)
+
+
+func test_every_enemy_has_a_gold_reward() -> void:
+	var expected := {"basic": 1, "fire": 1, "thunder": 1, "sea": 2, "land": 3}
+	for name in expected:
+		var data := load("res://resources/enemies/%s_enemy.tres" % name) as EnemyData
+		assert_eq(data.gold_reward, expected[name], name)

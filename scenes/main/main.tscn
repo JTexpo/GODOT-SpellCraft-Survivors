@@ -20,8 +20,9 @@
 [ext_resource type="PackedScene" path="res://scenes/interactables/lectern.tscn" id="40"]
 [ext_resource type="PackedScene" path="res://scenes/ui/interact_button.tscn" id="41"]
 [ext_resource type="PackedScene" path="res://scenes/ui/crafting_screen.tscn" id="42"]
-[ext_resource type="Script" path="res://scripts/systems/xp_dropper.gd" id="50"]
+[ext_resource type="Script" path="res://scripts/systems/value_dropper.gd" id="50"]
 [ext_resource type="PackedScene" path="res://scenes/progression/xp_gem.tscn" id="51"]
+[ext_resource type="PackedScene" path="res://scenes/progression/gold_coin.tscn" id="56"]
 [ext_resource type="Script" path="res://scripts/progression/profile_saver.gd" id="52"]
 [ext_resource type="PackedScene" path="res://scenes/ui/buff_pick_screen.tscn" id="53"]
 [ext_resource type="PackedScene" path="res://scenes/ui/xp_bar.tscn" id="54"]
@@ -79,6 +80,11 @@ pickup_scene = ExtResource("12")
 [node name="XpDropper" type="Node" parent="."]
 script = ExtResource("50")
 gem_scene = ExtResource("51")
+
+[node name="GoldDropper" type="Node" parent="."]
+script = ExtResource("50")
+kind = 1
+gem_scene = ExtResource("56")
 
 [node name="ProfileSaver" type="Node" parent="."]
 script = ExtResource("52")
