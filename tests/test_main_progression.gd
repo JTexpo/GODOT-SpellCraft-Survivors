@@ -175,3 +175,11 @@ func test_f12_gives_100_xp() -> void:
 	main._unhandled_input(event)
 	assert_eq(main.profile.total_xp, 100)
 	assert_eq(_player(main).progress.level(), 3)
+
+
+func test_spell_bar_shows_the_saved_slots_as_unlocked_at_run_start() -> void:
+	_save_at_level(10, {7: &"buff_damage"})
+	var main := _new_main(_path())
+	var bar := main.get_node("Hud/SpellBar") as SpellBar
+	for i in 5:
+		assert_eq(bar.widgets[i].locked, i >= 3, "slot %d" % (i + 1))

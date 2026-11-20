@@ -63,6 +63,15 @@ func unlock_next() -> bool:
 	return true
 
 
+## Sets how many slots are usable (from 1 to SLOT_COUNT) and emits `slot_unlocked` for each slot that
+## just opened, so the spell bar redraws them. Lowering it emits nothing.
+func set_unlocked_slots(count: int) -> void:
+	var before := unlocked_slots
+	unlocked_slots = clampi(count, 1, SLOT_COUNT)
+	for index in range(before, unlocked_slots):
+		slot_unlocked.emit(index)
+
+
 ## Puts a new spell, with a full mana pool, in an unlocked slot, replacing whatever was there.
 ## Returns the new instance, or null (changing nothing) if the slot is locked or out of range.
 func equip(index: int, spell: SpellData) -> SpellInstance:

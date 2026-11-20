@@ -402,3 +402,26 @@ func test_two_loadouts_never_share_a_bonus() -> void:
 	assert_almost_eq(first.slots[0].max_mana(), data.max_mana * 1.3, 0.0001)
 	assert_eq(second.slots[0].max_mana(), data.max_mana)
 	assert_eq(data.max_mana, 1000.0)
+
+
+func test_set_unlocked_slots_emits_one_signal_per_newly_opened_slot() -> void:
+	var loadout := _make_loadout(_five_spells())
+	loadout.unlocked_slots = 1
+	watch_signals(loadout)
+	loadout.set_unlocked_slots(3)
+	assert_eq(loadout.unlocked_slots, 3)
+	assert_signal_emit_count(loadout, "slot_unlocked", 2)
+	loadout.set_unlocked_slots(3)
+	assert_signal_emit_count(loadout, "slot_unlocked", 2)
+
+
+func test_set_unlocked_slots_can_lower_without_signals_and_clamps() -> void:
+	var loadout := _make_loadout(_five_spells())
+	watch_signals(loadout)
+	loadout.set_unlocked_slots(2)
+	assert_eq(loadout.unlocked_slots, 2)
+	assert_signal_not_emitted(loadout, "slot_unlocked")
+	loadout.set_unlocked_slots(99)
+	assert_eq(loadout.unlocked_slots, SpellLoadout.SLOT_COUNT)
+	loadout.set_unlocked_slots(-4)
+	assert_eq(loadout.unlocked_slots, 1)

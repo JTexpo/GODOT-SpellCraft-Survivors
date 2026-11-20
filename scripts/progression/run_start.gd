@@ -10,7 +10,7 @@ static func prepare(player: Player, profile: PlayerProfile, track: LevelTrack) -
 	# Bonuses first, so every spell equipped below starts with the level's mana bonus.
 	player.apply_stat_bonuses(StatBonuses.for_level(track, level), false)
 	var loadout := player.loadout
-	loadout.unlocked_slots = track.slot_count(level)
+	loadout.set_unlocked_slots(track.slot_count(level))
 	if not loadout.starting_spells.is_empty():
 		_equip(loadout, 0, loadout.starting_spells[0], StartingBuffs.buffs_for_spell(profile, track, level, 0))
 	for reached in range(2, mini(level, track.max_level()) + 1):
