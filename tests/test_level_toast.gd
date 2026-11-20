@@ -1,0 +1,51 @@
+extends GutTest
+
+var _toast: LevelToast
+var _track: LevelTrack
+
+
+func before_each() -> void:
+	_toast = load("res://scenes/ui/level_toast.tscn").instantiate() as LevelToast
+	add_child_autofree(_toast)
+	_track = LevelTrack.default_track()
+
+
+func _show(level: int) -> void:
+	_toast.show_level_up(level, _track.reward_for_level(level))
+
+
+func test_hidden_until_shown() -> void:
+	assert_false(_toast.is_showing())
+
+
+func test_shows_level_and_description() -> void:
+	_show(5)
+	assert_true(_toast.is_showing())
+	assert_eq(_toast.text, "Level 5! Slot 2 unlocked")
+
+
+func test_back_to_back_level_ups_are_listed_not_replaced() -> void:
+	_show(2)
+	_show(3)
+	assert_eq(_toast.text, "Level 2! Faster movement\nLevel 3! More health")
+
+
+func test_only_the_last_four_lines_are_kept() -> void:
+	for level in range(2, 8):
+		_show(level)
+	var lines := _toast.text.split("\n")
+	assert_eq(lines.size(), 4)
+	assert_true(lines[0].begins_with("Level 4!"))
+	assert_true(lines[3].begins_with("Level 7!"))
+
+
+func test_hides_after_its_duration_and_starts_a_fresh_list() -> void:
+	_show(2)
+	_toast._process(LevelToast.DURATION + 0.1)
+	assert_false(_toast.is_showing())
+	_show(3)
+	assert_eq(_toast.text, "Level 3! More health")
+
+
+func test_ignores_the_mouse() -> void:
+	assert_eq(_toast.mouse_filter, Control.MOUSE_FILTER_IGNORE)

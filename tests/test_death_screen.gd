@@ -56,3 +56,21 @@ func test_restart_with_missing_path_fails_safely_every_time() -> void:
 	assert_eq(_screen.restart(), ERR_FILE_NOT_FOUND)
 	_screen.restart_scene_path = ""
 	assert_eq(_screen.restart(), ERR_FILE_NOT_FOUND)
+
+
+func test_run_summary_text_shows_xp_and_level() -> void:
+	_screen.set_run_summary(120, 7)
+	assert_eq(_screen.summary_text(), "+120 XP this run, level 7")
+
+
+func test_death_screen_without_a_summary_shows_no_extra_line() -> void:
+	_screen.show_death()
+	assert_eq(_screen.summary_text(), "")
+
+
+func test_restart_still_works_with_a_summary() -> void:
+	_screen.set_run_summary(5, 1)
+	_screen.show_death()
+	watch_signals(_screen)
+	_screen.handle_event(_restart_action())
+	assert_signal_emitted(_screen, "restart_requested")
