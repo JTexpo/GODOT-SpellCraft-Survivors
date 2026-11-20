@@ -17,8 +17,8 @@ static func for_level(track: LevelTrack, level: int) -> StatBonuses:
 	return bonuses
 
 
-func add(stat: Stat, fraction: float) -> void:
-	_fractions[stat] = fraction(stat) + fraction
+func add(stat: Stat, amount: float) -> void:
+	_fractions[stat] = fraction(stat) + amount
 
 
 ## 0.0 for a stat nothing was added to.

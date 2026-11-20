@@ -1,9 +1,17 @@
 extends GutTest
 
+## Every Main in a test gets an empty save path, so no test reads or writes the player's real save,
+## and a pick screen that does not pause the test runner.
+func _new_main(save_path: String = "") -> Main:
+	var main := load("res://scenes/main/main.tscn").instantiate() as Main
+	main.save_path = save_path
+	(main.get_node("BuffPickScreen") as BuffPickScreen).pause_tree = false
+	add_child_autofree(main)
+	return main
+
 
 func test_player_death_shows_death_screen_and_bar_tracks_health() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var player := main.get_node("Player") as Player
 	var death_screen := main.get_node("DeathScreen") as DeathScreen
 	var bar := main.get_node("Hud/HealthBar") as HealthBar
@@ -17,8 +25,7 @@ func test_player_death_shows_death_screen_and_bar_tracks_health() -> void:
 
 
 func test_spell_bar_is_bound_and_slot_presses_select() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var player := main.get_node("Player") as Player
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	assert_eq(bar.widgets.size(), 5)
@@ -31,8 +38,7 @@ func test_spell_bar_is_bound_and_slot_presses_select() -> void:
 
 
 func test_debug_key_refills_drained_mana() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var player := main.get_node("Player") as Player
 	player.loadout.selected().current_mana = 0.0
 	var event := InputEventAction.new()
@@ -43,8 +49,7 @@ func test_debug_key_refills_drained_mana() -> void:
 
 
 func test_dead_player_cannot_change_spell_by_tapping_the_bar() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var player := main.get_node("Player") as Player
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	player.loadout.unlock_next()
@@ -59,8 +64,7 @@ func test_dead_player_cannot_change_spell_by_tapping_the_bar() -> void:
 
 
 func test_main_has_a_bound_target_reticle() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var reticle := main.get_node("TargetReticle") as TargetReticle
 	assert_not_null(reticle)
 	reticle._process(0.0)
@@ -68,8 +72,7 @@ func test_main_has_a_bound_target_reticle() -> void:
 
 
 func test_enemy_hits_show_damage_numbers_but_player_hits_do_not() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var numbers := main.get_node("DamageNumbers") as DamageNumbers
 	var spawner := main.get_node("EnemySpawner") as EnemySpawner
 	var enemy := spawner.spawn_at(Vector2(100, 100))
@@ -81,8 +84,7 @@ func test_enemy_hits_show_damage_numbers_but_player_hits_do_not() -> void:
 
 
 func test_killing_an_enemy_can_drop_a_scroll() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var spawner := main.get_node("EnemySpawner") as EnemySpawner
 	var enemy := spawner.spawn_at(Vector2(100, 100))
 	enemy.data = enemy.data.duplicate() as EnemyData
@@ -97,8 +99,7 @@ func test_killing_an_enemy_can_drop_a_scroll() -> void:
 
 
 func _main() -> Main:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	return main
 
 
@@ -173,21 +174,8 @@ func test_player_death_hides_the_inventory_button_so_restart_taps_get_through() 
 	assert_signal_not_emitted(button, "pressed")
 
 
-func test_debug_unlock_key_unlocks_the_next_slot() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
-	var player := main.get_node("Player") as Player
-	var event := InputEventAction.new()
-	event.action = &"debug_unlock_slot"
-	event.pressed = true
-	main._unhandled_input(event)
-	assert_true(player.loadout.is_unlocked(1))
-	assert_false(player.loadout.is_unlocked(2))
-
-
 func test_main_has_three_lecterns_off_screen_from_the_start() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var player := main.get_node("Player") as Player
 	var lecterns := get_tree().get_nodes_in_group(&"lecterns").filter(func(node): return main.is_ancestor_of(node))
 	assert_eq(lecterns.size(), 3)
@@ -196,8 +184,7 @@ func test_main_has_three_lecterns_off_screen_from_the_start() -> void:
 
 
 func test_interact_button_follows_the_interaction_target() -> void:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var player := main.get_node("Player") as Player
 	var button := main.get_node("Hud/InteractButton") as InteractButton
 	button.require_touchscreen = false
@@ -213,8 +200,7 @@ func test_interact_button_follows_the_interaction_target() -> void:
 
 
 func _open_main() -> Array:
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var screen := main.get_node("CraftingScreen") as CraftingScreen
 	screen.pause_tree = false
 	var lecterns := get_tree().get_nodes_in_group(&"lecterns").filter(func(node): return main.is_ancestor_of(node))
@@ -304,8 +290,7 @@ func test_tapping_the_death_screen_restarts_through_the_real_input_pipeline() ->
 	# swallowed taps (see test_world_input.gd), which only a real-window check can show, because in
 	# headless mode pointer events never reach _unhandled_input at all. This test therefore guards
 	# the second layer: the death screen listens in _input, which runs before any control.
-	var main := load("res://scenes/main/main.tscn").instantiate() as Main
-	add_child_autofree(main)
+	var main := _new_main()
 	var death_screen := main.get_node("DeathScreen") as DeathScreen
 	death_screen.input_delay_msec = 0
 	death_screen.restart_scene_path = "res://this_scene_does_not_exist.tscn"

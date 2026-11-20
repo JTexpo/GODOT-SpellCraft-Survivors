@@ -20,6 +20,12 @@
 [ext_resource type="PackedScene" path="res://scenes/interactables/lectern.tscn" id="40"]
 [ext_resource type="PackedScene" path="res://scenes/ui/interact_button.tscn" id="41"]
 [ext_resource type="PackedScene" path="res://scenes/ui/crafting_screen.tscn" id="42"]
+[ext_resource type="Script" path="res://scripts/systems/xp_dropper.gd" id="50"]
+[ext_resource type="PackedScene" path="res://scenes/progression/xp_gem.tscn" id="51"]
+[ext_resource type="Script" path="res://scripts/progression/profile_saver.gd" id="52"]
+[ext_resource type="PackedScene" path="res://scenes/ui/buff_pick_screen.tscn" id="53"]
+[ext_resource type="PackedScene" path="res://scenes/ui/xp_bar.tscn" id="54"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_toast.tscn" id="55"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/fire.tres" id="20"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/thunder.tres" id="21"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/land.tres" id="22"]
@@ -70,6 +76,15 @@ limit_bottom = 540
 script = ExtResource("11")
 pickup_scene = ExtResource("12")
 
+[node name="XpDropper" type="Node" parent="."]
+script = ExtResource("50")
+gem_scene = ExtResource("51")
+
+[node name="ProfileSaver" type="Node" parent="."]
+script = ExtResource("52")
+
+[node name="BuffPickScreen" parent="." instance=ExtResource("53")]
+
 [node name="DamageNumbers" type="Node2D" parent="."]
 script = ExtResource("10")
 
@@ -82,6 +97,18 @@ offset_left = 8.0
 offset_top = 8.0
 offset_right = 88.0
 offset_bottom = 22.0
+
+[node name="XpBar" parent="Hud" instance=ExtResource("54")]
+
+[node name="LevelToast" parent="Hud" instance=ExtResource("55")]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -90.0
+offset_top = 44.0
+offset_right = 90.0
+offset_bottom = 90.0
+grow_horizontal = 2
 
 [node name="SpellBar" parent="Hud" instance=ExtResource("8")]
 

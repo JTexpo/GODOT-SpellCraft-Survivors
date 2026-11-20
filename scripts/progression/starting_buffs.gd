@@ -54,7 +54,7 @@ static func buffs_for_spell(profile: PlayerProfile, track: LevelTrack, level: in
 		var reward := track.reward_for_level(reached)
 		if not _is_buff_reward(reward) or reward.spell_index != spell_index:
 			continue
-		var scroll := _find(track, profile.pick(reached))
+		var scroll := find_scroll(track, profile.pick(reached))
 		if scroll != null:
 			buffs.append(scroll)
 	return buffs
@@ -64,7 +64,8 @@ static func _is_buff_reward(reward: LevelReward) -> bool:
 	return reward.kind == LevelReward.Kind.RANDOM_BUFF or reward.kind == LevelReward.Kind.CHOSEN_BUFF
 
 
-static func _find(track: LevelTrack, buff_id: StringName) -> ScrollData:
+## The pool's scroll with this id, or null (an empty or unknown id).
+static func find_scroll(track: LevelTrack, buff_id: StringName) -> ScrollData:
 	if buff_id == &"":
 		return null
 	for scroll in track.buff_pool:

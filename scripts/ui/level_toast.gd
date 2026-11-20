@@ -31,8 +31,10 @@ func _process(delta: float) -> void:
 	modulate.a = clampf(_time_left / FADE, 0.0, 1.0)
 
 
-func show_level_up(level: int, reward: LevelReward) -> void:
-	_lines.append("Level %d! %s" % [level, reward.description if reward != null else ""])
+## `detail` replaces the reward's own description when it is not empty (a random buff names the buff).
+func show_level_up(level: int, reward: LevelReward, detail: String = "") -> void:
+	var line := detail if not detail.is_empty() else (reward.description if reward != null else "")
+	_lines.append("Level %d! %s" % [level, line])
 	while _lines.size() > MAX_LINES:
 		_lines.pop_front()
 	text = "\n".join(_lines)
