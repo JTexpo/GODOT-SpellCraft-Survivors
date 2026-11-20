@@ -499,7 +499,7 @@ Spells can support additional Base types through Buffs.
 
 The Damage System should be designed to support multiple elemental damage components.
 
-The exact rules for combining multiple Base types should be established before implementing this feature.
+**Settled and built in Sprint 7:** a hit uses the best match. `DamageSystem.resolve` compares each of the spell's elements with the defender's element and keeps the one with the highest multiplier (the first element wins a tie). Strong beats neutral beats weak. `vulnerability_scale` scales only a strong multiplier's bonus, and `ignores_resistance` turns a weak multiplier into a neutral one. A spell carries an `AttackProfile` (elements and these two flags) and the hitbox passes it to the hurtbox, which is still the only place the math runs. `SpellBuilder` averages the Bases' numbers for a hybrid.
 
 ---
 

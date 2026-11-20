@@ -200,3 +200,46 @@ The 60 fps target is met everywhere by a wide margin. Wave and Missile are uncha
 - **Fix, in two layers:** every decorative `ColorRect` in the world scenes now ignores input, and the death screen listens in `_input`, which runs before any control, so a future screen-sized control cannot break restart again. A guard test fails if a world scene gets a Control that stops touches.
 - **A test-environment finding:** in headless test runs, mouse and touch events never reach `_unhandled_input`, so a headless test cannot show this class of bug. The headless test therefore guards only the `_input` layer, and the root cause is guarded by the world-scene check.
 - Still untested on a real phone: the other touch paths on the web build (the Interact button, the crafting screen, the inventory button). The user reports the sticks, aiming and slot taps work.
+
+
+## 2026-11-20: Sprint 7 (buffs)
+
+Decisions (details in `sprint-7-design.md`):
+- All six buffs work. A buff is **data**: a `BuffEffect` resource on the Buff scroll (your choice over a script per buff). Multipliers multiply, bonuses add, and a new buff is a new `.tres`.
+- **Best match** for several Bases (your vision): each hit uses whichever element does best against that enemy (strong beats neutral beats weak, the first element wins a tie). It lives only in `DamageSystem.resolve`. The strong multiplier is the only thing Double Vulnerability scales (one stack is 2.0x, two are 2.5x), and a resisted hit under Ignore Resistance becomes a normal hit.
+- **Duplicate Area is a ring** (your choice): aimed Areas fire copies evenly around the player with the first on the aim, ground zones keep the first at the target and ring the rest at 1.5 x the zone radius. One cast pays mana once, and the copies are independent hits.
+- **Additional Base:** each stack opens one more Base slot. The Base count must equal 1 plus the stacks, with no repeated element.
+- Damage stacking is uncapped (your call: a bigger number drains the pool faster). Caps: Duplicate Area 4, Additional Base 3, Ignore Resistance 1.
+- Buff numbers (per stack): Damage x1.5 (cost x1.5), Max Mana x1.5 (cost x1.25), Double Vulnerability +100% strong bonus (cost x1.25), Ignore Resistance (cost x1.25), Duplicate Area +1 shot (cost x2.0), Additional Base +1 Base (cost x1.8). Cost rises at least as fast as damage or copies, so damage per mana never improves. **Increased Max Mana is the deliberate exception:** it gives more casts, not stronger ones, so it is the one buff that makes a spell last longer.
+- A spell whose cost is above its whole pool is refused (`REASON_TOO_COSTLY`). The crafting screen stays one screen: a buff row with minus and plus steppers, a multi-select Base column ("Base 2 of 2"), and a preview with the drawbacks in plain words ("Buffs: costs 2.3x per cast, 100 casts become 44.").
+
+Migration notes: `SpellBuilder.build` takes a list of Bases and the buff scrolls, `CraftingRequest.bases` replaces `base`, `CraftingSession.bases` replaces `base`, `REASON_BUFFS_LOCKED` is gone, and `SpellLoadout.try_cast` now loops over `CastPattern.shots`. The Sprint 6 check order (Base, Area, wrong Base, wrong Area, range) is kept before the new buff checks.
+
+Known limitations:
+- Balance is untested in play. The numbers are a first guess.
+- A hybrid spell is tinted with its first Base's colour.
+- The crafting screen is TEMPORARY in look, and long buff names (such as Double Vulnerability Damage) are clipped in the buff row.
+- Nothing teaches the player the recipe rules beyond the crafting screen's own messages.
+
+Findings during the build:
+- The Fire + Missile Normal spell is still identical to `fire_missile.tres` except the pool, and a crafted spell with no buffs equals its Sprint 6 version in every number (a test covers every Base and Area pair).
+- Real-renderer runs through the godot MCP caught GDScript warnings the headless run hides (a shadowed name and an int-for-enum), fixed in Task 2.
+- A real-window screenshot of a Fire + Sea Wave with five buffs overflowed the first preview layout (the "Now" lines ran under Confirm). The stat lines were merged until it fit.
+- Stress tooling: `--copies=N` and `--interval=SECONDS` were added to the stress test, and the STRESS line now prints the copies and interval it used. My first "real interval" runs were invalid because of a mistyped argument list (the Area name was passed as "zone 1.2"), so the table below comes from the corrected runs.
+
+Stress test after Sprint 7 (300 enemies, Apple M1, windowed, vsync off), median of three runs. The first block uses the stress test's 0.05 s interval, far faster than any real spell, to compare with Sprint 6. The second block fires five copies at each Area's real cast interval.
+
+| Spell at 0.05 s | 1 copy avg fps | 5 copies avg fps | Sprint 6 |
+|---|---|---|---|
+| Missile | 664.1 | 546.9 | 676.9 |
+| Wave | 260.1 | 85.7 | 187.8 |
+| Zone | 416.8 | 8.5 | 415.7 |
+
+| Five copies at a real interval | avg fps |
+|---|---|
+| Missile, 0.35 s | 697.3 |
+| Wave, 0.9 s | 382.5 |
+| Zone, 1.2 s | 542.3 |
+| Zone, 0.6 s (fastest a crafted zone can be: Thunder) | 439.1 |
+
+The 60 fps target holds at every real interval, with a wide margin. At the artificial 0.05 s rate, five zone copies collapse (about 300 zones alive at once, physics over 30 ms a frame), and five Wave copies stay above 60 fps. No real spell casts that fast: the quickest crafted spell is Thunder + Missile at 0.175 s, and the quickest crafted zone is 0.6 s. Nothing was optimised, and a cap on live zones is the first thing to reach for if a later sprint (equipment that speeds up casting) makes this reachable.

@@ -80,6 +80,8 @@ For example:
 
 Hybrid spells can potentially exploit multiple enemy vulnerabilities, but drain mana much faster than a single element
 
+**Built in Sprint 7:** each Additional Base scroll opens one more Base slot, up to three extra. The number of Base scrolls must match exactly (one, plus one per Additional Base), and an element cannot repeat. Against each enemy a hit uses **whichever of the spell's elements does best** (a strong match beats a neutral one, which beats a weak one), so a Fire + Sea spell hits a Fire enemy as Sea and a Thunder enemy as Fire. A hybrid's damage, speed and mana numbers are the average of its Bases, and the Additional Base buff makes each cast cost 1.8x, so the extra reach is paid for.
+
 ## 3.2 Area Scrolls
 
 Area scrolls determine the shape, targeting method, and behavior of a spell.
@@ -155,19 +157,28 @@ This creates a trade-off between creating a powerful spell and maintaining enoug
 
 Duplicate Area increases the number of times an Area effect is applied.
 
-The direction and distribution of duplicates depend on the Area type.
-
 Examples:
 - 1 Duplicate: Mirrors the original spell.
 - 2 Duplicates: Fires in three directions.
 - 3 Duplicates: Fires in four directions.
 - 4 Duplicates: Fires in five directions.
 
-For directional spells, duplicates can be distributed around the original firing direction.
+**Built in Sprint 7 (the ring):** a spell with N shots fires them evenly around the player, with the first on the aim (2 shots are opposite, 3 are 120 degrees apart, 5 are 72 degrees apart). A ground-targeted Area (the zone) keeps its first zone at the target and puts the others in a ring around it, at 1.5 times the zone's radius. Each shot is its own hit, and a cast costs mana once, so the buff's 2x cost per stack is what pays for the extra shots.
 
-For targeted Area spells, duplicates can create additional explosions around the original target.
+### Buff numbers (built in Sprint 7)
 
-The exact distribution should depend on the spell's Area type.
+Buffs stack. Multipliers multiply, bonuses add, and every stack raises the mana cost per cast.
+
+| Buff | Per stack | Cost per cast | Cap |
+|---|---|---|---|
+| Increased Max Mana | Pool x1.5 | x1.25 | none |
+| Increased Damage | Damage x1.5 | x1.5 | none |
+| Double Vulnerability Damage | Strong bonus +100% (one stack doubles it, two make it 2.5x damage) | x1.25 | none |
+| Ignore Resistance | A weak hit counts as a normal one | x1.25 | 1 |
+| Duplicate Area | +1 shot | x2.0 | 4 |
+| Additional Base | One more Base slot | x1.8 | 3 |
+
+Damage and copies never improve damage per mana. Increased Max Mana is the deliberate exception: it makes more casts, not stronger ones. A spell whose cost is above its whole pool is refused at the Lectern.
 
 ### Spell Balance
 

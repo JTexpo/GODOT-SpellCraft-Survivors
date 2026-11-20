@@ -1,6 +1,6 @@
 # Sprint 7 Design: Buff System
 
-**Status:** Draft. Builder check done and its questions settled. Awaiting the user's approval.
+**Status:** Built (Sprint 7).
 
 Scope comes from `sprint-development.md` (Sprint 7). Architecture follows `technical-design.md` (sections 5, 7 and 8), `CLAUDE.md`, and `sprint-0` to `sprint-6-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 

@@ -4,6 +4,7 @@ extends Node2D
 ## attacker fires, and reports frame time. Not part of the player-facing game.
 ##
 ## Run: godot --path . res://scenes/world/stress_test.tscn -- --enemies=300 --seconds=10
+## Options: --area=<missile|cone|zone|line|wave> --drops --copies=N --interval=SECONDS
 
 const WARMUP_FRAMES := 30
 const SPAWN_RADIUS_MIN := 40.0
@@ -28,6 +29,8 @@ const AREA_SPELLS := {
 @export var drops: bool = false
 ## --copies=N makes the stress spell fire N copies per cast (Duplicate Area), as a ring.
 @export var copies: int = 1
+## --interval=S overrides the stress spell's cast interval (seconds), to measure at a real one.
+@export var interval: float = 0.0
 
 var _frame_ms: Array[float] = []
 var _physics_ms_total: float = 0.0
@@ -99,6 +102,8 @@ func _stress_spell() -> SpellData:
 			push_error("Unknown --area=%s (use %s)" % [area_name, ", ".join(AREA_SPELLS.keys())])
 		spell = STRESS_SPELL.duplicate() as SpellData
 	spell.copies = copies
+	if interval > 0.0:
+		spell.cast_interval = interval
 	return spell
 
 
@@ -130,13 +135,18 @@ func _read_command_line() -> void:
 			drops = true
 		elif argument.begins_with("--copies="):
 			copies = maxi(int(argument.get_slice("=", 1)), 1)
+		elif argument.begins_with("--interval="):
+			interval = float(argument.get_slice("=", 1))
 		elif argument.begins_with("--area="):
 			area_name = argument.get_slice("=", 1)
 
 
 func _report_and_quit() -> void:
 	var report := StressReport.summarize(_frame_ms)
-	print("STRESS enemies=%d avg_fps=%.1f avg_frame_ms=%.2f p99_frame_ms=%.2f avg_physics_ms=%.2f avg_process_ms=%.2f" % [
+	var spell := _loadout.slots[0].data as SpellData
+	print("STRESS copies=%d interval=%.2f enemies=%d avg_fps=%.1f avg_frame_ms=%.2f p99_frame_ms=%.2f avg_physics_ms=%.2f avg_process_ms=%.2f" % [
+		spell.copies,
+		spell.cast_interval,
 		enemy_count,
 		report["avg_fps"],
 		report["avg_ms"],
