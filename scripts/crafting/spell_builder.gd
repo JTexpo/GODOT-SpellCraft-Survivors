@@ -51,6 +51,18 @@ static func build(bases: Array, area: ScrollData, option: RangeOption, buffs: Ar
 	return spell
 
 
+## A copy of an already built spell with `buffs` folded in by the same rules as crafting, for spells
+## that do not come from scrolls (the wizard's starting spells). The original is never changed.
+## Null if the spell is missing or an entry is not a usable Buff scroll.
+static func with_buffs(spell: SpellData, buffs: Array) -> SpellData:
+	if spell == null or not _buffs_usable(buffs):
+		return null
+	var copy := spell.duplicate() as SpellData
+	copy.buff_stacks = spell.buff_stacks.duplicate()
+	_apply_buffs(copy, buffs)
+	return copy
+
+
 ## "Fire Missile", "Fire+Sea Missile", or "Fire Missile (Long)" when the range is not the normal one.
 static func display_name(bases: Array, area: ScrollData, option: RangeOption) -> String:
 	var names: Array[String] = []
@@ -103,8 +115,8 @@ static func can_cast(spell: SpellData) -> bool:
 
 
 static func _apply_buffs(spell: SpellData, buffs: Array) -> void:
-	var copies := 1
-	var vulnerability := 1.0
+	var copies := spell.copies
+	var vulnerability := spell.vulnerability_scale
 	for buff: ScrollData in buffs:
 		var effect := buff.buff
 		spell.damage *= effect.damage_multiplier
