@@ -143,3 +143,26 @@ func test_every_non_button_control_ignores_the_mouse() -> void:
 		if child.get_parent() == _screen:
 			continue
 		assert_eq((child as Control).mouse_filter, Control.MOUSE_FILTER_IGNORE, str(child.name))
+
+
+func test_item_presses_inside_the_input_guard_do_nothing() -> void:
+	_profile.add_gold(500)
+	_screen.input_guard_msec = 300
+	_screen.open(_profile, _catalog)
+	watch_signals(_screen)
+	_screen._on_item_pressed(&"robe_ember")
+	assert_false(_profile.owns(&"robe_ember"))
+	assert_eq(_profile.gold, 500)
+	assert_signal_not_emitted(_screen, "changed")
+	_screen.input_guard_msec = 0
+	_screen._on_item_pressed(&"robe_ember")
+	assert_true(_profile.owns(&"robe_ember"))
+	assert_eq(_profile.gold, 400)
+
+
+func test_the_close_button_works_inside_the_input_guard() -> void:
+	_screen.input_guard_msec = 300
+	_screen.open(_profile, _catalog)
+	var close := _screen.find_children("*", "Button", true, false).filter(func(b): return b.text == "Close")[0] as Button
+	close.pressed.emit()
+	assert_false(_screen.is_open())

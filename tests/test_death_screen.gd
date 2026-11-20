@@ -176,3 +176,24 @@ func test_the_shop_button_is_not_requested_twice_while_open() -> void:
 	_shop_button().pressed.emit()
 	_shop_button().pressed.emit()
 	assert_signal_emit_count(_screen, "shop_requested", 1)
+
+
+func test_the_shop_button_is_ignored_inside_the_input_delay() -> void:
+	_screen.input_delay_msec = 500
+	_screen.show_death()
+	watch_signals(_screen)
+	_shop_button().pressed.emit()
+	assert_signal_not_emitted(_screen, "shop_requested")
+	_screen.input_delay_msec = 0
+	_shop_button().pressed.emit()
+	assert_signal_emit_count(_screen, "shop_requested", 1)
+
+
+func test_a_tap_on_the_shop_button_inside_the_delay_does_nothing() -> void:
+	_screen.input_delay_msec = 500
+	_screen.show_death()
+	await wait_process_frames(2)
+	watch_signals(_screen)
+	_screen.handle_event(_touch_at(_shop_button().get_global_rect().get_center()))
+	assert_signal_not_emitted(_screen, "shop_requested")
+	assert_signal_not_emitted(_screen, "restart_requested")

@@ -318,3 +318,8 @@ Findings during the build:
 | Zone | 211.2 | 173.2 |
 
 Casting stays at 679 fps for Missile without drops, so the per-cast damage scale costs nothing measurable. Wave without coin drops read 131.1 against 101.3 with them in one paired run (7.63 ms against 9.87 ms a frame).
+
+Review fixes (Sprint 9 whole-branch review: 0 Critical, 2 Important fixed, minors deferred):
+- Mashing Enter (or the controller's accept) at the moment of death opened the shop and then bought the first item, because the 500 ms input delay only guarded `handle_event`. The Shop button now ignores presses inside that delay, and the shop ignores item presses for 300 ms after it opens (`ShopScreen.input_guard_msec`). Close always works.
+- The crafting drawbacks line ("100 casts become N") used the raw pool while the stats block above it used the loadout's mana bonus. Both now use the bonus.
+- Doubled zones (the cost of a Wand's cast twice on a ground-targeted spell), measured with `--copies` as the stand-in at the real zone interval of 1.2 s, 300 enemies, median of three: 1 copy 688.2 fps, 2 copies 694.8, 4 copies 590.6. Casting twice costs nothing measurable.

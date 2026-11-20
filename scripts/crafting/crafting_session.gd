@@ -179,10 +179,11 @@ func drawbacks() -> Array[String]:
 	if buffed == null or plain == null:
 		return lines
 	var multiplier := snappedf(buffed.mana_cost / plain.mana_cost, 0.1) if plain.mana_cost > 0.0 else 1.0
+	var pool_bonus := _loadout.bonuses.fraction(StatBonuses.Stat.SPELL_MANA)
 	lines.append("Buffs: costs %.1fx per cast, %d casts become %d." % [
 		multiplier,
-		SpellBuilder.whole_casts(plain),
-		SpellBuilder.whole_casts(buffed),
+		SpellBuilder.whole_casts(plain, pool_bonus),
+		SpellBuilder.whole_casts(buffed, pool_bonus),
 	])
 	if not SpellBuilder.can_cast(buffed):
 		lines.append(CraftingSystem.REASON_TOO_COSTLY)

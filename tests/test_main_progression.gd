@@ -297,6 +297,7 @@ func test_death_screen_shop_opens_the_shop_and_a_purchase_is_saved_immediately()
 	var main := _new_main(_path())
 	_die(main)
 	var death := main.get_node("DeathScreen") as DeathScreen
+	death.input_delay_msec = 0
 	var shop := main.get_node("ShopScreen") as ShopScreen
 	(death.get_node("ShopButton") as Button).pressed.emit()
 	assert_true(shop.is_open())
@@ -331,6 +332,7 @@ func test_next_run_after_buying_applies_the_item() -> void:
 	SaveGame.save_profile(profile, _path())
 	var first := _new_main(_path())
 	_die(first)
+	(first.get_node("DeathScreen") as DeathScreen).input_delay_msec = 0
 	(first.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
 	(first.get_node("ShopScreen") as ShopScreen).buy(&"wand_quick")
 	first.free()
@@ -343,3 +345,37 @@ func test_shop_cannot_be_opened_while_alive() -> void:
 	var main := _new_main("")
 	(main.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
 	assert_false((main.get_node("ShopScreen") as ShopScreen).is_open())
+
+
+func test_mashing_accept_at_the_moment_of_death_buys_nothing() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(1000)
+	SaveGame.save_profile(profile, _path())
+	var main := _new_main(_path())
+	_die(main)
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	var button := main.get_node("DeathScreen/ShopButton") as Button
+	button.pressed.emit()
+	button.pressed.emit()
+	assert_false(shop.is_open(), "the shop stays shut inside the death screen's input delay")
+	var saved := SaveGame.load_profile(_path())
+	assert_eq(saved.gold, 1000)
+	assert_true(saved.owned.is_empty())
+
+
+func test_a_second_accept_right_after_the_shop_opens_buys_nothing() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(1000)
+	SaveGame.save_profile(profile, _path())
+	var main := _new_main(_path())
+	_die(main)
+	(main.get_node("DeathScreen") as DeathScreen).input_delay_msec = 0
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	(main.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
+	assert_true(shop.is_open())
+	# The second press lands on the shop's first item, which has focus.
+	var focused := get_viewport().gui_get_focus_owner() as Button
+	if focused != null and shop.is_ancestor_of(focused):
+		focused.pressed.emit()
+	assert_eq(main.profile.gold, 1000, "nothing was bought by the second press")
+	assert_true(main.profile.owned.is_empty())

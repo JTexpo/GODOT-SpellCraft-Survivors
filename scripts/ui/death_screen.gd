@@ -75,8 +75,10 @@ func handle_event(event: InputEvent) -> void:
 		restart()
 
 
+## Ignored while the death screen is hidden, while the shop is already open, and inside the input
+## delay, so a button mashed at the moment of death cannot open the shop and then press inside it.
 func _request_shop() -> void:
-	if not visible or _shop_open:
+	if not visible or _shop_open or Time.get_ticks_msec() - _shown_at_msec < input_delay_msec:
 		return
 	_shop_open = true
 	shop_requested.emit()

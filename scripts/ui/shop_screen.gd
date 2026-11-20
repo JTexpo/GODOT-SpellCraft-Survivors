@@ -13,7 +13,12 @@ const COLUMN_X := [8.0, 164.0, 320.0]
 const BUTTON_SIZE := Vector2(152, 15)
 const SLOT_NAMES := ["Robes", "Wands and Staffs", "Hats and Hoods"]
 
+## Item presses are ignored for this long after the shop opens, so the press that opened it (or one
+## mashed right after) cannot also buy something.
+var input_guard_msec: int = 300
+
 var _open: bool = false
+var _opened_at_msec: int = 0
 var _profile: PlayerProfile
 var _catalog: EquipmentCatalog
 var _message: String = ""
@@ -58,6 +63,7 @@ func open(profile: PlayerProfile, catalog: EquipmentCatalog) -> void:
 	_catalog = catalog
 	_message = ""
 	_open = true
+	_opened_at_msec = Time.get_ticks_msec()
 	visible = true
 	_fill()
 	_refresh()
@@ -193,6 +199,8 @@ func _refresh() -> void:
 
 
 func _on_item_pressed(id: StringName) -> void:
+	if Time.get_ticks_msec() - _opened_at_msec < input_guard_msec:
+		return
 	_show_detail(_catalog.find(id))
 	activate(id)
 

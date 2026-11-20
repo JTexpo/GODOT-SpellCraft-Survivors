@@ -401,3 +401,19 @@ func test_stats_without_bonuses_are_the_plain_numbers() -> void:
 	session.select_area(_missile)
 	assert_almost_eq(session.new_stats()["pool"], 100.0, 0.001)
 	assert_almost_eq(session.current_stats()["pool"], 1000.0, 0.001)
+
+
+func test_drawbacks_count_casts_with_the_loadouts_mana_bonus() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_missile)
+	_own(damage)
+	var bonuses := StatBonuses.new()
+	bonuses.add(StatBonuses.Stat.SPELL_MANA, 0.5)
+	_loadout.set_bonuses(bonuses)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	session.add_buff(damage)
+	assert_eq(session.drawbacks(), ["Buffs: costs 1.5x per cast, 150 casts become 100."])
+	assert_almost_eq(session.new_stats()["whole_casts"], 100, 0)
