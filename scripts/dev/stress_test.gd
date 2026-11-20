@@ -26,6 +26,8 @@ const AREA_SPELLS := {
 @export var area_name: String = ""
 ## --drops: kills drop real scrolls, and the arena starts with a full 100 pickups on the ground.
 @export var drops: bool = false
+## --copies=N makes the stress spell fire N copies per cast (Duplicate Area), as a ring.
+@export var copies: int = 1
 
 var _frame_ms: Array[float] = []
 var _physics_ms_total: float = 0.0
@@ -87,13 +89,16 @@ func _process(delta: float) -> void:
 
 ## The named Area's spell with a bottomless pool and a fast interval, so it never runs dry.
 func _stress_spell() -> SpellData:
-	if not AREA_SPELLS.has(area_name):
+	var spell: SpellData
+	if AREA_SPELLS.has(area_name):
+		spell = (load(AREA_SPELLS[area_name]) as SpellData).duplicate() as SpellData
+		spell.max_mana = STRESS_SPELL.max_mana
+		spell.cast_interval = STRESS_SPELL.cast_interval
+	else:
 		if area_name != "":
 			push_error("Unknown --area=%s (use %s)" % [area_name, ", ".join(AREA_SPELLS.keys())])
-		return STRESS_SPELL
-	var spell := (load(AREA_SPELLS[area_name]) as SpellData).duplicate() as SpellData
-	spell.max_mana = STRESS_SPELL.max_mana
-	spell.cast_interval = STRESS_SPELL.cast_interval
+		spell = STRESS_SPELL.duplicate() as SpellData
+	spell.copies = copies
 	return spell
 
 
@@ -123,6 +128,8 @@ func _read_command_line() -> void:
 			run_seconds = float(argument.get_slice("=", 1))
 		elif argument == "--drops":
 			drops = true
+		elif argument.begins_with("--copies="):
+			copies = maxi(int(argument.get_slice("=", 1)), 1)
 		elif argument.begins_with("--area="):
 			area_name = argument.get_slice("=", 1)
 
