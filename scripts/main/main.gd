@@ -32,6 +32,7 @@ extends Node2D
 
 var profile: PlayerProfile
 var track: LevelTrack
+var catalog: EquipmentCatalog
 
 var _rng := RandomNumberGenerator.new()
 
@@ -88,9 +89,11 @@ func _unhandled_input(event: InputEvent) -> void:
 func _begin_progression() -> void:
 	_rng.randomize()
 	track = LevelTrack.default_track()
+	catalog = EquipmentCatalog.default_catalog()
 	profile = SaveGame.load_profile(save_path) if not save_path.is_empty() else PlayerProfile.new()
 	var progress := _player.progress
 	progress.bind(_player, profile, track)
+	progress.equipment_bonuses = ShopSystem.bonuses(profile, catalog)
 	_saver.bind(profile, save_path)
 	_xp_bar.bind(progress)
 	_gold_counter.bind(progress)
@@ -112,7 +115,7 @@ func _begin_progression() -> void:
 		_pick_screen.open(options, "Level %d: choose a buff for your starting spell" % reward_level)
 		var picked: ScrollData = await _pick_screen.chosen
 		run_buffs.set_pick(reward_level, picked.id)
-	RunStart.prepare(_player, profile, track, run_buffs)
+	RunStart.prepare(_player, profile, track, run_buffs, catalog)
 	for reward_level in rolled:
 		_level_toast.show_message(_rolled_notice(run_buffs, reward_level))
 

@@ -160,13 +160,13 @@ func confirm() -> CraftingResult:
 ## The numbers of the spell the choices would make. Empty when there is nothing to preview.
 func new_stats() -> Dictionary:
 	var spell := preview()
-	return SpellBuilder.describe(spell) if spell != null else {}
+	return SpellBuilder.describe(spell, _loadout.bonuses) if spell != null else {}
 
 
 ## The numbers of the spell now in the target slot. Empty for an empty slot.
 func current_stats() -> Dictionary:
 	var instance := _loadout.slots[slot_index] if slot_index < _loadout.slots.size() else null
-	return SpellBuilder.describe(instance.data) if instance != null else {}
+	return SpellBuilder.describe(instance.data, _loadout.bonuses) if instance != null else {}
 
 
 ## Plain-words costs of the chosen buffs. Empty with no buffs or when the spell cannot be built.

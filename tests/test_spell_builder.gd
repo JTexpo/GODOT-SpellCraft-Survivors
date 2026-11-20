@@ -332,3 +332,43 @@ func test_with_buffs_empty_list_equals_the_original_numbers() -> void:
 	assert_eq(copy.copies, 1)
 	assert_eq(copy.elements, original.elements)
 	assert_ne(copy, original)
+
+
+func test_describe_without_bonuses_is_unchanged() -> void:
+	var spell := _fire_missile()
+	assert_eq(SpellBuilder.describe(spell), SpellBuilder.describe(spell, null))
+	assert_eq(SpellBuilder.describe(spell, StatBonuses.new()), SpellBuilder.describe(spell))
+
+
+func test_describe_with_bonuses_scales_damage_interval_pool_and_casts() -> void:
+	var spell := _fire_missile()
+	var bonuses := StatBonuses.new()
+	bonuses.add(StatBonuses.Stat.SPELL_DAMAGE, 0.25)
+	bonuses.add(StatBonuses.Stat.DAMAGE_FIRE, 0.2)
+	bonuses.add(StatBonuses.Stat.CAST_SPEED, 0.25)
+	bonuses.add(StatBonuses.Stat.SPELL_MANA, 0.3)
+	var info := SpellBuilder.describe(spell, bonuses)
+	assert_almost_eq(info["damage"], spell.damage * 1.5, 0.0001)
+	assert_almost_eq(info["interval"], spell.cast_interval / 1.25, 0.0001)
+	assert_almost_eq(info["pool"], spell.max_mana * 1.3, 0.0001)
+	assert_almost_eq(info["casts"], spell.max_mana * 1.3 / spell.mana_cost, 0.0001)
+	assert_eq(info["cost"], spell.mana_cost, "the cost per cast is not changed")
+
+
+func test_describe_whole_casts_use_the_bonus_pool() -> void:
+	var spell := _fire_missile()
+	spell.max_mana = 10.0
+	spell.mana_cost = 3.0
+	var bonuses := StatBonuses.new()
+	bonuses.add(StatBonuses.Stat.SPELL_MANA, 0.2)
+	assert_eq(SpellBuilder.describe(spell)["whole_casts"], 3)
+	assert_eq(SpellBuilder.describe(spell, bonuses)["whole_casts"], 4)
+
+
+func test_describe_does_not_change_the_spell() -> void:
+	var spell := _fire_missile()
+	var damage := spell.damage
+	var bonuses := StatBonuses.new()
+	bonuses.add(StatBonuses.Stat.SPELL_DAMAGE, 1.0)
+	SpellBuilder.describe(spell, bonuses)
+	assert_eq(spell.damage, damage)

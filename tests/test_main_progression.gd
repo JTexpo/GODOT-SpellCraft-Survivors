@@ -244,3 +244,43 @@ func test_gold_survives_death_and_a_new_run() -> void:
 	var second := _new_main(_path())
 	assert_eq(second.profile.gold, 40)
 	assert_eq((second.get_node("Hud/GoldCounter") as GoldCounter).gold_text(), "Gold 40")
+
+
+func _save_wearing(ids: Array[StringName]) -> void:
+	var catalog := EquipmentCatalog.default_catalog()
+	var profile := PlayerProfile.new()
+	for id in ids:
+		profile.grant(id)
+		profile.equip(int(catalog.find(id).slot()), id)
+	SaveGame.save_profile(profile, _path())
+
+
+func test_equipped_items_are_applied_when_a_run_starts() -> void:
+	_save_wearing([&"robe_ember", &"wand_quick"] as Array[StringName])
+	var main := _new_main(_path())
+	var bonuses := _player(main).loadout.bonuses
+	assert_almost_eq(bonuses.fraction(StatBonuses.Stat.DAMAGE_FIRE), 0.15, 0.0001)
+	assert_almost_eq(bonuses.fraction(StatBonuses.Stat.CAST_SPEED), 0.25, 0.0001)
+	assert_almost_eq(bonuses.fraction(StatBonuses.Stat.SPELL_DAMAGE), -0.15, 0.0001)
+
+
+func test_restart_does_not_apply_equipment_twice() -> void:
+	_save_wearing([&"robe_warded", &"hat_swift"] as Array[StringName])
+	var first := _new_main(_path())
+	var speed := _speed(first)
+	var health := _player(first).health.max_health
+	var cast_speed := _player(first).loadout.bonuses.fraction(StatBonuses.Stat.CAST_SPEED)
+	first.free()
+	var second := _new_main(_path())
+	assert_almost_eq(_speed(second), speed, 0.0001)
+	assert_almost_eq(_player(second).health.max_health, health, 0.0001)
+	assert_almost_eq(_player(second).loadout.bonuses.fraction(StatBonuses.Stat.CAST_SPEED), cast_speed, 0.0001)
+	assert_almost_eq(_speed(second), 90.0 * 1.10, 0.001)
+	assert_almost_eq(_player(second).health.max_health, 130.0, 0.001)
+
+
+func test_a_level_up_in_a_run_keeps_the_saved_equipment() -> void:
+	_save_wearing([&"hat_swift"] as Array[StringName])
+	var main := _new_main(_path())
+	_player(main).progress.add_xp(30)
+	assert_almost_eq(_speed(main), 90.0 * (1.0 + 0.08 + 0.10), 0.001)

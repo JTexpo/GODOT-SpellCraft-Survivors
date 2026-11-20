@@ -163,3 +163,39 @@ func test_gold_changed_reports_the_total() -> void:
 	watch_signals(_progress)
 	_progress.add_gold(4)
 	assert_signal_emitted_with_parameters(_progress, "gold_changed", [14])
+
+
+func _wear(id: StringName) -> void:
+	var catalog := EquipmentCatalog.default_catalog()
+	_profile.grant(id)
+	_profile.equip(int(catalog.find(id).slot()), id)
+	_progress.equipment_bonuses = ShopSystem.bonuses(_profile, catalog)
+
+
+func test_level_up_keeps_the_equipment_bonuses() -> void:
+	_wear(&"hat_swift")
+	_progress.add_xp(30)
+	assert_almost_eq(_speed(), 90.0 * (1.0 + 0.08 + 0.10), 0.001)
+
+
+func test_equipment_never_applies_twice_across_several_level_ups() -> void:
+	_wear(&"hat_swift")
+	_progress.add_xp(_track.xp_for_level(11))
+	assert_almost_eq(_speed(), 90.0 * (1.0 + 0.24 + 0.10), 0.001)
+	_progress.add_xp(1)
+	assert_almost_eq(_speed(), 90.0 * (1.0 + 0.24 + 0.10), 0.001)
+
+
+func test_health_level_up_with_equipment_heals_by_the_gain() -> void:
+	_wear(&"hat_hardy")
+	_player.health.take_damage(30.0)
+	_progress.add_xp(_track.xp_for_level(3))
+	assert_almost_eq(_player.health.max_health, 100.0 * (1.0 + 0.20 + 0.20), 0.001)
+	assert_almost_eq(_player.health.current_health, 70.0 + 40.0, 0.001)
+
+
+func test_equipment_damage_bonus_survives_a_mana_level_up() -> void:
+	_wear(&"robe_ember")
+	_progress.add_xp(_track.xp_for_level(4))
+	assert_almost_eq(_player.loadout.bonuses.fraction(StatBonuses.Stat.DAMAGE_FIRE), 0.15, 0.0001)
+	assert_almost_eq(_player.loadout.bonuses.fraction(StatBonuses.Stat.SPELL_MANA), 0.15, 0.0001)
