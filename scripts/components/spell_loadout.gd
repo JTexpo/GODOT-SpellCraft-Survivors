@@ -27,6 +27,8 @@ var projectile_root: Node
 
 var slots: Array[SpellInstance] = []
 var selected_index: int = 0
+## The level's spell mana bonus, given to every spell here (see SpellInstance.max_mana_bonus).
+var mana_bonus: float = 0.0
 
 var _dry_latched: bool = false
 
@@ -35,7 +37,7 @@ func _ready() -> void:
 	slots.clear()
 	for i in SLOT_COUNT:
 		var spell: SpellData = starting_spells[i] if i < starting_spells.size() and is_unlocked(i) else null
-		slots.append(SpellInstance.new(spell) if spell != null else null)
+		slots.append(_new_instance(spell) if spell != null else null)
 
 
 func _process(delta: float) -> void:
@@ -61,17 +63,34 @@ func unlock_next() -> bool:
 	return true
 
 
+## Sets how many slots are usable (from 1 to SLOT_COUNT) and emits `slot_unlocked` for each slot that
+## just opened, so the spell bar redraws them. Lowering it emits nothing.
+func set_unlocked_slots(count: int) -> void:
+	var before := unlocked_slots
+	unlocked_slots = clampi(count, 1, SLOT_COUNT)
+	for index in range(before, unlocked_slots):
+		slot_unlocked.emit(index)
+
+
 ## Puts a new spell, with a full mana pool, in an unlocked slot, replacing whatever was there.
 ## Returns the new instance, or null (changing nothing) if the slot is locked or out of range.
 func equip(index: int, spell: SpellData) -> SpellInstance:
 	if spell == null or not is_unlocked(index) or index >= slots.size():
 		return null
-	var instance := SpellInstance.new(spell)
+	var instance := _new_instance(spell)
 	slots[index] = instance
 	if index == selected_index:
 		_dry_latched = false
 	slot_changed.emit(index)
 	return instance
+
+
+## Sets the level's mana bonus on every spell now in a slot, and on every spell equipped later.
+func set_mana_bonus(bonus: float) -> void:
+	mana_bonus = bonus
+	for spell in slots:
+		if spell != null:
+			spell.set_max_mana_bonus(bonus)
 
 
 func select(index: int) -> bool:
@@ -122,6 +141,13 @@ func try_cast(origin: Vector2, direction: Vector2, target: Vector2 = Vector2.INF
 ## Call when the player stops casting, so the next press can cue "dry" again.
 func end_cast() -> void:
 	_dry_latched = false
+
+
+func _new_instance(spell: SpellData) -> SpellInstance:
+	var instance := SpellInstance.new(spell)
+	if mana_bonus != 0.0:
+		instance.set_max_mana_bonus(mana_bonus)
+	return instance
 
 
 func restore_all_mana() -> void:

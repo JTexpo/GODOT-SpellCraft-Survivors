@@ -1,0 +1,124 @@
+[gd_resource type="Resource" script_class="LevelTrack" load_steps=29 format=3]
+
+[ext_resource type="Script" path="res://resources/progression/level_reward.gd" id="1"]
+[ext_resource type="Script" path="res://resources/progression/level_track.gd" id="2"]
+[ext_resource type="Resource" path="res://resources/spells/sea_cone.tres" id="3"]
+[ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="4"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/max_mana.tres" id="b0"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/damage.tres" id="b1"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/double_vulnerability.tres" id="b2"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/ignore_resistance.tres" id="b3"]
+[ext_resource type="Resource" path="res://resources/scrolls/buff/duplicate_area.tres" id="b4"]
+
+[sub_resource type="Resource" id="r2"]
+script = ExtResource("1")
+kind = 0
+amount = 0.08
+description = "Faster movement"
+
+[sub_resource type="Resource" id="r3"]
+script = ExtResource("1")
+kind = 1
+amount = 0.2
+description = "More health"
+
+[sub_resource type="Resource" id="r4"]
+script = ExtResource("1")
+kind = 2
+amount = 0.15
+description = "More spell mana"
+
+[sub_resource type="Resource" id="r5"]
+script = ExtResource("1")
+kind = 3
+description = "Slot 2 unlocked"
+
+[sub_resource type="Resource" id="r6"]
+script = ExtResource("1")
+kind = 0
+amount = 0.08
+description = "Faster movement"
+
+[sub_resource type="Resource" id="r7"]
+script = ExtResource("1")
+kind = 4
+description = "Starting spell: random buff"
+
+[sub_resource type="Resource" id="r8"]
+script = ExtResource("1")
+kind = 1
+amount = 0.2
+description = "More health"
+
+[sub_resource type="Resource" id="r9"]
+script = ExtResource("1")
+kind = 2
+amount = 0.15
+description = "More spell mana"
+
+[sub_resource type="Resource" id="r10"]
+script = ExtResource("1")
+kind = 3
+description = "Slot 3 unlocked"
+
+[sub_resource type="Resource" id="r11"]
+script = ExtResource("1")
+kind = 0
+amount = 0.08
+description = "Faster movement"
+
+[sub_resource type="Resource" id="r12"]
+script = ExtResource("1")
+kind = 5
+description = "Starting spell: choose a buff"
+
+[sub_resource type="Resource" id="r13"]
+script = ExtResource("1")
+kind = 1
+amount = 0.2
+description = "More health"
+
+[sub_resource type="Resource" id="r14"]
+script = ExtResource("1")
+kind = 6
+spell = ExtResource("3")
+description = "Second starting spell: Sea Cone"
+
+[sub_resource type="Resource" id="r15"]
+script = ExtResource("1")
+kind = 3
+description = "Slot 4 unlocked"
+
+[sub_resource type="Resource" id="r16"]
+script = ExtResource("1")
+kind = 0
+amount = 0.08
+description = "Faster movement"
+
+[sub_resource type="Resource" id="r17"]
+script = ExtResource("1")
+kind = 4
+spell_index = 1
+description = "Second spell: random buff"
+
+[sub_resource type="Resource" id="r18"]
+script = ExtResource("1")
+kind = 1
+amount = 0.2
+description = "More health"
+
+[sub_resource type="Resource" id="r19"]
+script = ExtResource("1")
+kind = 5
+spell_index = 1
+description = "Second spell: choose a buff"
+
+[sub_resource type="Resource" id="r20"]
+script = ExtResource("1")
+kind = 3
+description = "Slot 5 unlocked"
+
+[resource]
+script = ExtResource("2")
+rewards = Array[ExtResource("1")]([SubResource("r2"), SubResource("r3"), SubResource("r4"), SubResource("r5"), SubResource("r6"), SubResource("r7"), SubResource("r8"), SubResource("r9"), SubResource("r10"), SubResource("r11"), SubResource("r12"), SubResource("r13"), SubResource("r14"), SubResource("r15"), SubResource("r16"), SubResource("r17"), SubResource("r18"), SubResource("r19"), SubResource("r20")])
+buff_pool = Array[ExtResource("4")]([ExtResource("b0"), ExtResource("b1"), ExtResource("b2"), ExtResource("b3"), ExtResource("b4")])

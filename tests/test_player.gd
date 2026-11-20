@@ -187,3 +187,45 @@ func test_interact_action_uses_the_nearest_lectern() -> void:
 	watch_signals(lectern)
 	_player._unhandled_input(_action_event(&"interact"))
 	assert_signal_emit_count(lectern, "interacted", 1)
+
+
+func _bonuses(level: int) -> StatBonuses:
+	return StatBonuses.for_level(LevelTrack.default_track(), level)
+
+
+func test_apply_stat_bonuses_scales_from_the_base_values() -> void:
+	_player.apply_stat_bonuses(_bonuses(20))
+	assert_almost_eq((_player.get_node("MoveComponent") as MoveComponent).speed, 118.8, 0.001)
+	assert_almost_eq(_player.health.max_health, 180.0, 0.001)
+	assert_almost_eq(_player.health.current_health, 180.0, 0.001)
+	assert_almost_eq(_player.loadout.mana_bonus, 0.3, 0.0001)
+
+
+func test_apply_twice_is_the_same_as_once() -> void:
+	_player.apply_stat_bonuses(_bonuses(20))
+	_player.apply_stat_bonuses(_bonuses(20))
+	assert_almost_eq((_player.get_node("MoveComponent") as MoveComponent).speed, 118.8, 0.001)
+	assert_almost_eq(_player.health.max_health, 180.0, 0.001)
+	_player.apply_stat_bonuses(_bonuses(20), true)
+	assert_almost_eq(_player.health.max_health, 180.0, 0.001)
+	assert_almost_eq(_player.health.current_health, 180.0, 0.001)
+
+
+func test_heal_difference_adds_the_gain_to_current_health() -> void:
+	_player.health.take_damage(30.0)
+	_player.apply_stat_bonuses(_bonuses(3), true)
+	assert_almost_eq(_player.health.max_health, 120.0, 0.001)
+	assert_almost_eq(_player.health.current_health, 90.0, 0.001)
+
+
+func test_without_heal_difference_current_becomes_max() -> void:
+	_player.health.take_damage(30.0)
+	_player.apply_stat_bonuses(_bonuses(3), false)
+	assert_almost_eq(_player.health.current_health, 120.0, 0.001)
+
+
+func test_fresh_bonuses_change_nothing() -> void:
+	_player.apply_stat_bonuses(_bonuses(1))
+	assert_eq((_player.get_node("MoveComponent") as MoveComponent).speed, 90.0)
+	assert_eq(_player.health.max_health, 100.0)
+	assert_eq(_player.loadout.mana_bonus, 0.0)

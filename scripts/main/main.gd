@@ -18,6 +18,20 @@ extends Node2D
 @onready var _inventory_button: InventoryButton = $Hud/InventoryButton
 @onready var _interact_button: InteractButton = $Hud/InteractButton
 @onready var _crafting_screen: CraftingScreen = $CraftingScreen
+@onready var _xp_dropper: XpDropper = $XpDropper
+@onready var _saver: ProfileSaver = $ProfileSaver
+@onready var _pick_screen: BuffPickScreen = $BuffPickScreen
+@onready var _xp_bar: XpBar = $Hud/XpBar
+@onready var _level_toast: LevelToast = $Hud/LevelToast
+
+## Where the profile is saved. Empty means "do not load or save": tests set it before adding Main to
+## the tree so they never touch the player's real save.
+@export var save_path: String = SaveGame.DEFAULT_PATH
+
+var profile: PlayerProfile
+var track: LevelTrack
+
+var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
@@ -47,6 +61,7 @@ func _ready() -> void:
 			lectern.interacted.connect(_open_crafting)
 	# The click that confirmed a craft is probably still held when the world resumes.
 	_crafting_screen.closed.connect(_player.require_cast_release)
+	_begin_progression()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -59,9 +74,70 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"debug_give_scrolls"):
 		for scroll in debug_scrolls:
 			_player.inventory.add(scroll, 3)
-	# DEBUG: unlocks the next spell slot, until levels do it (Sprint 8). Delete then.
-	elif event.is_action_pressed(&"debug_unlock_slot"):
-		_player.loadout.unlock_next()
+	# DEBUG: 100 XP, to try levels without grinding. It is saved like real XP. Delete later.
+	elif event.is_action_pressed(&"debug_give_xp"):
+		_player.progress.add_xp(100)
+
+
+## Loads the profile, wires XP and saving, asks for any owed buff pick, then sets the run up. With
+## nothing to ask it finishes straight away. With a pick owed it waits on the pick screen (the world
+## is paused meanwhile), so the run starts with the choice already applied.
+func _begin_progression() -> void:
+	_rng.randomize()
+	track = LevelTrack.default_track()
+	profile = SaveGame.load_profile(save_path) if not save_path.is_empty() else PlayerProfile.new()
+	var progress := _player.progress
+	progress.bind(_player, profile, track)
+	progress.starting_buffs_hook = _on_random_buff_reached
+	_saver.bind(profile, save_path)
+	_xp_bar.bind(progress)
+	_player.collector.xp_collected.connect(progress.add_xp)
+	_spawner.enemy_died.connect(_xp_dropper.on_enemy_died)
+	progress.xp_changed.connect(_on_xp_changed)
+	progress.leveled_up.connect(_on_leveled_up)
+	_player.died.connect(_on_player_died)
+	var level := profile.level(track)
+	if not StartingBuffs.settle_random(profile, track, level, _rng).is_empty():
+		_saver.mark_dirty()
+	for reward_level in StartingBuffs.unresolved_levels(profile, track, level, LevelReward.Kind.CHOSEN_BUFF):
+		var options := StartingBuffs.options_for(profile, track, reward_level)
+		if options.is_empty():
+			continue
+		_pick_screen.open(options, "Level %d: choose a buff for your starting spell" % reward_level)
+		var picked: ScrollData = await _pick_screen.chosen
+		profile.set_pick(reward_level, picked.id)
+		_saver.save_now()
+	RunStart.prepare(_player, profile, track)
+
+
+func _on_random_buff_reached(_reward_level: int) -> void:
+	StartingBuffs.settle_random(profile, track, _player.progress.level(), _rng)
+	_saver.mark_dirty()
+
+
+func _on_xp_changed(_total_xp: int, _level: int) -> void:
+	_saver.mark_dirty()
+
+
+func _on_leveled_up(level: int, reward: LevelReward) -> void:
+	_level_toast.show_level_up(level, reward, _buff_notice(level, reward))
+	_saver.save_now()
+
+
+## For a random buff: what the starting spell will gain next run. Empty for any other reward.
+func _buff_notice(level: int, reward: LevelReward) -> String:
+	if reward.kind != LevelReward.Kind.RANDOM_BUFF:
+		return ""
+	var scroll := StartingBuffs.find_scroll(track, profile.pick(level))
+	if scroll == null:
+		return ""
+	var spell_name := "Starting spell" if reward.spell_index == 0 else "Second spell"
+	return "%s gains %s next run" % [spell_name, scroll.display_name]
+
+
+func _on_player_died() -> void:
+	_death_screen.set_run_summary(_player.progress.run_xp, _player.progress.level())
+	_saver.save_now()
 
 
 func _toggle_inventory() -> void:

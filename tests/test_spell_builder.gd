@@ -272,3 +272,63 @@ func test_bad_buffs_return_null() -> void:
 func test_whole_casts_round_down() -> void:
 	var spell := _fire_missile([_buff("damage")])
 	assert_eq(SpellBuilder.describe(spell)["whole_casts"], 66)
+
+
+func _starting_fire_missile() -> SpellData:
+	return load("res://resources/spells/fire_missile.tres") as SpellData
+
+
+func test_with_buffs_adds_copies_and_cost_without_changing_the_original() -> void:
+	var original := _starting_fire_missile()
+	var buffed := SpellBuilder.with_buffs(original, [_buff("duplicate_area")])
+	assert_not_null(buffed)
+	assert_eq(buffed.copies, 2)
+	assert_almost_eq(buffed.mana_cost, original.mana_cost * 2.0, 0.0001)
+	assert_eq(buffed.max_mana, original.max_mana)
+	assert_eq(buffed.display_name, "Fire Missile")
+	assert_eq(original.copies, 1)
+	assert_eq(original.mana_cost, 1.0)
+	assert_true(original.buff_stacks.is_empty())
+
+
+func test_with_buffs_stacks_multiply_and_record_stacks() -> void:
+	var damage := _buff("damage")
+	var original := _starting_fire_missile()
+	var buffed := SpellBuilder.with_buffs(original, [damage, damage])
+	assert_almost_eq(buffed.damage, original.damage * 2.25, 0.0001)
+	assert_eq(buffed.buff_stacks[damage.id], 2)
+	assert_eq(original.damage, 10.0)
+
+
+func test_with_buffs_builds_on_the_spells_own_buffs() -> void:
+	var once := SpellBuilder.with_buffs(_starting_fire_missile(), [_buff("duplicate_area"), _buff("double_vulnerability")])
+	var twice := SpellBuilder.with_buffs(once, [_buff("duplicate_area")])
+	assert_eq(twice.copies, 3)
+	assert_almost_eq(twice.vulnerability_scale, 2.0, 0.0001)
+	assert_eq(twice.buff_stacks[_buff("duplicate_area").id], 2)
+	assert_eq(once.copies, 2)
+
+
+func test_with_buffs_gives_each_copy_its_own_profile() -> void:
+	var buffed := SpellBuilder.with_buffs(_starting_fire_missile(), [_buff("ignore_resistance")])
+	assert_true(buffed.attack_profile().ignores_resistance)
+	assert_false(_starting_fire_missile().attack_profile().ignores_resistance)
+
+
+func test_with_buffs_rejects_null_and_non_buff_scrolls() -> void:
+	assert_null(SpellBuilder.with_buffs(null, [_buff("damage")]))
+	assert_null(SpellBuilder.with_buffs(_starting_fire_missile(), [_base("fire")]))
+	assert_null(SpellBuilder.with_buffs(_starting_fire_missile(), [null]))
+	assert_null(SpellBuilder.with_buffs(_starting_fire_missile(), [_area("missile")]))
+
+
+func test_with_buffs_empty_list_equals_the_original_numbers() -> void:
+	var original := _starting_fire_missile()
+	var copy := SpellBuilder.with_buffs(original, [])
+	assert_not_null(copy)
+	assert_eq(copy.damage, original.damage)
+	assert_eq(copy.mana_cost, original.mana_cost)
+	assert_eq(copy.max_mana, original.max_mana)
+	assert_eq(copy.copies, 1)
+	assert_eq(copy.elements, original.elements)
+	assert_ne(copy, original)

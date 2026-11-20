@@ -196,7 +196,7 @@ func replace_note() -> String:
 	if not instance.has_mana():
 		return "Replaces %s (empty)" % instance.data.display_name
 	return "Replaces %s (%d / %d mana left)" % [
-		instance.data.display_name, roundi(instance.current_mana), roundi(instance.data.max_mana),
+		instance.data.display_name, roundi(instance.current_mana), roundi(instance.max_mana()),
 	]
 
 

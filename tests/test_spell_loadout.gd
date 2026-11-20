@@ -377,3 +377,51 @@ func test_a_one_copy_spell_launches_exactly_one_effect() -> void:
 	var loadout := _copies_loadout(1)
 	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
 	assert_eq(_stub_effects().size(), 1)
+
+
+func test_mana_bonus_applies_to_existing_and_new_spells() -> void:
+	var spells := _five_spells()
+	var loadout := _make_loadout(spells)
+	var first_pool := spells[0].max_mana
+	loadout.set_mana_bonus(0.15)
+	assert_almost_eq(loadout.slots[0].max_mana(), first_pool * 1.15, 0.0001)
+	assert_almost_eq(loadout.slots[0].current_mana, first_pool * 1.15, 0.0001)
+	var crafted := SpellData.new()
+	crafted.max_mana = 100.0
+	crafted.mana_cost = 1.0
+	var instance := loadout.equip(1, crafted)
+	assert_almost_eq(instance.max_mana(), 115.0, 0.0001)
+	assert_almost_eq(instance.current_mana, 115.0, 0.0001)
+
+
+func test_two_loadouts_never_share_a_bonus() -> void:
+	var data := load("res://resources/spells/fire_missile.tres") as SpellData
+	var first := _make_loadout([data] as Array[SpellData])
+	var second := _make_loadout([data] as Array[SpellData])
+	first.set_mana_bonus(0.3)
+	assert_almost_eq(first.slots[0].max_mana(), data.max_mana * 1.3, 0.0001)
+	assert_eq(second.slots[0].max_mana(), data.max_mana)
+	assert_eq(data.max_mana, 1000.0)
+
+
+func test_set_unlocked_slots_emits_one_signal_per_newly_opened_slot() -> void:
+	var loadout := _make_loadout(_five_spells())
+	loadout.unlocked_slots = 1
+	watch_signals(loadout)
+	loadout.set_unlocked_slots(3)
+	assert_eq(loadout.unlocked_slots, 3)
+	assert_signal_emit_count(loadout, "slot_unlocked", 2)
+	loadout.set_unlocked_slots(3)
+	assert_signal_emit_count(loadout, "slot_unlocked", 2)
+
+
+func test_set_unlocked_slots_can_lower_without_signals_and_clamps() -> void:
+	var loadout := _make_loadout(_five_spells())
+	watch_signals(loadout)
+	loadout.set_unlocked_slots(2)
+	assert_eq(loadout.unlocked_slots, 2)
+	assert_signal_not_emitted(loadout, "slot_unlocked")
+	loadout.set_unlocked_slots(99)
+	assert_eq(loadout.unlocked_slots, SpellLoadout.SLOT_COUNT)
+	loadout.set_unlocked_slots(-4)
+	assert_eq(loadout.unlocked_slots, 1)

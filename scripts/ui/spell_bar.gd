@@ -46,7 +46,7 @@ func _follow(index: int) -> void:
 	_bound[index] = instance
 	widget.setup(index, instance.data if instance != null else null)
 	if instance != null:
-		widget.set_mana(instance.current_mana, instance.data.max_mana)
+		widget.set_mana(instance.current_mana, instance.max_mana())
 		instance.mana_changed.connect(widget.set_mana)
 	widget.set_locked(not _loadout.is_unlocked(index))
 	widget.set_selected(index == _loadout.selected_index)

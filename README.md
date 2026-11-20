@@ -284,17 +284,17 @@ The two primary progression resources are:
 
 ## 6.1 XP Progression
 
-XP is accumulated during adventures and contributes toward the player's permanent wizard level.
+XP is accumulated during adventures and contributes toward the player's permanent wizard level. XP and level are saved, so a run that ends badly still leaves the wizard stronger.
 
-There are 20 progression levels.
+There are 20 progression levels. Every wizard starts at level 1, which gives no reward. Levels 2 to 20 each provide a predefined upgrade, gradually improving the wizard's attributes and starting spell loadout.
 
-Each level provides a predefined upgrade, gradually improving the wizard's attributes and starting spell loadout.
+Enemies drop XP as gems on the ground, and walking over a gem collects it. Stat and spell slot rewards apply the moment their level is reached. Rewards that change the starting spells apply when the next run begins, and a chosen buff is picked on a small screen before that run starts.
 
 ### Level Progression
 
 | Level | Reward |
 |---|---|
-| 1 | Increase Base Level |
+| 1 | Starting level (no reward) |
 | 2 | Increase Movement Speed |
 | 3 | Increase Maximum Health |
 | 4 | Increase Maximum Mana of All Spells |
@@ -315,14 +315,19 @@ Each level provides a predefined upgrade, gradually improving the wizard's attri
 | 19 | Second Starting Spell receives 1 Chosen Buff |
 | 20 | Increase Maximum Spell Slots from 4 to 5 |
 
-### Base Level
+### Reward numbers (starting values, tuned by playing)
 
-Base Level determines the strength of the wizard's starting magical capabilities.
+| Reward | Amount |
+|---|---|
+| Increase Movement Speed | +8% of base speed each (+32% in total) |
+| Increase Maximum Health | +20% of base health each (+80% in total), and the player heals by the amount it adds |
+| Increase Maximum Mana of All Spells | +15% of each spell's pool each (+30% in total), for spells equipped now and later |
+| Spell slots | One slot per reward, up to five |
+| Starting Spell receives a Random Buff | Rolled when the level is reached and kept, from the five buffs that work on one element (not Additional Base) |
+| Starting Spell receives a Chosen Buff | Picked on a screen at the start of the next run, from the same five |
+| Start with 2 Spells | The second starting spell is Sea Cone |
 
-Potential benefits include:
-- Increased base spell damage.
-- Improved starting mana capacity.
-- Increased spell effectiveness.
+XP needed to reach level 2 is 30, and each level costs 20 more than the one before it (3,990 XP in total for level 20).
 
 ### Spell Slots
 

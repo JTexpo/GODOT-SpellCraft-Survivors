@@ -69,3 +69,57 @@ func test_instances_from_one_definition_do_not_share_mana() -> void:
 	assert_eq(_spell.current_mana, 2.0)
 	assert_eq(other.current_mana, 3.0)
 	assert_eq(_data.max_mana, 3.0)
+
+
+func test_mana_bonus_raises_pool_and_current_by_the_same_amount() -> void:
+	_data.max_mana = 100.0
+	var spell := SpellInstance.new(_data)
+	spell.current_mana = 40.0
+	spell.set_max_mana_bonus(0.15)
+	assert_almost_eq(spell.max_mana(), 115.0, 0.0001)
+	assert_almost_eq(spell.current_mana, 55.0, 0.0001)
+
+
+func test_new_instance_with_a_bonus_set_later_starts_full() -> void:
+	_data.max_mana = 100.0
+	var spell := SpellInstance.new(_data)
+	spell.set_max_mana_bonus(0.3)
+	assert_almost_eq(spell.current_mana, 130.0, 0.0001)
+
+
+func test_lowering_the_bonus_clamps_current() -> void:
+	_data.max_mana = 100.0
+	var spell := SpellInstance.new(_data)
+	spell.set_max_mana_bonus(0.3)
+	spell.set_max_mana_bonus(0.0)
+	assert_almost_eq(spell.current_mana, 100.0, 0.0001)
+	assert_almost_eq(spell.max_mana(), 100.0, 0.0001)
+
+
+func test_mana_ratio_and_restore_use_the_bonus_pool() -> void:
+	_data.max_mana = 100.0
+	var spell := SpellInstance.new(_data)
+	spell.set_max_mana_bonus(0.5)
+	spell.current_mana = 75.0
+	assert_almost_eq(spell.mana_ratio(), 0.5, 0.0001)
+	spell.restore_mana()
+	assert_almost_eq(spell.current_mana, 150.0, 0.0001)
+
+
+func test_mana_changed_reports_the_bonus_pool() -> void:
+	_data.max_mana = 10.0
+	_data.mana_cost = 1.0
+	var spell := SpellInstance.new(_data)
+	spell.set_max_mana_bonus(0.5)
+	watch_signals(spell)
+	spell.cast()
+	assert_signal_emitted_with_parameters(spell, "mana_changed", [14.0, 15.0])
+
+
+func test_cost_per_cast_is_unchanged_by_the_bonus() -> void:
+	_data.max_mana = 10.0
+	_data.mana_cost = 1.0
+	var spell := SpellInstance.new(_data)
+	spell.set_max_mana_bonus(0.5)
+	spell.cast()
+	assert_almost_eq(spell.current_mana, 14.0, 0.0001)

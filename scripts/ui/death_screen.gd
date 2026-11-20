@@ -10,9 +10,12 @@ var restart_scene_path: String = ""
 
 var _shown_at_msec: int = 0
 
+@onready var _summary: Label = $Summary
+
 
 func _ready() -> void:
 	visible = false
+	_summary.visible = false
 
 
 ## Listens in _input, which runs before any control sees the event. _unhandled_input would never hear
@@ -20,6 +23,17 @@ func _ready() -> void:
 ## "tap to restart" on a phone.
 func _input(event: InputEvent) -> void:
 	handle_event(event)
+
+
+## Adds a line under "You died": the XP gained this run and the level reached.
+func set_run_summary(run_xp: int, level: int) -> void:
+	_summary.text = "+%d XP this run, level %d" % [run_xp, level]
+	_summary.visible = true
+
+
+## The summary line, or "" if none was set.
+func summary_text() -> String:
+	return _summary.text if _summary.visible else ""
 
 
 func show_death() -> void:

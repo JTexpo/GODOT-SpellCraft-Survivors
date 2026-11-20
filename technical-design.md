@@ -569,7 +569,7 @@ Responsibilities include:
 - Spell slot unlocks.
 - Starting spell modifications.
 
-Run progression should reset according to the game's run-reset rules.
+The wizard's XP and level persist between runs (the user's decision, Sprint 8), so they live in the saved profile described in 10.2. What resets each run is the run's own state: health, mana, scrolls and the spells equipped after the starting ones.
 
 ## 10.2 Permanent Progression
 
@@ -577,6 +577,7 @@ Permanent Progression handles improvements retained between adventures.
 
 Responsibilities include:
 
+- XP and level (Sprint 8), with the buff chosen for each starting-spell buff reward.
 - Persistent Gold.
 - Equipment ownership.
 - Equipment selection.
@@ -585,6 +586,16 @@ Responsibilities include:
 - Save data.
 
 Permanent progression should be independent of temporary run state.
+
+### Save format (Sprint 8)
+
+The profile is one JSON file, `user://save.json`, written to a temporary file and renamed over the old one:
+
+```json
+{"version": 1, "total_xp": 5321, "buff_picks": {"7": "buff_damage", "12": "buff_max_mana"}}
+```
+
+`version` is checked on load. `buff_picks` maps the level of a buff reward to the chosen buff scroll's id. The level is computed from `total_xp` and never stored. A file that cannot be used is renamed to `save.json.bak` and a fresh profile starts. Sprint 9 adds Gold and equipment to the same file.
 
 The exact persistence rules should follow the game design document.
 
