@@ -49,15 +49,19 @@ func select_base(scroll: ScrollData) -> bool:
 	return true
 
 
-## Adds one stack. False for a non-Buff scroll, one with no effect, or one past what the player owns
-## or the buff's own cap.
-func add_buff(scroll: ScrollData) -> bool:
+## Whether one more stack of this scroll can be added: it must be a Buff scroll with an effect, and
+## the stacks cannot pass what the player owns or the buff's own cap.
+func can_add_buff(scroll: ScrollData) -> bool:
 	if scroll == null or scroll.category != ScrollData.Category.BUFF or scroll.buff == null:
 		return false
 	var stacks := buff_stacks(scroll)
 	if stacks >= _inventory.count(scroll):
 		return false
-	if scroll.buff.max_stacks > 0 and stacks >= scroll.buff.max_stacks:
+	return scroll.buff.max_stacks <= 0 or stacks < scroll.buff.max_stacks
+
+
+func add_buff(scroll: ScrollData) -> bool:
+	if not can_add_buff(scroll):
 		return false
 	buffs.append(scroll)
 	changed.emit()

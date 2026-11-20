@@ -13,6 +13,8 @@ const FONT_SIZE := 8
 const SELECTED_TINT := Color(1.0, 0.95, 0.5)
 const SLOT_SIZE := Vector2(88, 24)
 const ROW_HEIGHT := 14.0
+const BUFF_COLUMNS := 2
+const BUFF_NAME_WIDTH := 90.0
 const READY_MESSAGE := "Ready to craft."
 
 ## Tests turn this off so the test runner itself is not paused.
@@ -29,6 +31,7 @@ var _base_column: VBoxContainer
 var _area_column: VBoxContainer
 var _range_column: VBoxContainer
 var _buffs_label: Label
+var _buff_grid: GridContainer
 var _preview_label: Label
 var _message_label: Label
 var _confirm_button: Button
@@ -108,6 +111,14 @@ func choose_range(index: int) -> bool:
 	return session.select_range(index)
 
 
+func add_buff(scroll: ScrollData) -> bool:
+	return session.add_buff(scroll)
+
+
+func remove_buff(scroll: ScrollData) -> bool:
+	return session.remove_buff(scroll)
+
+
 func choose_slot(index: int) -> bool:
 	return session.select_slot(index)
 
@@ -141,12 +152,10 @@ func preview_text() -> String:
 	else:
 		lines.append("New: %s" % fresh["name"])
 		lines.append_array(_stat_lines(fresh))
-	lines.append("")
+		lines.append_array(session.drawbacks())
 	var current := session.current_stats()
 	if not current.is_empty():
-		lines.append("Now: %s" % current["name"])
-		lines.append_array(_stat_lines(current))
-		lines.append("")
+		lines.append("Now: %s  (casts %d)" % [current["name"], roundi(current["casts"])])
 	lines.append(session.replace_note())
 	return "\n".join(lines)
 
@@ -154,9 +163,18 @@ func preview_text() -> String:
 func buffs_text() -> String:
 	var names: Array[String] = []
 	for scroll in session.owned_buffs():
-		names.append("%s x%d" % [scroll.display_name, _inventory.count(scroll)])
-	var owned := ", ".join(names) if not names.is_empty() else "none yet"
-	return "Buffs (locked until a later update): %s" % owned
+		var stacks := session.buff_stacks(scroll)
+		if stacks > 0:
+			names.append("%s x%d" % [scroll.display_name, stacks])
+	return "Buffs: %s" % (", ".join(names) if not names.is_empty() else "none")
+
+
+func base_heading_text() -> String:
+	return "Base (%d of %d)" % [session.bases.size(), session.max_bases()]
+
+
+func buff_button_count() -> int:
+	return _buff_grid.get_child_count()
 
 
 func base_button_count() -> int:
@@ -189,11 +207,20 @@ func _build() -> void:
 	_range_column = _add_box(root, VBoxContainer.new(), Vector2(208, 46))
 	for column in [_base_column, _area_column, _range_column]:
 		column.add_theme_constant_override("separation", 1)
-	_buffs_label = _label("", Vector2(8, 140), Vector2(300, 36))
+	_buffs_label = _label("", Vector2(8, 137), Vector2(300, 10))
+	_buffs_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_buffs_label.clip_text = true
 	root.add_child(_buffs_label)
-	_preview_label = _label("", Vector2(322, 46), Vector2(152, 150))
+	_buff_grid = GridContainer.new()
+	_buff_grid.columns = BUFF_COLUMNS
+	_buff_grid.position = Vector2(8, 148)
+	_buff_grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_buff_grid.add_theme_constant_override("h_separation", 6)
+	_buff_grid.add_theme_constant_override("v_separation", 1)
+	root.add_child(_buff_grid)
+	_preview_label = _label("", Vector2(322, 46), Vector2(152, 180))
 	root.add_child(_preview_label)
-	_message_label = _label("", Vector2(8, 190), Vector2(300, 24))
+	_message_label = _label("", Vector2(8, 196), Vector2(300, 24))
 	root.add_child(_message_label)
 	_confirm_button = _button("Confirm", Vector2(322, 232), Vector2(70, 22))
 	_confirm_button.pressed.connect(confirm)
@@ -205,17 +232,19 @@ func _build() -> void:
 
 func _rebuild() -> void:
 	var focused := _focus_key()
-	for container in [_slot_row, _base_column, _area_column, _range_column]:
+	for container in [_slot_row, _base_column, _area_column, _range_column, _buff_grid]:
 		_clear(container)
 	for i in SpellLoadout.SLOT_COUNT:
 		_slot_row.add_child(_slot_button(i))
-	_fill_scrolls(_base_column, "Base", session.owned_bases(), session.bases, _on_base_pressed)
+	_fill_scrolls(_base_column, base_heading_text(), session.owned_bases(), session.bases, _on_base_pressed)
 	_fill_scrolls(_area_column, "Area", session.owned_areas(), [session.area], _on_area_pressed)
 	_range_column.add_child(_label("Range", Vector2.ZERO, Vector2(100, ROW_HEIGHT)))
 	for i in session.rules.range_options.size():
 		var option := session.rules.option(i)
 		var text := "%s (cost x%.1f)" % [option.label, option.cost_multiplier]
 		_range_column.add_child(_selectable(text, "range:%d" % i, i == session.option_index, _on_range_pressed.bind(i)))
+	for scroll in session.owned_buffs():
+		_buff_grid.add_child(_buff_cell(scroll))
 	_buffs_label.text = buffs_text()
 	_preview_label.text = preview_text()
 	_message_label.text = message_text()
@@ -237,6 +266,29 @@ func _slot_button(index: int) -> Button:
 	button.disabled = not _loadout.is_unlocked(index)
 	button.clip_text = true
 	return button
+
+
+## One buff: a minus button, the name, chosen over owned stacks, and a plus button.
+func _buff_cell(scroll: ScrollData) -> HBoxContainer:
+	var cell := HBoxContainer.new()
+	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cell.add_theme_constant_override("separation", 2)
+	var minus := _button("-", Vector2.ZERO, Vector2(14, ROW_HEIGHT))
+	minus.set_meta(&"key", "buff-:%s" % scroll.id)
+	minus.disabled = session.buff_stacks(scroll) == 0
+	minus.pressed.connect(session.remove_buff.bind(scroll))
+	cell.add_child(minus)
+	var name_label := _label(scroll.display_name, Vector2.ZERO, Vector2(BUFF_NAME_WIDTH, ROW_HEIGHT))
+	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	name_label.clip_text = true
+	cell.add_child(name_label)
+	cell.add_child(_label("%d/%d" % [session.buff_stacks(scroll), _inventory.count(scroll)], Vector2.ZERO, Vector2(24, ROW_HEIGHT)))
+	var plus := _button("+", Vector2.ZERO, Vector2(14, ROW_HEIGHT))
+	plus.set_meta(&"key", "buff+:%s" % scroll.id)
+	plus.disabled = not session.can_add_buff(scroll)
+	plus.pressed.connect(session.add_buff.bind(scroll))
+	cell.add_child(plus)
+	return cell
 
 
 func _fill_scrolls(column: VBoxContainer, heading: String, scrolls: Array[ScrollData], chosen: Array, callback: Callable) -> void:
@@ -304,14 +356,17 @@ func _add_box(root: Control, box: BoxContainer, at: Vector2) -> BoxContainer:
 
 
 func _stat_lines(stats: Dictionary) -> Array[String]:
-	return [
-		"  Damage %.1f" % stats["damage"],
-		"  Interval %.2fs" % stats["interval"],
-		"  Mana/cast %.1f" % stats["cost"],
-		"  Pool %d" % roundi(stats["pool"]),
-		"  Casts %d" % roundi(stats["casts"]),
-		"  Range %d" % roundi(stats["range"]),
+	var lines: Array[String] = [
+		"  Damage %.1f  Every %.2fs" % [stats["damage"], stats["interval"]],
+		"  Mana/cast %.1f  Pool %d" % [stats["cost"], roundi(stats["pool"])],
+		"  Casts %d  Range %d" % [roundi(stats["casts"]), roundi(stats["range"])],
+		"  Elements %s  Shots %d" % [stats["elements"], stats["copies"]],
 	]
+	if stats["vulnerability"] > 1.0:
+		lines.append("  Vulnerable bonus x%.1f" % stats["vulnerability"])
+	if stats["ignores_resistance"]:
+		lines.append("  Ignores resistance")
+	return lines
 
 
 func _clear(container: Container) -> void:
@@ -336,9 +391,9 @@ func _focus_key() -> String:
 func _restore_focus(key: String) -> void:
 	if key.is_empty():
 		return
-	for container in [_slot_row, _base_column, _area_column, _range_column]:
-		for child in container.get_children():
-			if child is Button and str(child.get_meta(&"key", "")) == key and not child.disabled:
+	for container in [_slot_row, _base_column, _area_column, _range_column, _buff_grid]:
+		for child in container.find_children("*", "Button", true, false):
+			if str(child.get_meta(&"key", "")) == key and not child.disabled:
 				child.grab_focus()
 				return
 
