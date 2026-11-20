@@ -42,7 +42,7 @@ description = "Faster movement"
 [sub_resource type="Resource" id="r7"]
 script = ExtResource("1")
 kind = 4
-description = "Starting spell: random buff"
+description = "Next run: a random buff for your starting spell"
 
 [sub_resource type="Resource" id="r8"]
 script = ExtResource("1")
@@ -70,7 +70,7 @@ description = "Faster movement"
 [sub_resource type="Resource" id="r12"]
 script = ExtResource("1")
 kind = 5
-description = "Starting spell: choose a buff"
+description = "Next run: choose a buff for your starting spell"
 
 [sub_resource type="Resource" id="r13"]
 script = ExtResource("1")
@@ -99,7 +99,7 @@ description = "Faster movement"
 script = ExtResource("1")
 kind = 4
 spell_index = 1
-description = "Second spell: random buff"
+description = "Next run: a random buff for your second spell"
 
 [sub_resource type="Resource" id="r18"]
 script = ExtResource("1")
@@ -111,7 +111,7 @@ description = "More health"
 script = ExtResource("1")
 kind = 5
 spell_index = 1
-description = "Second spell: choose a buff"
+description = "Next run: choose a buff for your second spell"
 
 [sub_resource type="Resource" id="r20"]
 script = ExtResource("1")

@@ -31,12 +31,17 @@ func _new_main(save_path: String) -> Main:
 	return main
 
 
-func _save_at_level(level: int, picks: Dictionary = {}) -> void:
+func _save_at_level(level: int) -> void:
 	var profile := PlayerProfile.new()
 	profile.total_xp = _track.xp_for_level(level)
-	for reward_level in picks:
-		profile.set_pick(reward_level, picks[reward_level])
 	SaveGame.save_profile(profile, _path())
+
+
+func _stack_total(spell: SpellData) -> int:
+	var total := 0
+	for id in spell.buff_stacks:
+		total += int(spell.buff_stacks[id])
+	return total
 
 
 func _player(main: Main) -> Player:
@@ -59,14 +64,14 @@ func test_fresh_run_starts_at_level_one_with_one_slot() -> void:
 
 
 func test_saved_level_ten_profile_starts_with_three_slots_and_the_bonuses() -> void:
-	_save_at_level(10, {7: &"buff_damage"})
+	_save_at_level(10)
 	var main := _new_main(_path())
 	var player := _player(main)
 	assert_eq(player.loadout.unlocked_slots, 3)
 	assert_almost_eq(_speed(main), 90.0 * 1.16, 0.001)
 	assert_almost_eq(player.health.max_health, 140.0, 0.001)
 	assert_almost_eq(player.loadout.mana_bonus, 0.3, 0.0001)
-	assert_almost_eq(player.loadout.slots[0].data.damage, 15.0, 0.0001)
+	assert_eq(_stack_total(player.loadout.slots[0].data), 1, "level 7 gave one random buff")
 	assert_eq((main.get_node("Hud/XpBar") as XpBar).level_text(), "Lv 10")
 
 
@@ -78,9 +83,9 @@ func test_killing_an_enemy_drops_a_gem_that_adds_xp_when_collected() -> void:
 	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	var gems := get_tree().get_nodes_in_group(&"xp_gems")
 	assert_eq(gems.size(), 1)
-	var value := (gems[0] as XpGem).value
+	var value := (gems[0] as ValueGem).value
 	assert_gt(value, 0)
-	player.global_position = (gems[0] as XpGem).global_position
+	player.global_position = (gems[0] as ValueGem).global_position
 	await wait_physics_frames(4)
 	assert_eq(main.profile.total_xp, value)
 
@@ -106,34 +111,37 @@ func test_death_saves_the_profile_and_shows_the_summary() -> void:
 	assert_false(FileAccess.file_exists(_path()), "20 XP is no level-up, so nothing is saved yet")
 	(_player(main).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
 	assert_eq(SaveGame.load_profile(_path()).total_xp, 20)
-	assert_eq((main.get_node("DeathScreen") as DeathScreen).summary_text(), "+20 XP this run, level 1")
+	assert_eq((main.get_node("DeathScreen") as DeathScreen).summary_text(), "+20 XP, +0 Gold this run, level 1")
 
 
-func test_random_buff_reward_stores_a_pick_when_reached() -> void:
+func test_random_buff_reward_mid_run_changes_nothing_until_next_run() -> void:
 	var main := _new_main("")
 	_player(main).progress.add_xp(_track.xp_for_level(7))
-	assert_ne(main.profile.pick(7), &"")
+	assert_eq(_stack_total(_player(main).loadout.slots[0].data), 0)
 	var toast := main.get_node("Hud/LevelToast") as LevelToast
 	assert_string_contains(toast.text, "Level 7!")
-	assert_string_contains(toast.text, "gains")
+	assert_string_contains(toast.text, "Next run")
 
 
 func test_owed_chosen_buff_opens_the_pick_screen_before_the_run_and_applies_after_choosing() -> void:
-	_save_at_level(12, {7: &"buff_damage"})
+	_save_at_level(12)
 	var main := _new_main(_path())
 	var screen := main.get_node("BuffPickScreen") as BuffPickScreen
+	watch_signals(screen)
 	assert_true(screen.is_open())
-	assert_eq(screen.option_count(), 5)
+	assert_gte(screen.option_count(), 4)
 	screen.choose(0)
 	assert_false(screen.is_open())
+	var picked := get_signal_parameters(screen, "chosen")[0] as ScrollData
 	var spell := _player(main).loadout.slots[0].data
-	assert_eq(spell.buff_stacks[&"buff_damage"], 1)
-	assert_eq(spell.buff_stacks[&"buff_max_mana"], 1)
-	assert_eq(SaveGame.load_profile(_path()).pick(12), &"buff_max_mana")
+	assert_eq(_stack_total(spell), 2, "the random buff of level 7 and the chosen one of level 12")
+	assert_gte(int(spell.buff_stacks.get(picked.id, 0)), 1)
+	_player(main).progress.add_xp(30)
+	assert_false(FileAccess.get_file_as_string(_path()).contains("buff_picks"))
 
 
 func test_unchosen_buff_is_asked_again_next_run() -> void:
-	_save_at_level(12, {7: &"buff_damage"})
+	_save_at_level(12)
 	var first := _new_main(_path())
 	assert_true((first.get_node("BuffPickScreen") as BuffPickScreen).is_open())
 	first.free()
@@ -141,11 +149,32 @@ func test_unchosen_buff_is_asked_again_next_run() -> void:
 	assert_true((second.get_node("BuffPickScreen") as BuffPickScreen).is_open())
 
 
-func test_old_save_with_an_unrolled_random_buff_gets_one_at_run_start() -> void:
+func test_random_buffs_are_rolled_every_run_and_never_saved() -> void:
+	_save_at_level(7)
+	var first := _new_main(_path())
+	assert_eq(_stack_total(_player(first).loadout.slots[0].data), 1)
+	_player(first).progress.add_xp(30)
+	assert_false(FileAccess.get_file_as_string(_path()).contains("buff_picks"))
+	first.free()
+	var second := _new_main(_path())
+	assert_eq(_stack_total(_player(second).loadout.slots[0].data), 1)
+
+
+func test_chosen_buff_is_asked_every_run_even_after_choosing() -> void:
+	_save_at_level(12)
+	var first := _new_main(_path())
+	(first.get_node("BuffPickScreen") as BuffPickScreen).choose(0)
+	first.free()
+	var second := _new_main(_path())
+	assert_true((second.get_node("BuffPickScreen") as BuffPickScreen).is_open())
+
+
+func test_run_start_toast_names_the_rolled_buff() -> void:
 	_save_at_level(7)
 	var main := _new_main(_path())
-	assert_ne(main.profile.pick(7), &"")
-	assert_gt(_player(main).loadout.slots[0].data.buff_stacks.size(), 0)
+	var toast := main.get_node("Hud/LevelToast") as LevelToast
+	assert_true(toast.is_showing())
+	assert_string_contains(toast.text, "Starting spell gains")
 
 
 func test_second_run_keeps_the_xp_from_the_first() -> void:
@@ -178,8 +207,175 @@ func test_f12_gives_100_xp() -> void:
 
 
 func test_spell_bar_shows_the_saved_slots_as_unlocked_at_run_start() -> void:
-	_save_at_level(10, {7: &"buff_damage"})
+	_save_at_level(10)
 	var main := _new_main(_path())
 	var bar := main.get_node("Hud/SpellBar") as SpellBar
 	for i in 5:
 		assert_eq(bar.widgets[i].locked, i >= 3, "slot %d" % (i + 1))
+
+
+func test_killing_an_enemy_drops_both_a_gem_and_a_coin() -> void:
+	var main := _new_main("")
+	var enemy := (main.get_node("EnemySpawner") as EnemySpawner).spawn_at(Vector2(300, 300))
+	(enemy.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	assert_eq(get_tree().get_nodes_in_group(&"xp_gems").size(), 1)
+	assert_eq(get_tree().get_nodes_in_group(&"gold_coins").size(), 1)
+
+
+func test_collecting_a_coin_banks_gold_and_marks_the_profile_for_saving() -> void:
+	var main := _new_main(_path())
+	var player := _player(main)
+	var coin := (load("res://scenes/progression/gold_coin.tscn") as PackedScene).instantiate() as ValueGem
+	main.add_child(coin)
+	coin.setup(6)
+	coin.global_position = player.global_position
+	await wait_physics_frames(4)
+	assert_eq(main.profile.gold, 6)
+	assert_eq((main.get_node("Hud/GoldCounter") as GoldCounter).gold_text(), "Gold 6")
+	assert_true((main.get_node("ProfileSaver") as ProfileSaver).is_dirty())
+
+
+func test_gold_survives_death_and_a_new_run() -> void:
+	var first := _new_main(_path())
+	_player(first).progress.add_gold(40)
+	(_player(first).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	assert_eq((first.get_node("DeathScreen") as DeathScreen).summary_text(), "+0 XP, +40 Gold this run, level 1")
+	first.free()
+	var second := _new_main(_path())
+	assert_eq(second.profile.gold, 40)
+	assert_eq((second.get_node("Hud/GoldCounter") as GoldCounter).gold_text(), "Gold 40")
+
+
+func _save_wearing(ids: Array[StringName]) -> void:
+	var catalog := EquipmentCatalog.default_catalog()
+	var profile := PlayerProfile.new()
+	for id in ids:
+		profile.grant(id)
+		profile.equip(int(catalog.find(id).slot()), id)
+	SaveGame.save_profile(profile, _path())
+
+
+func test_equipped_items_are_applied_when_a_run_starts() -> void:
+	_save_wearing([&"robe_ember", &"wand_quick"] as Array[StringName])
+	var main := _new_main(_path())
+	var bonuses := _player(main).loadout.bonuses
+	assert_almost_eq(bonuses.fraction(StatBonuses.Stat.DAMAGE_FIRE), 0.15, 0.0001)
+	assert_almost_eq(bonuses.fraction(StatBonuses.Stat.CAST_SPEED), 0.25, 0.0001)
+	assert_almost_eq(bonuses.fraction(StatBonuses.Stat.SPELL_DAMAGE), -0.15, 0.0001)
+
+
+func test_restart_does_not_apply_equipment_twice() -> void:
+	_save_wearing([&"robe_warded", &"hat_swift"] as Array[StringName])
+	var first := _new_main(_path())
+	var speed := _speed(first)
+	var health := _player(first).health.max_health
+	var cast_speed := _player(first).loadout.bonuses.fraction(StatBonuses.Stat.CAST_SPEED)
+	first.free()
+	var second := _new_main(_path())
+	assert_almost_eq(_speed(second), speed, 0.0001)
+	assert_almost_eq(_player(second).health.max_health, health, 0.0001)
+	assert_almost_eq(_player(second).loadout.bonuses.fraction(StatBonuses.Stat.CAST_SPEED), cast_speed, 0.0001)
+	assert_almost_eq(_speed(second), 90.0 * 1.10, 0.001)
+	assert_almost_eq(_player(second).health.max_health, 130.0, 0.001)
+
+
+func test_a_level_up_in_a_run_keeps_the_saved_equipment() -> void:
+	_save_wearing([&"hat_swift"] as Array[StringName])
+	var main := _new_main(_path())
+	_player(main).progress.add_xp(30)
+	assert_almost_eq(_speed(main), 90.0 * (1.0 + 0.08 + 0.10), 0.001)
+
+
+func _die(main: Main) -> void:
+	(_player(main).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+
+
+func test_death_screen_shop_opens_the_shop_and_a_purchase_is_saved_immediately() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(500)
+	SaveGame.save_profile(profile, _path())
+	var main := _new_main(_path())
+	_die(main)
+	var death := main.get_node("DeathScreen") as DeathScreen
+	death.input_delay_msec = 0
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	(death.get_node("ShopButton") as Button).pressed.emit()
+	assert_true(shop.is_open())
+	shop.buy(&"robe_ember")
+	var saved := SaveGame.load_profile(_path())
+	assert_eq(saved.gold, 400)
+	assert_true(saved.owns(&"robe_ember"))
+	assert_eq(saved.equipped_id(EquipmentData.Slot.ROBE), &"robe_ember")
+
+
+func test_closing_the_shop_lets_the_death_screen_restart_again() -> void:
+	var main := _new_main("")
+	_die(main)
+	var death := main.get_node("DeathScreen") as DeathScreen
+	death.input_delay_msec = 0
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	(death.get_node("ShopButton") as Button).pressed.emit()
+	watch_signals(death)
+	var restart := InputEventAction.new()
+	restart.action = &"restart"
+	restart.pressed = true
+	death.handle_event(restart)
+	assert_signal_not_emitted(death, "restart_requested")
+	shop.close()
+	death.handle_event(restart)
+	assert_signal_emit_count(death, "restart_requested", 1)
+
+
+func test_next_run_after_buying_applies_the_item() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(500)
+	SaveGame.save_profile(profile, _path())
+	var first := _new_main(_path())
+	_die(first)
+	(first.get_node("DeathScreen") as DeathScreen).input_delay_msec = 0
+	(first.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
+	(first.get_node("ShopScreen") as ShopScreen).buy(&"wand_quick")
+	first.free()
+	var second := _new_main(_path())
+	assert_almost_eq(_player(second).loadout.bonuses.fraction(StatBonuses.Stat.CAST_SPEED), 0.25, 0.0001)
+	assert_almost_eq(_player(second).loadout.slots[0].cast_speed_bonus, 0.25, 0.0001)
+
+
+func test_shop_cannot_be_opened_while_alive() -> void:
+	var main := _new_main("")
+	(main.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
+	assert_false((main.get_node("ShopScreen") as ShopScreen).is_open())
+
+
+func test_mashing_accept_at_the_moment_of_death_buys_nothing() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(1000)
+	SaveGame.save_profile(profile, _path())
+	var main := _new_main(_path())
+	_die(main)
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	var button := main.get_node("DeathScreen/ShopButton") as Button
+	button.pressed.emit()
+	button.pressed.emit()
+	assert_false(shop.is_open(), "the shop stays shut inside the death screen's input delay")
+	var saved := SaveGame.load_profile(_path())
+	assert_eq(saved.gold, 1000)
+	assert_true(saved.owned.is_empty())
+
+
+func test_a_second_accept_right_after_the_shop_opens_buys_nothing() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(1000)
+	SaveGame.save_profile(profile, _path())
+	var main := _new_main(_path())
+	_die(main)
+	(main.get_node("DeathScreen") as DeathScreen).input_delay_msec = 0
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	(main.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
+	assert_true(shop.is_open())
+	# The second press lands on the shop's first item, which has focus.
+	var focused := get_viewport().gui_get_focus_owner() as Button
+	if focused != null and shop.is_ancestor_of(focused):
+		focused.pressed.emit()
+	assert_eq(main.profile.gold, 1000, "nothing was bought by the second press")
+	assert_true(main.profile.owned.is_empty())

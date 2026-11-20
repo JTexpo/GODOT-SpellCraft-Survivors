@@ -74,19 +74,28 @@ static func display_name(bases: Array, area: ScrollData, option: RangeOption) ->
 	return text
 
 
-## The numbers the crafting screen shows for a spell.
-static func describe(spell: SpellData) -> Dictionary:
+## The numbers the crafting screen shows for a spell. With `bonuses` (the loadout's level and equipment
+## bonuses) the damage, interval, pool and casts are what a cast will really do. The spell is not changed.
+static func describe(spell: SpellData, bonuses: StatBonuses = null) -> Dictionary:
 	var names: Array[String] = []
 	for element in spell.elements:
 		names.append(element_name(element))
+	var damage := spell.damage
+	var interval := spell.cast_interval
+	var pool_bonus := 0.0
+	if bonuses != null:
+		damage *= CastMath.damage_scale(spell.elements, bonuses)
+		interval = CastMath.interval(interval, bonuses.fraction(StatBonuses.Stat.CAST_SPEED))
+		pool_bonus = bonuses.fraction(StatBonuses.Stat.SPELL_MANA)
+	var pool := CastMath.pool(spell.max_mana, pool_bonus)
 	return {
 		"name": spell.display_name,
-		"damage": spell.damage,
-		"interval": spell.cast_interval,
+		"damage": damage,
+		"interval": interval,
 		"cost": spell.mana_cost,
-		"pool": spell.max_mana,
-		"casts": spell.max_mana / spell.mana_cost if spell.mana_cost > 0.0 else 0.0,
-		"whole_casts": whole_casts(spell),
+		"pool": pool,
+		"casts": pool / spell.mana_cost if spell.mana_cost > 0.0 else 0.0,
+		"whole_casts": whole_casts(spell, pool_bonus),
 		"range": spell.effective_range(),
 		"area": str(AreaData.AreaType.keys()[spell.area_type()]).capitalize(),
 		"elements": "+".join(names),
@@ -105,8 +114,8 @@ static func element_name(element: int) -> String:
 
 
 ## How many casts the pool really pays for (a cast needs the full cost, so this rounds down).
-static func whole_casts(spell: SpellData) -> int:
-	return floori(spell.max_mana / spell.mana_cost + 1e-6) if spell.mana_cost > 0.0 else 0
+static func whole_casts(spell: SpellData, pool_bonus: float = 0.0) -> int:
+	return floori(CastMath.pool(spell.max_mana, pool_bonus) / spell.mana_cost + 1e-6) if spell.mana_cost > 0.0 else 0
 
 
 ## A spell whose cost is above its whole pool could never be cast once.

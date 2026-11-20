@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/value_gem.gd" id="1"]
+[ext_resource type="Shader" path="res://scenes/scrolls/pickup_bob.gdshader" id="2"]
+
+[sub_resource type="CircleShape2D" id="shape"]
+radius = 5.0
+
+[sub_resource type="ShaderMaterial" id="bob"]
+shader = ExtResource("2")
+
+[node name="GoldCoin" type="Area2D"]
+collision_layer = 32
+collision_mask = 0
+monitoring = false
+script = ExtResource("1")
+kind = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("shape")
+
+[node name="Shape" type="Polygon2D" parent="."]
+material = SubResource("bob")

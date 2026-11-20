@@ -18,11 +18,14 @@ extends Node2D
 @onready var _inventory_button: InventoryButton = $Hud/InventoryButton
 @onready var _interact_button: InteractButton = $Hud/InteractButton
 @onready var _crafting_screen: CraftingScreen = $CraftingScreen
-@onready var _xp_dropper: XpDropper = $XpDropper
+@onready var _xp_dropper: ValueDropper = $XpDropper
+@onready var _gold_dropper: ValueDropper = $GoldDropper
 @onready var _saver: ProfileSaver = $ProfileSaver
 @onready var _pick_screen: BuffPickScreen = $BuffPickScreen
 @onready var _xp_bar: XpBar = $Hud/XpBar
 @onready var _level_toast: LevelToast = $Hud/LevelToast
+@onready var _gold_counter: GoldCounter = $Hud/GoldCounter
+@onready var _shop_screen: ShopScreen = $ShopScreen
 
 ## Where the profile is saved. Empty means "do not load or save": tests set it before adding Main to
 ## the tree so they never touch the player's real save.
@@ -30,6 +33,7 @@ extends Node2D
 
 var profile: PlayerProfile
 var track: LevelTrack
+var catalog: EquipmentCatalog
 
 var _rng := RandomNumberGenerator.new()
 
@@ -79,64 +83,74 @@ func _unhandled_input(event: InputEvent) -> void:
 		_player.progress.add_xp(100)
 
 
-## Loads the profile, wires XP and saving, asks for any owed buff pick, then sets the run up. With
+## Loads the profile, wires XP and saving, rolls the random starting buffs, asks for each owed chosen
+## buff, then sets the run up. Nothing about the buffs is saved: this happens at every run start. With
 ## nothing to ask it finishes straight away. With a pick owed it waits on the pick screen (the world
 ## is paused meanwhile), so the run starts with the choice already applied.
 func _begin_progression() -> void:
 	_rng.randomize()
 	track = LevelTrack.default_track()
+	catalog = EquipmentCatalog.default_catalog()
 	profile = SaveGame.load_profile(save_path) if not save_path.is_empty() else PlayerProfile.new()
 	var progress := _player.progress
 	progress.bind(_player, profile, track)
-	progress.starting_buffs_hook = _on_random_buff_reached
+	progress.equipment_bonuses = ShopSystem.bonuses(profile, catalog)
 	_saver.bind(profile, save_path)
 	_xp_bar.bind(progress)
+	_gold_counter.bind(progress)
 	_player.collector.xp_collected.connect(progress.add_xp)
+	_player.collector.gold_collected.connect(progress.add_gold)
 	_spawner.enemy_died.connect(_xp_dropper.on_enemy_died)
+	_spawner.enemy_died.connect(_gold_dropper.on_enemy_died)
 	progress.xp_changed.connect(_on_xp_changed)
+	progress.gold_changed.connect(_on_gold_changed)
 	progress.leveled_up.connect(_on_leveled_up)
 	_player.died.connect(_on_player_died)
+	_death_screen.shop_requested.connect(_on_shop_requested)
+	_shop_screen.changed.connect(_saver.save_now)
+	_shop_screen.closed.connect(_death_screen.set_shop_open.bind(false))
+	var run_buffs := RunBuffs.new()
 	var level := profile.level(track)
-	if not StartingBuffs.settle_random(profile, track, level, _rng).is_empty():
-		_saver.mark_dirty()
-	for reward_level in StartingBuffs.unresolved_levels(profile, track, level, LevelReward.Kind.CHOSEN_BUFF):
-		var options := StartingBuffs.options_for(profile, track, reward_level)
+	var rolled := StartingBuffs.roll_random(run_buffs, track, level, _rng)
+	for reward_level in StartingBuffs.unresolved_levels(run_buffs, track, level, LevelReward.Kind.CHOSEN_BUFF):
+		var options := StartingBuffs.options_for(run_buffs, track, reward_level)
 		if options.is_empty():
 			continue
 		_pick_screen.open(options, "Level %d: choose a buff for your starting spell" % reward_level)
 		var picked: ScrollData = await _pick_screen.chosen
-		profile.set_pick(reward_level, picked.id)
-		_saver.save_now()
-	RunStart.prepare(_player, profile, track)
-
-
-func _on_random_buff_reached(_reward_level: int) -> void:
-	StartingBuffs.settle_random(profile, track, _player.progress.level(), _rng)
-	_saver.mark_dirty()
+		run_buffs.set_pick(reward_level, picked.id)
+	RunStart.prepare(_player, profile, track, run_buffs, catalog)
+	for reward_level in rolled:
+		_level_toast.show_message(_rolled_notice(run_buffs, reward_level))
 
 
 func _on_xp_changed(_total_xp: int, _level: int) -> void:
 	_saver.mark_dirty()
 
 
+func _on_gold_changed(_total_gold: int) -> void:
+	_saver.mark_dirty()
+
+
 func _on_leveled_up(level: int, reward: LevelReward) -> void:
-	_level_toast.show_level_up(level, reward, _buff_notice(level, reward))
+	_level_toast.show_level_up(level, reward)
 	_saver.save_now()
 
 
-## For a random buff: what the starting spell will gain next run. Empty for any other reward.
-func _buff_notice(level: int, reward: LevelReward) -> String:
-	if reward.kind != LevelReward.Kind.RANDOM_BUFF:
-		return ""
-	var scroll := StartingBuffs.find_scroll(track, profile.pick(level))
-	if scroll == null:
-		return ""
+## "Starting spell gains Increased Damage": what a random reward rolled for this run.
+func _rolled_notice(run_buffs: RunBuffs, reward_level: int) -> String:
+	var reward := track.reward_for_level(reward_level)
+	var scroll := StartingBuffs.find_scroll(track, run_buffs.pick(reward_level))
 	var spell_name := "Starting spell" if reward.spell_index == 0 else "Second spell"
-	return "%s gains %s next run" % [spell_name, scroll.display_name]
+	return "%s gains %s" % [spell_name, scroll.display_name if scroll != null else "a buff"]
+
+
+func _on_shop_requested() -> void:
+	_shop_screen.open(profile, catalog)
 
 
 func _on_player_died() -> void:
-	_death_screen.set_run_summary(_player.progress.run_xp, _player.progress.level())
+	_death_screen.set_run_summary(_player.progress.run_xp, _player.progress.level(), _player.progress.run_gold)
 	_saver.save_now()
 
 

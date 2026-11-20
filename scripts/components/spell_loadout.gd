@@ -29,11 +29,17 @@ var slots: Array[SpellInstance] = []
 var selected_index: int = 0
 ## The level's spell mana bonus, given to every spell here (see SpellInstance.max_mana_bonus).
 var mana_bonus: float = 0.0
+## Every bonus that reaches a cast (element and spell damage, casting speed, the two chance effects)
+## and the mana bonus. Kept here so the crafting preview can show what a cast will really do.
+var bonuses: StatBonuses = StatBonuses.new()
+## Rolls the chance effects. Tests seed it.
+var rng := RandomNumberGenerator.new()
 
 var _dry_latched: bool = false
 
 
 func _ready() -> void:
+	rng.randomize()
 	slots.clear()
 	for i in SLOT_COUNT:
 		var spell: SpellData = starting_spells[i] if i < starting_spells.size() and is_unlocked(i) else null
@@ -85,6 +91,16 @@ func equip(index: int, spell: SpellData) -> SpellInstance:
 	return instance
 
 
+## Sets every bonus at once: the mana bonus and casting speed on each spell now in a slot (and on any
+## equipped later), and the damage and chance bonuses the next cast reads.
+func set_bonuses(new_bonuses: StatBonuses) -> void:
+	bonuses = new_bonuses
+	set_mana_bonus(bonuses.fraction(StatBonuses.Stat.SPELL_MANA))
+	for spell in slots:
+		if spell != null:
+			spell.set_cast_speed_bonus(bonuses.fraction(StatBonuses.Stat.CAST_SPEED))
+
+
 ## Sets the level's mana bonus on every spell now in a slot, and on every spell equipped later.
 func set_mana_bonus(bonus: float) -> void:
 	mana_bonus = bonus
@@ -130,10 +146,17 @@ func try_cast(origin: Vector2, direction: Vector2, target: Vector2 = Vector2.INF
 	if not target.is_finite():
 		target = origin + direction * FAR_TARGET_DISTANCE
 	var root := projectile_root if projectile_root != null else get_parent().get_parent()
-	for shot in CastPattern.shots(spell.data, origin, direction, target):
-		var effect := spell.data.area_data.scene.instantiate() as AreaEffect
-		root.add_child(effect)
-		effect.launch(spell.data, origin, shot.direction, shot.target)
+	var damage_scale := CastMath.damage_scale(spell.data.elements, bonuses)
+	if _roll(CastMath.chance(bonuses, StatBonuses.Stat.DOUBLE_DAMAGE_CHANCE)):
+		damage_scale *= 2.0
+	var passes := 2 if _roll(CastMath.chance(bonuses, StatBonuses.Stat.CAST_TWICE_CHANCE)) else 1
+	var shots := CastPattern.shots(spell.data, origin, direction, target)
+	for _pass in passes:
+		for shot in shots:
+			var effect := spell.data.area_data.scene.instantiate() as AreaEffect
+			effect.damage_scale = damage_scale
+			root.add_child(effect)
+			effect.launch(spell.data, origin, shot.direction, shot.target)
 	cast_fired.emit(selected_index)
 	return true
 
@@ -147,7 +170,13 @@ func _new_instance(spell: SpellData) -> SpellInstance:
 	var instance := SpellInstance.new(spell)
 	if mana_bonus != 0.0:
 		instance.set_max_mana_bonus(mana_bonus)
+	instance.set_cast_speed_bonus(bonuses.fraction(StatBonuses.Stat.CAST_SPEED))
 	return instance
+
+
+## True with the given chance (0 never, 1 always).
+func _roll(chance: float) -> bool:
+	return chance >= 1.0 or (chance > 0.0 and rng.randf() < chance)
 
 
 func restore_all_mana() -> void:

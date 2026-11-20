@@ -123,3 +123,35 @@ func test_cost_per_cast_is_unchanged_by_the_bonus() -> void:
 	spell.set_max_mana_bonus(0.5)
 	spell.cast()
 	assert_almost_eq(spell.current_mana, 14.0, 0.0001)
+
+
+func test_cast_speed_shortens_the_cooldown_after_a_cast() -> void:
+	_data.max_mana = 10.0
+	var spell := SpellInstance.new(_data)
+	spell.set_cast_speed_bonus(0.25)
+	spell.cast()
+	assert_almost_eq(spell.cooldown_left, 0.4, 0.0001)
+	assert_almost_eq(spell.effective_interval(), 0.4, 0.0001)
+
+
+func test_slower_casting_lengthens_it() -> void:
+	_data.max_mana = 10.0
+	var spell := SpellInstance.new(_data)
+	spell.set_cast_speed_bonus(-0.5)
+	spell.cast()
+	assert_almost_eq(spell.cooldown_left, 1.0, 0.0001)
+
+
+func test_no_cast_speed_leaves_the_interval_alone() -> void:
+	_data.max_mana = 10.0
+	var spell := SpellInstance.new(_data)
+	spell.cast()
+	assert_eq(spell.cooldown_left, 0.5)
+
+
+func test_two_instances_never_share_a_cast_speed() -> void:
+	var fast := SpellInstance.new(_data)
+	var plain := SpellInstance.new(_data)
+	fast.set_cast_speed_bonus(0.5)
+	assert_eq(plain.effective_interval(), _data.cast_interval)
+	assert_eq(_data.cast_interval, 0.5)

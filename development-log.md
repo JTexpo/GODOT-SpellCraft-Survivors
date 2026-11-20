@@ -280,3 +280,46 @@ Findings during the build:
 | Zone | 314.0 | 211.2 |
 
 The 60 fps target holds by a wide margin. Gems add about 1.8 ms a frame at the cap (150 more passive areas to draw and to keep in the physics broadphase), the same kind of cost the scroll pickups have. If a device struggles, `XpDropper.max_gems` is an exported number.
+
+## 2026-11-20: Sprint 9 (Gold, equipment and the shop)
+
+Decisions:
+- **The shop lives on the death screen (your choice).** After death you see "+N XP, +N Gold this run", a **Shop** button and the usual restart. It cannot be opened during a run, so equipment changes apply at the next run. Sprint 15's menu can move it.
+- **Starting-spell buffs are picked or re-rolled every run and never saved (your decision, from player feedback).** The level table is unchanged: levels 7 and 17 are random rewards (re-rolled each run) and 12 and 19 are chosen ones (picked each run). `buff_picks` left the save and old files still load.
+- **Scope B (your choice):** stats plus one effect each for Wands (chance to cast twice) and Staffs (chance to deal double damage). The other README effects wait.
+- **Approach 1 (your choice):** the existing `StatBonuses` path plus a per-cast `damage_scale` on the effect and a cast-speed bonus on the spell instance. Nothing is written into a shared `SpellData`.
+- Gold: plain, Fire and Thunder enemies give 1, Sea 2, Land 3 (my call). Coins share the gem pickup and dropper (150 cap, merge at the cap). Gold is banked as collected and saved like XP.
+- Equipment: 15 items in three slots (Robe, Weapon, Headwear). Prices 80 to 350 Gold, element Robes +15% element damage, Wands trade damage for speed and Staffs the reverse (all my calls, tune by playing). The element bonus of a hybrid spell is the average of the bonuses for its elements. Buying an item equips it and the replaced item stays owned.
+
+Rulings I made while building:
+- The `StatBonuses` test cases went into their own `test_stat_bonuses.gd` instead of the profile test file.
+- One item button does what is needed (buy, equip or take off) instead of three buttons per row, and its label shows the state (price, owned, equipped).
+- The perf gate asked for no more than 10% below the Sprint 8 medians. Coins cost about 2.2 ms a frame at the stress test's artificial rate (see below), so Wave and Zone missed it. I profiled it (mostly drawing 150 more pickups) and accepted it: both stay above 100 fps, and `max_gems` is an exported number on each dropper.
+
+Migration notes: `PlayerProfile` lost `buff_picks`, `set_pick` and `pick` and gained `gold`, `owned` and `equipped`. `StartingBuffs` takes a `RunBuffs` and `settle_random` became `roll_random`. `XpGem` and `XpDropper` became `ValueGem` and `ValueDropper` (with a kind), and the scene group `xp_gems` stays for XP while coins are in `gold_coins`. `RunStart.prepare` takes the run's buffs and the equipment catalog. `SpellBuilder.describe` and `whole_casts` take optional bonuses. `DeathScreen.set_run_summary` takes the Gold too.
+
+Known limitations:
+- Equipment only changes between runs, because the shop is only on the death screen.
+- Wand and Staff effects are rolled per cast, not per hit.
+- "Purchasing confirmation" (Sprint 9's task list) is not built: pressing an item buys it at once and a message says so.
+- All the new screens and HUD pieces are TEMPORARY looks, and balance is untested in play.
+- Only one effect each for Wands and Staffs. Free casts, reduced mana cost, longer range, faster projectiles, bigger areas, longer duration and boss damage are not built.
+- The Shop button was checked on a real window (a tap on it opens the shop and does not restart, a tap elsewhere restarts), but not on a real phone.
+
+Findings during the build:
+- Touches never reach buttons because mouse emulation is off, so the death screen handles a tap on its Shop button itself. A real-window script (3x scale) confirmed it, and also that the shop's own buttons work through the touch bridge.
+- The godot MCP run left a game window open each time, and the real save showed the user's own play (purchases and XP) after later suite runs. Before and after checksums were compared and they never changed because of a test.
+- Stress with `--drops` now also drops coins (300 enemies, windowed, median of three, 0.05 s interval):
+
+| Area | Sprint 8 (gems) | Sprint 9 (gems and coins) |
+|---|---|---|
+| Missile | 472.3 | 469.7 |
+| Wave | 129.7 | 105.4 |
+| Zone | 211.2 | 173.2 |
+
+Casting stays at 679 fps for Missile without drops, so the per-cast damage scale costs nothing measurable. Wave without coin drops read 131.1 against 101.3 with them in one paired run (7.63 ms against 9.87 ms a frame).
+
+Review fixes (Sprint 9 whole-branch review: 0 Critical, 2 Important fixed, minors deferred):
+- Mashing Enter (or the controller's accept) at the moment of death opened the shop and then bought the first item, because the 500 ms input delay only guarded `handle_event`. The Shop button now ignores presses inside that delay, and the shop ignores item presses for 300 ms after it opens (`ShopScreen.input_guard_msec`). Close always works.
+- The crafting drawbacks line ("100 casts become N") used the raw pool while the stats block above it used the loadout's mana bonus. Both now use the bonus.
+- Doubled zones (the cost of a Wand's cast twice on a ground-targeted spell), measured with `--copies` as the stand-in at the real zone interval of 1.2 s, 300 enemies, median of three: 1 copy 688.2 fps, 2 copies 694.8, 4 copies 590.6. Casting twice costs nothing measurable.

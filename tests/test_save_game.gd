@@ -38,14 +38,25 @@ func test_missing_file_gives_a_fresh_profile() -> void:
 	assert_false(FileAccess.file_exists(_path()))
 
 
-func test_save_then_load_round_trips_xp_and_picks() -> void:
+func test_save_then_load_round_trips_xp() -> void:
 	var profile := PlayerProfile.new()
 	profile.add_xp(321)
-	profile.set_pick(7, &"buff_damage")
 	assert_true(SaveGame.save_profile(profile, _path()))
-	var loaded := SaveGame.load_profile(_path())
-	assert_eq(loaded.total_xp, 321)
-	assert_eq(loaded.pick(7), &"buff_damage")
+	assert_eq(SaveGame.load_profile(_path()).total_xp, 321)
+
+
+func test_saved_file_has_no_buff_picks() -> void:
+	SaveGame.save_profile(PlayerProfile.new(), _path())
+	assert_false(_read(_path()).contains("buff_picks"))
+
+
+func test_an_old_file_with_buff_picks_loads_and_loses_the_field_when_saved_again() -> void:
+	_write('{"version": 1, "total_xp": 90, "buff_picks": {"7": "buff_damage"}}')
+	var profile := SaveGame.load_profile(_path())
+	assert_eq(profile.total_xp, 90)
+	assert_false(FileAccess.file_exists(_path() + ".bak"))
+	SaveGame.save_profile(profile, _path())
+	assert_false(_read(_path()).contains("buff_picks"))
 
 
 func test_large_xp_survives_exactly() -> void:
@@ -103,3 +114,29 @@ func test_a_second_bad_file_replaces_the_old_bak_without_error() -> void:
 	_write("second bad")
 	SaveGame.load_profile(_path())
 	assert_eq(_read(_path() + ".bak"), "second bad")
+
+
+func test_gold_and_equipment_survive_save_and_load() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(321)
+	profile.grant(&"robe_tide")
+	profile.equip(0, &"robe_tide")
+	assert_true(SaveGame.save_profile(profile, _path()))
+	var loaded := SaveGame.load_profile(_path())
+	assert_eq(loaded.gold, 321)
+	assert_true(loaded.owns(&"robe_tide"))
+	assert_eq(loaded.equipped_id(0), &"robe_tide")
+
+
+func test_large_gold_survives_exactly() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(PlayerProfile.MAX_VALUE - 7)
+	SaveGame.save_profile(profile, _path())
+	assert_eq(SaveGame.load_profile(_path()).gold, PlayerProfile.MAX_VALUE - 7)
+
+
+func test_a_save_with_a_bad_gold_field_is_kept_as_bak() -> void:
+	_write('{"version": 1, "total_xp": 5, "gold": "lots"}')
+	var profile := SaveGame.load_profile(_path())
+	assert_eq(profile.gold, 0)
+	assert_true(FileAccess.file_exists(_path() + ".bak"))

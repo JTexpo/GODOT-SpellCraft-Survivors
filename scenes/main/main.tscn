@@ -20,12 +20,15 @@
 [ext_resource type="PackedScene" path="res://scenes/interactables/lectern.tscn" id="40"]
 [ext_resource type="PackedScene" path="res://scenes/ui/interact_button.tscn" id="41"]
 [ext_resource type="PackedScene" path="res://scenes/ui/crafting_screen.tscn" id="42"]
-[ext_resource type="Script" path="res://scripts/systems/xp_dropper.gd" id="50"]
+[ext_resource type="Script" path="res://scripts/systems/value_dropper.gd" id="50"]
 [ext_resource type="PackedScene" path="res://scenes/progression/xp_gem.tscn" id="51"]
+[ext_resource type="PackedScene" path="res://scenes/progression/gold_coin.tscn" id="56"]
 [ext_resource type="Script" path="res://scripts/progression/profile_saver.gd" id="52"]
 [ext_resource type="PackedScene" path="res://scenes/ui/buff_pick_screen.tscn" id="53"]
 [ext_resource type="PackedScene" path="res://scenes/ui/xp_bar.tscn" id="54"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_toast.tscn" id="55"]
+[ext_resource type="PackedScene" path="res://scenes/ui/gold_counter.tscn" id="57"]
+[ext_resource type="PackedScene" path="res://scenes/ui/shop_screen.tscn" id="58"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/fire.tres" id="20"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/thunder.tres" id="21"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/land.tres" id="22"]
@@ -80,10 +83,17 @@ pickup_scene = ExtResource("12")
 script = ExtResource("50")
 gem_scene = ExtResource("51")
 
+[node name="GoldDropper" type="Node" parent="."]
+script = ExtResource("50")
+kind = 1
+gem_scene = ExtResource("56")
+
 [node name="ProfileSaver" type="Node" parent="."]
 script = ExtResource("52")
 
 [node name="BuffPickScreen" parent="." instance=ExtResource("53")]
+
+[node name="ShopScreen" parent="." instance=ExtResource("58")]
 
 [node name="DamageNumbers" type="Node2D" parent="."]
 script = ExtResource("10")
@@ -99,6 +109,12 @@ offset_right = 88.0
 offset_bottom = 22.0
 
 [node name="XpBar" parent="Hud" instance=ExtResource("54")]
+
+[node name="GoldCounter" parent="Hud" instance=ExtResource("57")]
+offset_left = 92.0
+offset_top = 15.0
+offset_right = 172.0
+offset_bottom = 28.0
 
 [node name="LevelToast" parent="Hud" instance=ExtResource("55")]
 anchors_preset = 5

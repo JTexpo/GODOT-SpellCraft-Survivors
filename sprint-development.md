@@ -500,7 +500,7 @@ A complete XP and leveling system that improves the player throughout an adventu
 - Spell slots unlock correctly.
 - Starting spell modifications are applied correctly.
 
-**Built note:** XP and level persist between runs (the user's decision), so the save system moved here from Sprint 9. Level 1 is where every wizard starts and gives nothing, so the track holds levels 2 to 20 as 19 `LevelReward` resources on a `LevelTrack`. Enemies drop XP gems (capped at 150, merging into the oldest gem at the cap so no XP is lost). Stat and slot rewards apply at once through one `Player.apply_stat_bonuses`. Starting-spell rewards apply at the next run start: a random buff is rolled when the level is reached and kept, a chosen buff is picked on a small screen before the run, and level 14 adds Sea Cone as a second starting spell. The F11 debug key is gone and F12 gives 100 XP. Balance has not been tested in play.
+**Built note:** XP and level persist between runs (the user's decision), so the save system moved here from Sprint 9. (Sprint 9 changed one rule: starting-spell buffs are no longer saved, a random buff is re-rolled and a chosen buff is picked again every run.) Level 1 is where every wizard starts and gives nothing, so the track holds levels 2 to 20 as 19 `LevelReward` resources on a `LevelTrack`. Enemies drop XP gems (capped at 150, merging into the oldest gem at the cap so no XP is lost). Stat and slot rewards apply at once through one `Player.apply_stat_bonuses`. Starting-spell rewards apply at the next run start: a random buff is rolled when the level is reached and kept, a chosen buff is picked on a small screen before the run, and level 14 adds Sea Cone as a second starting spell. The F11 debug key is gone and F12 gives 100 XP. Balance has not been tested in play.
 
 ---
 
@@ -514,42 +514,42 @@ Players can now use Gold to purchase equipment that changes their future adventu
 
 #### Gold
 
-- [ ] Implement Gold drops.
-- [ ] Implement Gold collection.
-- [ ] Implement Gold accumulation.
-- [ ] Implement Gold persistence between runs (the save file and profile already exist from Sprint 8, so this adds Gold to them).
-- [ ] Display Gold collected during an adventure.
+- [x] Implement Gold drops.
+- [x] Implement Gold collection.
+- [x] Implement Gold accumulation.
+- [x] Implement Gold persistence between runs (the save file and profile already exist from Sprint 8, so this adds Gold to them).
+- [x] Display Gold collected during an adventure.
 
 #### Equipment
 
-- [ ] Implement Robes.
-- [ ] Implement Wands.
-- [ ] Implement Staffs.
-- [ ] Implement Hats.
-- [ ] Implement Hoods.
-- [ ] Implement equipment modifiers.
-- [ ] Implement equipment purchasing.
-- [ ] Implement equipment selection.
-- [ ] Implement equipment persistence (also added to the Sprint 8 profile and save file).
+- [x] Implement Robes.
+- [x] Implement Wands.
+- [x] Implement Staffs.
+- [x] Implement Hats.
+- [x] Implement Hoods.
+- [x] Implement equipment modifiers.
+- [x] Implement equipment purchasing.
+- [x] Implement equipment selection.
+- [x] Implement equipment persistence (also added to the Sprint 8 profile and save file).
 
 #### Equipment Bonuses
 
-- [ ] Implement elemental damage bonuses.
-- [ ] Implement maximum mana bonuses.
-- [ ] Implement health bonuses.
-- [ ] Implement movement speed bonuses.
-- [ ] Implement Wand casting speed bonuses.
-- [ ] Implement Staff damage bonuses.
-- [ ] Implement equipment-specific special effects.
+- [x] Implement elemental damage bonuses.
+- [x] Implement maximum mana bonuses.
+- [x] Implement health bonuses.
+- [x] Implement movement speed bonuses.
+- [x] Implement Wand casting speed bonuses.
+- [x] Implement Staff damage bonuses.
+- [x] Implement equipment-specific special effects. (One each: Wand chance to cast twice, Staff chance to deal double damage. The rest of the README list is left for later.)
 
 #### Shop Interface
 
-- [ ] Create the equipment shop.
-- [ ] Display equipment descriptions.
-- [ ] Display equipment prices.
-- [ ] Display player Gold.
-- [ ] Implement purchasing confirmation.
-- [ ] Prevent purchases without sufficient Gold.
+- [x] Create the equipment shop.
+- [x] Display equipment descriptions.
+- [x] Display equipment prices.
+- [x] Display player Gold.
+- [ ] Implement purchasing confirmation. (Not built: pressing an item buys it at once and a message says so. A confirm dialog is a later polish.)
+- [x] Prevent purchases without sufficient Gold.
 
 ### Deliverable
 
@@ -562,6 +562,8 @@ A functional between-run shop and equipment progression system.
 - Equipment bonuses apply correctly.
 - Equipment selections persist between runs.
 - Different equipment creates meaningful gameplay differences.
+
+**Built note:** enemies drop Gold coins (the same pickup and dropper as XP gems), Gold is banked as it is collected and saved with the rest, and a **Shop** button on the death screen opens a shop with 15 pieces of equipment in three slots (Robe, Wand or Staff, Hat or Hood). Every modifier goes through the one `StatBonuses` path that levels use. Element damage, spell damage, casting speed and two chance effects reach every cast through a per-cast damage scale, so no Area and no shared spell data is edited. The crafting preview now shows the real numbers with level and equipment bonuses. Also, at the player feedback of the user, starting-spell buffs are no longer saved: a random buff is re-rolled and a chosen buff is picked again at the start of every run. Balance has not been tested in play.
 
 ---
 

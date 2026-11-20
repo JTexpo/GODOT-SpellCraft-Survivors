@@ -5,18 +5,20 @@ extends RefCounted
 ## running it again gives the same state, so a restart can never apply a bonus twice.
 
 
-static func prepare(player: Player, profile: PlayerProfile, track: LevelTrack) -> void:
+static func prepare(player: Player, profile: PlayerProfile, track: LevelTrack, run_buffs: RunBuffs, catalog: EquipmentCatalog) -> void:
 	var level := profile.level(track)
-	# Bonuses first, so every spell equipped below starts with the level's mana bonus.
-	player.apply_stat_bonuses(StatBonuses.for_level(track, level), false)
+	# Level and equipment bonuses first, added into one object, so every spell equipped below starts
+	# with the mana bonus and the casting speed.
+	var bonuses := StatBonuses.combined(StatBonuses.for_level(track, level), ShopSystem.bonuses(profile, catalog))
+	player.apply_stat_bonuses(bonuses, false)
 	var loadout := player.loadout
 	loadout.set_unlocked_slots(track.slot_count(level))
 	if not loadout.starting_spells.is_empty():
-		_equip(loadout, 0, loadout.starting_spells[0], StartingBuffs.buffs_for_spell(profile, track, level, 0))
+		_equip(loadout, 0, loadout.starting_spells[0], StartingBuffs.buffs_for_spell(run_buffs, track, level, 0))
 	for reached in range(2, mini(level, track.max_level()) + 1):
 		var reward := track.reward_for_level(reached)
 		if reward.kind == LevelReward.Kind.SECOND_SPELL:
-			_equip(loadout, 1, reward.spell, StartingBuffs.buffs_for_spell(profile, track, level, 1))
+			_equip(loadout, 1, reward.spell, StartingBuffs.buffs_for_spell(run_buffs, track, level, 1))
 
 
 static func _equip(loadout: SpellLoadout, slot: int, spell: SpellData, buffs: Array[ScrollData]) -> void:

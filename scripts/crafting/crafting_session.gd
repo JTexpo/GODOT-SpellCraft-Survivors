@@ -160,13 +160,13 @@ func confirm() -> CraftingResult:
 ## The numbers of the spell the choices would make. Empty when there is nothing to preview.
 func new_stats() -> Dictionary:
 	var spell := preview()
-	return SpellBuilder.describe(spell) if spell != null else {}
+	return SpellBuilder.describe(spell, _loadout.bonuses) if spell != null else {}
 
 
 ## The numbers of the spell now in the target slot. Empty for an empty slot.
 func current_stats() -> Dictionary:
 	var instance := _loadout.slots[slot_index] if slot_index < _loadout.slots.size() else null
-	return SpellBuilder.describe(instance.data) if instance != null else {}
+	return SpellBuilder.describe(instance.data, _loadout.bonuses) if instance != null else {}
 
 
 ## Plain-words costs of the chosen buffs. Empty with no buffs or when the spell cannot be built.
@@ -179,10 +179,11 @@ func drawbacks() -> Array[String]:
 	if buffed == null or plain == null:
 		return lines
 	var multiplier := snappedf(buffed.mana_cost / plain.mana_cost, 0.1) if plain.mana_cost > 0.0 else 1.0
+	var pool_bonus := _loadout.bonuses.fraction(StatBonuses.Stat.SPELL_MANA)
 	lines.append("Buffs: costs %.1fx per cast, %d casts become %d." % [
 		multiplier,
-		SpellBuilder.whole_casts(plain),
-		SpellBuilder.whole_casts(buffed),
+		SpellBuilder.whole_casts(plain, pool_bonus),
+		SpellBuilder.whole_casts(buffed, pool_bonus),
 	])
 	if not SpellBuilder.can_cast(buffed):
 		lines.append(CraftingSystem.REASON_TOO_COSTLY)

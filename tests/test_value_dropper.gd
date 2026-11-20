@@ -4,13 +4,13 @@ const GEM_SCENE := "res://scenes/progression/xp_gem.tscn"
 const FIRE_ENEMY := "res://resources/enemies/fire_enemy.tres"
 
 var _root: Node2D
-var _dropper: XpDropper
+var _dropper: ValueDropper
 
 
 func before_each() -> void:
 	_root = Node2D.new()
 	add_child_autofree(_root)
-	_dropper = XpDropper.new()
+	_dropper = ValueDropper.new()
 	_dropper.gem_scene = load(GEM_SCENE) as PackedScene
 	_dropper.drop_root = _root
 	add_child_autofree(_dropper)
@@ -29,7 +29,7 @@ func _enemy(xp: int, at: Vector2 = Vector2(40, 50)) -> Enemy:
 func _total_value() -> int:
 	var total := 0
 	for gem in get_tree().get_nodes_in_group(&"xp_gems"):
-		total += (gem as XpGem).value
+		total += (gem as ValueGem).value
 	return total
 
 
@@ -88,3 +88,61 @@ func test_collected_gems_free_their_slot() -> void:
 	var third := _dropper.place(3, Vector2.ZERO)
 	assert_eq(third.value, 3)
 	assert_eq(_dropper.gem_count(), 2)
+
+
+func _gold_dropper() -> ValueDropper:
+	var dropper := ValueDropper.new()
+	dropper.kind = ValueGem.Kind.GOLD
+	dropper.gem_scene = load("res://scenes/progression/gold_coin.tscn") as PackedScene
+	dropper.drop_root = _root
+	add_child_autofree(dropper)
+	return dropper
+
+
+func _enemy_data(path: String) -> Enemy:
+	var enemy := (load("res://scenes/enemies/base_enemy.tscn") as PackedScene).instantiate() as Enemy
+	enemy.setup(load(path) as EnemyData, Rect2(0, 0, 960, 540), RandomNumberGenerator.new())
+	_root.add_child(enemy)
+	enemy.global_position = Vector2(40, 50)
+	return enemy
+
+
+func test_gold_dropper_uses_the_enemys_gold_reward() -> void:
+	var gold := _gold_dropper()
+	assert_eq(gold.on_enemy_died(_enemy_data("res://resources/enemies/land_enemy.tres")).value, 3)
+	assert_eq(gold.on_enemy_died(_enemy_data("res://resources/enemies/sea_enemy.tres")).value, 2)
+	assert_eq(gold.on_enemy_died(_enemy_data("res://resources/enemies/basic_enemy.tres")).value, 1)
+
+
+func test_xp_dropper_reads_xp_and_the_gold_dropper_reads_gold() -> void:
+	var gold := _gold_dropper()
+	var enemy := _enemy_data("res://resources/enemies/land_enemy.tres")
+	assert_eq(_dropper.on_enemy_died(enemy).value, 10)
+	assert_eq(gold.on_enemy_died(enemy).value, 3)
+	assert_eq(get_tree().get_nodes_in_group(&"xp_gems").size(), 1)
+	assert_eq(get_tree().get_nodes_in_group(&"gold_coins").size(), 1)
+
+
+func test_zero_gold_reward_drops_nothing() -> void:
+	var gold := _gold_dropper()
+	var data := (load("res://resources/enemies/fire_enemy.tres") as EnemyData).duplicate() as EnemyData
+	data.gold_reward = 0
+	var enemy := (load("res://scenes/enemies/base_enemy.tscn") as PackedScene).instantiate() as Enemy
+	enemy.setup(data, Rect2(0, 0, 960, 540), RandomNumberGenerator.new())
+	_root.add_child(enemy)
+	assert_null(gold.on_enemy_died(enemy))
+
+
+func test_gold_cap_merges_and_loses_nothing() -> void:
+	var gold := _gold_dropper()
+	gold.max_gems = 5
+	var dropped := 0
+	for i in 60:
+		var amount := 1 + i % 4
+		dropped += amount
+		gold.place(amount, Vector2(i % 90, i % 50))
+	assert_eq(gold.gem_count(), 5)
+	var total := 0
+	for coin in get_tree().get_nodes_in_group(&"gold_coins"):
+		total += (coin as ValueGem).value
+	assert_eq(total, dropped)

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EquipmentCatalog" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://resources/equipment/equipment_catalog.gd" id="1"]
+[ext_resource type="Script" path="res://resources/equipment/equipment_data.gd" id="2"]
+[ext_resource type="Resource" path="res://resources/equipment/items/robe_ember.tres" id="i0"]
+[ext_resource type="Resource" path="res://resources/equipment/items/robe_storm.tres" id="i1"]
+[ext_resource type="Resource" path="res://resources/equipment/items/robe_stone.tres" id="i2"]
+[ext_resource type="Resource" path="res://resources/equipment/items/robe_tide.tres" id="i3"]
+[ext_resource type="Resource" path="res://resources/equipment/items/robe_warded.tres" id="i4"]
+[ext_resource type="Resource" path="res://resources/equipment/items/hat_mana.tres" id="i5"]
+[ext_resource type="Resource" path="res://resources/equipment/items/hat_swift.tres" id="i6"]
+[ext_resource type="Resource" path="res://resources/equipment/items/hat_hardy.tres" id="i7"]
+[ext_resource type="Resource" path="res://resources/equipment/items/hood_mana.tres" id="i8"]
+[ext_resource type="Resource" path="res://resources/equipment/items/hood_swift.tres" id="i9"]
+[ext_resource type="Resource" path="res://resources/equipment/items/hood_hardy.tres" id="i10"]
+[ext_resource type="Resource" path="res://resources/equipment/items/wand_quick.tres" id="i11"]
+[ext_resource type="Resource" path="res://resources/equipment/items/wand_flicker.tres" id="i12"]
+[ext_resource type="Resource" path="res://resources/equipment/items/staff_oak.tres" id="i13"]
+[ext_resource type="Resource" path="res://resources/equipment/items/staff_elder.tres" id="i14"]
+
+[resource]
+script = ExtResource("1")
+items = Array[ExtResource("2")]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2"), ExtResource("i3"), ExtResource("i4"), ExtResource("i5"), ExtResource("i6"), ExtResource("i7"), ExtResource("i8"), ExtResource("i9"), ExtResource("i10"), ExtResource("i11"), ExtResource("i12"), ExtResource("i13"), ExtResource("i14")])

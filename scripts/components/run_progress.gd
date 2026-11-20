@@ -6,13 +6,17 @@ extends Node
 
 signal xp_changed(total_xp: int, level: int)
 signal leveled_up(level: int, reward: LevelReward)
+signal gold_changed(total_gold: int)
 
 var profile: PlayerProfile
 var track: LevelTrack
 ## XP collected since this run began.
 var run_xp: int = 0
-## Called with the reward's level when a RANDOM_BUFF reward is reached, so Main can roll and store it.
-var starting_buffs_hook: Callable
+## Gold collected since this run began.
+var run_gold: int = 0
+## What the equipped items add. Main sets it from the profile, so a level-up recomputes level plus
+## equipment and never drops the equipment's bonuses.
+var equipment_bonuses: StatBonuses = StatBonuses.new()
 
 var _player: Player
 
@@ -41,15 +45,21 @@ func add_xp(amount: int) -> void:
 		leveled_up.emit(reached, reward)
 
 
+## Banks Gold the moment it is collected. Ignores amounts at or below 0 and a dead player.
+func add_gold(amount: int) -> void:
+	if amount <= 0 or profile == null or _player.health.is_dead():
+		return
+	profile.add_gold(amount)
+	run_gold += amount
+	gold_changed.emit(profile.gold)
+
+
 func _apply(reached: int, reward: LevelReward) -> void:
 	match reward.kind:
 		LevelReward.Kind.SPEED, LevelReward.Kind.HEALTH, LevelReward.Kind.MANA:
-			_player.apply_stat_bonuses(StatBonuses.for_level(track, reached), true)
+			_player.apply_stat_bonuses(StatBonuses.combined(StatBonuses.for_level(track, reached), equipment_bonuses), true)
 		LevelReward.Kind.SLOT:
 			_player.loadout.unlock_next()
-		LevelReward.Kind.RANDOM_BUFF:
-			if starting_buffs_hook.is_valid():
-				starting_buffs_hook.call(reached)
 		_:
-			# CHOSEN_BUFF and SECOND_SPELL are applied at the start of the next run.
+			# Random buff, chosen buff and second spell are applied at the start of the next run.
 			pass

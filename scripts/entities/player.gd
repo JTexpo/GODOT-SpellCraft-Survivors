@@ -51,7 +51,7 @@ func apply_stat_bonuses(bonuses: StatBonuses, heal_difference: bool = false) -> 
 		health.raise_max_health(new_max - health.max_health)
 	else:
 		health.set_max_health(new_max)
-	loadout.set_mana_bonus(bonuses.fraction(StatBonuses.Stat.SPELL_MANA))
+	loadout.set_bonuses(bonuses)
 
 
 func _physics_process(delta: float) -> void:

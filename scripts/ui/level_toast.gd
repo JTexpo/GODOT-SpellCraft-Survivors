@@ -34,7 +34,11 @@ func _process(delta: float) -> void:
 ## `detail` replaces the reward's own description when it is not empty (a random buff names the buff).
 func show_level_up(level: int, reward: LevelReward, detail: String = "") -> void:
 	var line := detail if not detail.is_empty() else (reward.description if reward != null else "")
-	_lines.append("Level %d! %s" % [level, line])
+	_add_line("Level %d! %s" % [level, line])
+
+
+func _add_line(line: String) -> void:
+	_lines.append(line)
 	while _lines.size() > MAX_LINES:
 		_lines.pop_front()
 	text = "\n".join(_lines)
@@ -42,6 +46,11 @@ func show_level_up(level: int, reward: LevelReward, detail: String = "") -> void
 	_time_left = DURATION
 	visible = true
 	set_process(true)
+
+
+## Adds a plain line (no "Level N!" prefix), for example a note about a buff rolled at run start.
+func show_message(message: String) -> void:
+	_add_line(message)
 
 
 func is_showing() -> bool:

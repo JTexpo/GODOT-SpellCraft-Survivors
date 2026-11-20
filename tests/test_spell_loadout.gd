@@ -425,3 +425,145 @@ func test_set_unlocked_slots_can_lower_without_signals_and_clamps() -> void:
 	assert_eq(loadout.unlocked_slots, SpellLoadout.SLOT_COUNT)
 	loadout.set_unlocked_slots(-4)
 	assert_eq(loadout.unlocked_slots, 1)
+
+
+func _bonuses(values: Dictionary) -> StatBonuses:
+	var bonuses := StatBonuses.new()
+	for stat in values:
+		bonuses.add(stat, values[stat])
+	return bonuses
+
+
+func test_default_cast_launches_once_with_a_scale_of_one() -> void:
+	var loadout := _stub_loadout()
+	assert_true(loadout.try_cast(Vector2.ZERO, Vector2.RIGHT))
+	var stubs := _stub_effects()
+	assert_eq(stubs.size(), 1)
+	assert_eq(stubs[0].damage_scale, 1.0)
+
+
+func test_cast_twice_at_certain_chance_launches_every_shot_twice_for_one_mana_payment() -> void:
+	var loadout := _stub_loadout()
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: 1.0}))
+	var before := loadout.selected().current_mana
+	assert_true(loadout.try_cast(Vector2.ZERO, Vector2.RIGHT))
+	assert_eq(_stub_effects().size(), 2)
+	assert_almost_eq(loadout.selected().current_mana, before - loadout.selected().data.mana_cost, 0.0001)
+
+
+func test_cast_twice_at_zero_chance_launches_once() -> void:
+	var loadout := _stub_loadout()
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: 0.0}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_eq(_stub_effects().size(), 1)
+
+
+func test_cast_twice_does_not_lengthen_the_cooldown() -> void:
+	var loadout := _stub_loadout()
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: 1.0}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_almost_eq(loadout.selected().cooldown_left, loadout.selected().data.cast_interval, 0.0001)
+	assert_false(loadout.try_cast(Vector2.ZERO, Vector2.RIGHT), "the cooldown still blocks")
+	assert_eq(_stub_effects().size(), 2)
+
+
+func test_double_damage_at_certain_chance_doubles_the_scale_of_every_shot() -> void:
+	var loadout := _copies_loadout(3)
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.DOUBLE_DAMAGE_CHANCE: 1.0}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	var stubs := _stub_effects()
+	assert_eq(stubs.size(), 3)
+	for stub in stubs:
+		assert_eq(stub.damage_scale, 2.0)
+
+
+func test_double_damage_at_zero_chance_leaves_the_scale() -> void:
+	var loadout := _stub_loadout()
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.DOUBLE_DAMAGE_CHANCE: 0.0, StatBonuses.Stat.SPELL_DAMAGE: 0.25}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_almost_eq(_stub_effects()[0].damage_scale, 1.25, 0.0001)
+
+
+func test_chances_above_one_and_below_zero_are_clamped() -> void:
+	var certain := _stub_loadout()
+	certain.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: 5.0, StatBonuses.Stat.DOUBLE_DAMAGE_CHANCE: 3.0}))
+	certain.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	var stubs := _stub_effects()
+	assert_eq(stubs.size(), 2)
+	assert_eq(stubs[0].damage_scale, 2.0)
+	for stub in stubs:
+		stub.queue_free()
+	await wait_frames(2)
+	var never := _stub_loadout()
+	never.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: -4.0, StatBonuses.Stat.DOUBLE_DAMAGE_CHANCE: -1.0}))
+	never.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_eq(_stub_effects().size(), 1)
+	assert_eq(_stub_effects()[0].damage_scale, 1.0)
+
+
+func test_both_effects_together() -> void:
+	var loadout := _stub_loadout()
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: 1.0, StatBonuses.Stat.DOUBLE_DAMAGE_CHANCE: 1.0}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	var stubs := _stub_effects()
+	assert_eq(stubs.size(), 2)
+	for stub in stubs:
+		assert_eq(stub.damage_scale, 2.0)
+
+
+func test_a_spell_with_copies_launches_copies_times_two_when_casting_twice() -> void:
+	var loadout := _copies_loadout(3)
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: 1.0}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_eq(_stub_effects().size(), 6)
+
+
+func test_element_bonus_reaches_the_launched_effect() -> void:
+	var spell := _stub_spell()
+	spell.elements = [SpellData.Element.FIRE]
+	var spells: Array[SpellData] = [spell, null, null, null, null]
+	var loadout := _make_loadout(spells)
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.DAMAGE_FIRE: 0.2, StatBonuses.Stat.DAMAGE_SEA: 0.9}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_almost_eq(_stub_effects()[0].damage_scale, 1.2, 0.0001)
+
+
+func test_cast_speed_reaches_the_cooldown() -> void:
+	var loadout := _stub_loadout()
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_SPEED: 0.25}))
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_almost_eq(loadout.selected().cooldown_left, 0.28, 0.0001)
+
+
+func test_loadout_bonuses_apply_to_spells_equipped_later() -> void:
+	var loadout := _make_loadout(_five_spells())
+	loadout.unlocked_slots = 3
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_SPEED: 0.25, StatBonuses.Stat.SPELL_MANA: 0.1}))
+	var crafted := SpellData.new()
+	crafted.max_mana = 100.0
+	crafted.mana_cost = 1.0
+	var instance := loadout.equip(1, crafted)
+	assert_almost_eq(instance.cast_speed_bonus, 0.25, 0.0001)
+	assert_almost_eq(instance.max_mana(), 110.0, 0.0001)
+	assert_almost_eq(loadout.slots[0].cast_speed_bonus, 0.25, 0.0001)
+
+
+func test_two_loadouts_never_share_bonuses() -> void:
+	var first := _stub_loadout()
+	var second := _stub_loadout()
+	first.set_bonuses(_bonuses({StatBonuses.Stat.CAST_SPEED: 0.5}))
+	assert_eq(second.bonuses.fraction(StatBonuses.Stat.CAST_SPEED), 0.0)
+	assert_eq(second.selected().cast_speed_bonus, 0.0)
+
+
+func test_a_fractional_chance_uses_the_loadouts_rng() -> void:
+	var loadout := _stub_loadout()
+	loadout.rng.seed = 7
+	loadout.set_bonuses(_bonuses({StatBonuses.Stat.CAST_TWICE_CHANCE: 0.5}))
+	var casts := 30
+	for i in casts:
+		loadout.selected().cooldown_left = 0.0
+		loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	var launched := _stub_effects().size()
+	assert_gt(launched, casts, "some casts repeated")
+	assert_lt(launched, casts * 2, "not all of them did")

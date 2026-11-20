@@ -4,6 +4,11 @@ extends Node2D
 ## spell's Area scene and calls launch(), and knows nothing else about the Area.
 
 
+## Scales the damage of this one cast (equipment and level bonuses, a double-damage roll). The loadout
+## sets it before `launch`, so no Area and no shared SpellData needs to know about it.
+var damage_scale: float = 1.0
+
+
 ## Call after the effect is in the tree. Subclasses override this.
 func launch(_spell: SpellData, _origin: Vector2, _direction: Vector2, _target: Vector2) -> void:
 	push_error("AreaEffect.launch must be overridden")
@@ -12,7 +17,7 @@ func launch(_spell: SpellData, _origin: Vector2, _direction: Vector2, _target: V
 ## The one place an Area turns a spell into hit damage. The hitbox carries the raw damage and
 ## the spell's element, and the target's hurtbox applies the elemental multiplier on impact.
 func _configure_hitbox(hitbox: HitboxComponent, spell: SpellData, hit_cooldown: float) -> void:
-	hitbox.damage = spell.damage
+	hitbox.damage = spell.damage * damage_scale
 	hitbox.element = spell.primary_element()
 	hitbox.profile = spell.attack_profile()
 	hitbox.knockback = spell.knockback

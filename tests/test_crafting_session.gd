@@ -373,3 +373,47 @@ func test_drawbacks_count_whole_casts_only() -> void:
 	session.select_area(_missile)
 	session.add_buff(damage)
 	assert_eq(session.drawbacks()[0], "Buffs: costs 1.5x per cast, 100 casts become 66.", "a 67th cast would not have the mana")
+
+
+func test_new_and_current_stats_include_the_loadouts_bonuses() -> void:
+	_inventory.add(_fire)
+	_inventory.add(_missile)
+	var bonuses := StatBonuses.new()
+	bonuses.add(StatBonuses.Stat.SPELL_MANA, 0.5)
+	bonuses.add(StatBonuses.Stat.CAST_SPEED, 0.25)
+	_loadout.set_bonuses(bonuses)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	var fresh := session.new_stats()
+	assert_almost_eq(fresh["pool"], 150.0, 0.001)
+	assert_almost_eq(fresh["interval"], 0.35 / 1.25, 0.0001)
+	var current := session.current_stats()
+	assert_almost_eq(current["pool"], 1500.0, 0.001)
+	assert_almost_eq(current["interval"], 0.35 / 1.25, 0.0001)
+
+
+func test_stats_without_bonuses_are_the_plain_numbers() -> void:
+	_inventory.add(_fire)
+	_inventory.add(_missile)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	assert_almost_eq(session.new_stats()["pool"], 100.0, 0.001)
+	assert_almost_eq(session.current_stats()["pool"], 1000.0, 0.001)
+
+
+func test_drawbacks_count_casts_with_the_loadouts_mana_bonus() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_missile)
+	_own(damage)
+	var bonuses := StatBonuses.new()
+	bonuses.add(StatBonuses.Stat.SPELL_MANA, 0.5)
+	_loadout.set_bonuses(bonuses)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	session.add_buff(damage)
+	assert_eq(session.drawbacks(), ["Buffs: costs 1.5x per cast, 150 casts become 100."])
+	assert_almost_eq(session.new_stats()["whole_casts"], 100, 0)

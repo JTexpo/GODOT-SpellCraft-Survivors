@@ -17,3 +17,4 @@ color = Color(0.2, 0.55, 1, 1)
 spawn_weight = 2.0
 drop_table = ExtResource("2")
 xp_reward = 6
+gold_reward = 2

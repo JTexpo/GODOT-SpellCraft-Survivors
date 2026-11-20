@@ -229,3 +229,13 @@ func test_fresh_bonuses_change_nothing() -> void:
 	assert_eq((_player.get_node("MoveComponent") as MoveComponent).speed, 90.0)
 	assert_eq(_player.health.max_health, 100.0)
 	assert_eq(_player.loadout.mana_bonus, 0.0)
+
+
+func test_apply_stat_bonuses_reaches_the_loadout_cast_stats() -> void:
+	var bonuses := StatBonuses.new()
+	bonuses.add(StatBonuses.Stat.CAST_SPEED, 0.25)
+	bonuses.add(StatBonuses.Stat.DAMAGE_FIRE, 0.15)
+	_player.apply_stat_bonuses(bonuses)
+	assert_almost_eq(_player.loadout.bonuses.fraction(StatBonuses.Stat.CAST_SPEED), 0.25, 0.0001)
+	assert_almost_eq(_player.loadout.bonuses.fraction(StatBonuses.Stat.DAMAGE_FIRE), 0.15, 0.0001)
+	assert_almost_eq(_player.loadout.slots[0].cast_speed_bonus, 0.25, 0.0001)

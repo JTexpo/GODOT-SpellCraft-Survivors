@@ -49,3 +49,22 @@ func test_hides_after_its_duration_and_starts_a_fresh_list() -> void:
 
 func test_ignores_the_mouse() -> void:
 	assert_eq(_toast.mouse_filter, Control.MOUSE_FILTER_IGNORE)
+
+
+func test_show_message_appends_a_line_without_a_level_prefix() -> void:
+	_toast.show_message("Starting spell gains Increased Damage")
+	assert_true(_toast.is_showing())
+	assert_eq(_toast.text, "Starting spell gains Increased Damage")
+	_show(2)
+	assert_eq(_toast.text, "Starting spell gains Increased Damage\nLevel 2! Faster movement")
+
+
+func test_messages_and_level_ups_share_the_four_line_cap() -> void:
+	for i in 3:
+		_toast.show_message("note %d" % i)
+	_show(2)
+	_show(3)
+	var lines := _toast.text.split("\n")
+	assert_eq(lines.size(), 4)
+	assert_eq(lines[0], "note 1")
+	assert_true(lines[3].begins_with("Level 3!"))

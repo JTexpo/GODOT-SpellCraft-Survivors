@@ -122,8 +122,80 @@ func test_run_xp_counts_only_this_run() -> void:
 	assert_eq(_profile.total_xp, 120)
 
 
-func test_random_buff_reward_calls_the_hook_with_its_level() -> void:
-	var seen: Array[int] = []
-	_progress.starting_buffs_hook = func(level: int) -> void: seen.append(level)
-	_progress.add_xp(_track.xp_for_level(17))
-	assert_eq(seen, [7, 17] as Array[int])
+func test_random_buff_level_changes_nothing_mid_run() -> void:
+	_progress.add_xp(_track.xp_for_level(6))
+	var speed := _speed()
+	var slots := _player.loadout.unlocked_slots
+	var data := _player.loadout.slots[0].data
+	_progress.add_xp(_track.xp_for_level(7) - _track.xp_for_level(6))
+	assert_eq(_progress.level(), 7)
+	assert_eq(_speed(), speed)
+	assert_eq(_player.loadout.unlocked_slots, slots)
+	assert_eq(_player.loadout.slots[0].data, data)
+	assert_true(data.buff_stacks.is_empty())
+
+func test_add_gold_banks_it_in_the_profile_and_this_run() -> void:
+	_progress.add_gold(7)
+	_progress.add_gold(5)
+	assert_eq(_profile.gold, 12)
+	assert_eq(_progress.run_gold, 12)
+
+
+func test_gold_from_an_earlier_run_is_kept_but_not_counted_as_this_run() -> void:
+	_profile.add_gold(100)
+	_progress.add_gold(3)
+	assert_eq(_profile.gold, 103)
+	assert_eq(_progress.run_gold, 3)
+
+
+func test_zero_negative_and_dead_player_bank_no_gold() -> void:
+	_progress.add_gold(0)
+	_progress.add_gold(-5)
+	assert_eq(_profile.gold, 0)
+	(_player.get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+	_progress.add_gold(50)
+	assert_eq(_profile.gold, 0)
+	assert_eq(_progress.run_gold, 0)
+
+
+func test_gold_changed_reports_the_total() -> void:
+	_profile.add_gold(10)
+	watch_signals(_progress)
+	_progress.add_gold(4)
+	assert_signal_emitted_with_parameters(_progress, "gold_changed", [14])
+
+
+func _wear(id: StringName) -> void:
+	var catalog := EquipmentCatalog.default_catalog()
+	_profile.grant(id)
+	_profile.equip(int(catalog.find(id).slot()), id)
+	_progress.equipment_bonuses = ShopSystem.bonuses(_profile, catalog)
+
+
+func test_level_up_keeps_the_equipment_bonuses() -> void:
+	_wear(&"hat_swift")
+	_progress.add_xp(30)
+	assert_almost_eq(_speed(), 90.0 * (1.0 + 0.08 + 0.10), 0.001)
+
+
+func test_equipment_never_applies_twice_across_several_level_ups() -> void:
+	_wear(&"hat_swift")
+	_progress.add_xp(_track.xp_for_level(11))
+	assert_almost_eq(_speed(), 90.0 * (1.0 + 0.24 + 0.10), 0.001)
+	_progress.add_xp(1)
+	assert_almost_eq(_speed(), 90.0 * (1.0 + 0.24 + 0.10), 0.001)
+
+
+func test_health_level_up_with_equipment_heals_by_the_gain() -> void:
+	_wear(&"hat_hardy")
+	_player.health.take_damage(30.0)
+	_progress.add_xp(_track.xp_for_level(3))
+	assert_almost_eq(_player.health.max_health, 100.0 * (1.0 + 0.20 + 0.20), 0.001)
+	assert_almost_eq(_player.health.current_health, 70.0 + 40.0, 0.001)
+
+
+func test_equipment_damage_bonus_survives_a_mana_level_up() -> void:
+	_wear(&"robe_ember")
+	_progress.add_xp(_track.xp_for_level(4))
+	assert_almost_eq(_player.loadout.bonuses.fraction(StatBonuses.Stat.DAMAGE_FIRE), 0.15, 0.0001)
+	assert_almost_eq(_player.loadout.bonuses.fraction(StatBonuses.Stat.SPELL_MANA), 0.15, 0.0001)

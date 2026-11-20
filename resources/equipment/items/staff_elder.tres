@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://resources/equipment/equipment_modifier.gd" id="1"]
+[ext_resource type="Script" path="res://resources/equipment/equipment_data.gd" id="2"]
+
+[sub_resource type="Resource" id="m0"]
+script = ExtResource("1")
+stat = 7
+amount = 0.45
+
+[sub_resource type="Resource" id="m1"]
+script = ExtResource("1")
+stat = 8
+amount = -0.3
+
+[sub_resource type="Resource" id="m2"]
+script = ExtResource("1")
+stat = 10
+amount = 0.15
+
+[resource]
+script = ExtResource("2")
+id = &"staff_elder"
+display_name = "Elder Staff"
+description = "45% more damage but casts 30% slower. 15% chance to deal double damage."
+category = 2
+price = 350
+modifiers = Array[ExtResource("1")]([SubResource("m0"), SubResource("m1"), SubResource("m2")])
+color = Color(0.55, 0.38, 0.22, 1)

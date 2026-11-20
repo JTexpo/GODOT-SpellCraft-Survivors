@@ -11,7 +11,6 @@ func test_fresh_profile_is_level_one_with_no_xp() -> void:
 	var profile := PlayerProfile.new()
 	assert_eq(profile.total_xp, 0)
 	assert_eq(profile.level(_track), 1)
-	assert_true(profile.buff_picks.is_empty())
 
 
 func test_add_xp_ignores_zero_and_negative() -> void:
@@ -24,42 +23,43 @@ func test_add_xp_ignores_zero_and_negative() -> void:
 	assert_eq(profile.level(_track), 2)
 
 
-func test_picks_round_trip_through_a_dictionary() -> void:
+func test_xp_round_trips_through_a_dictionary() -> void:
 	var profile := PlayerProfile.new()
 	profile.add_xp(1234)
-	profile.set_pick(7, &"buff_damage")
-	profile.set_pick(12, &"buff_max_mana")
 	var restored := PlayerProfile.from_dict(profile.to_dict())
 	assert_not_null(restored)
 	assert_eq(restored.total_xp, 1234)
-	assert_eq(restored.pick(7), &"buff_damage")
-	assert_eq(restored.pick(12), &"buff_max_mana")
-	assert_eq(restored.pick(17), &"")
+
+
+func test_old_save_with_buff_picks_still_loads_and_the_field_is_dropped() -> void:
+	var old := {"version": SaveGame.VERSION, "total_xp": 40, "buff_picks": {"7": "buff_damage"}}
+	var profile := PlayerProfile.from_dict(old)
+	assert_not_null(profile)
+	assert_eq(profile.total_xp, 40)
+	assert_false(profile.to_dict().has("buff_picks"))
+
+
+func test_from_dict_does_not_require_buff_picks() -> void:
+	assert_not_null(PlayerProfile.from_dict({"version": SaveGame.VERSION, "total_xp": 5}))
 
 
 func test_from_dict_accepts_what_json_produces() -> void:
 	var parsed = JSON.parse_string(JSON.stringify(PlayerProfile.new().to_dict()))
 	assert_not_null(PlayerProfile.from_dict(parsed))
-	var with_xp := {"version": 1.0, "total_xp": 55.0, "buff_picks": {"7": "buff_damage"}}
-	var profile := PlayerProfile.from_dict(with_xp)
-	assert_eq(profile.total_xp, 55)
-	assert_eq(profile.pick(7), &"buff_damage")
+	var with_xp := {"version": 1.0, "total_xp": 55.0}
+	assert_eq(PlayerProfile.from_dict(with_xp).total_xp, 55)
 
 
 func test_from_dict_rejects_bad_shapes() -> void:
-	var good := {"version": SaveGame.VERSION, "total_xp": 5, "buff_picks": {}}
+	var good := {"version": SaveGame.VERSION, "total_xp": 5}
 	assert_not_null(PlayerProfile.from_dict(good))
 	var cases := {
-		"missing total_xp": {"version": SaveGame.VERSION, "buff_picks": {}},
-		"missing version": {"total_xp": 5, "buff_picks": {}},
-		"missing buff_picks": {"version": SaveGame.VERSION, "total_xp": 5},
-		"string total_xp": {"version": SaveGame.VERSION, "total_xp": "5", "buff_picks": {}},
-		"fractional total_xp": {"version": SaveGame.VERSION, "total_xp": 5.5, "buff_picks": {}},
-		"negative total_xp": {"version": SaveGame.VERSION, "total_xp": -5, "buff_picks": {}},
-		"picks not a dictionary": {"version": SaveGame.VERSION, "total_xp": 5, "buff_picks": []},
-		"non-integer pick key": {"version": SaveGame.VERSION, "total_xp": 5, "buff_picks": {"seven": "buff_damage"}},
-		"non-string pick value": {"version": SaveGame.VERSION, "total_xp": 5, "buff_picks": {"7": 3}},
-		"wrong version": {"version": SaveGame.VERSION + 1, "total_xp": 5, "buff_picks": {}},
+		"missing total_xp": {"version": SaveGame.VERSION},
+		"missing version": {"total_xp": 5},
+		"string total_xp": {"version": SaveGame.VERSION, "total_xp": "5"},
+		"fractional total_xp": {"version": SaveGame.VERSION, "total_xp": 5.5},
+		"negative total_xp": {"version": SaveGame.VERSION, "total_xp": -5},
+		"wrong version": {"version": SaveGame.VERSION + 1, "total_xp": 5},
 	}
 	for name in cases:
 		assert_null(PlayerProfile.from_dict(cases[name]), name)
@@ -79,3 +79,133 @@ func test_stat_bonuses_for_level() -> void:
 	assert_almost_eq(level_twenty.multiplier(StatBonuses.Stat.HEALTH), 1.8, 0.0001)
 	assert_almost_eq(level_twenty.multiplier(StatBonuses.Stat.SPELL_MANA), 1.3, 0.0001)
 	assert_almost_eq(level_twenty.fraction(StatBonuses.Stat.SPEED), 0.32, 0.0001)
+
+
+func test_fresh_profile_has_no_gold_or_items() -> void:
+	var profile := PlayerProfile.new()
+	assert_eq(profile.gold, 0)
+	assert_true(profile.owned.is_empty())
+	assert_true(profile.equipped.is_empty())
+	assert_eq(profile.equipped_id(0), &"")
+
+
+func test_add_gold_ignores_zero_and_negative_and_clamps() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(10)
+	profile.add_gold(0)
+	profile.add_gold(-3)
+	assert_eq(profile.gold, 10)
+	profile.add_gold(PlayerProfile.MAX_VALUE * 4)
+	assert_eq(profile.gold, PlayerProfile.MAX_VALUE)
+	profile.add_gold(1)
+	assert_eq(profile.gold, PlayerProfile.MAX_VALUE)
+
+
+func test_add_xp_clamps_at_the_limit() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_xp(PlayerProfile.MAX_VALUE)
+	profile.add_xp(5)
+	assert_eq(profile.total_xp, PlayerProfile.MAX_VALUE)
+	profile.add_xp(9223372036854775807)
+	assert_eq(profile.total_xp, PlayerProfile.MAX_VALUE)
+
+
+func test_spend_gold_succeeds_with_exactly_enough() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(100)
+	assert_true(profile.spend_gold(100))
+	assert_eq(profile.gold, 0)
+
+
+func test_spend_gold_fails_with_one_too_few_and_changes_nothing() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(99)
+	assert_false(profile.spend_gold(100))
+	assert_eq(profile.gold, 99)
+
+
+func test_spend_gold_rejects_zero_and_negative() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(50)
+	assert_false(profile.spend_gold(0))
+	assert_false(profile.spend_gold(-10))
+	assert_eq(profile.gold, 50)
+
+
+func test_grant_never_duplicates() -> void:
+	var profile := PlayerProfile.new()
+	profile.grant(&"robe_ember")
+	profile.grant(&"robe_ember")
+	assert_eq(profile.owned, [&"robe_ember"] as Array[StringName])
+	assert_true(profile.owns(&"robe_ember"))
+	assert_false(profile.owns(&"robe_tide"))
+
+
+func test_equip_and_unequip_a_slot() -> void:
+	var profile := PlayerProfile.new()
+	profile.equip(1, &"wand_quick")
+	assert_eq(profile.equipped_id(1), &"wand_quick")
+	profile.equip(1, &"staff_oak")
+	assert_eq(profile.equipped_id(1), &"staff_oak")
+	profile.unequip(1)
+	assert_eq(profile.equipped_id(1), &"")
+	profile.unequip(1)
+
+
+func test_gold_items_and_equipment_round_trip_through_a_dictionary() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_xp(77)
+	profile.add_gold(450)
+	profile.grant(&"robe_ember")
+	profile.grant(&"wand_quick")
+	profile.equip(0, &"robe_ember")
+	profile.equip(1, &"wand_quick")
+	var parsed = JSON.parse_string(JSON.stringify(profile.to_dict()))
+	var restored := PlayerProfile.from_dict(parsed)
+	assert_not_null(restored)
+	assert_eq(restored.total_xp, 77)
+	assert_eq(restored.gold, 450)
+	assert_eq(restored.owned, [&"robe_ember", &"wand_quick"] as Array[StringName])
+	assert_eq(restored.equipped_id(0), &"robe_ember")
+	assert_eq(restored.equipped_id(1), &"wand_quick")
+	assert_eq(restored.equipped_id(2), &"")
+
+
+func test_old_save_without_gold_owned_equipped_loads_with_defaults() -> void:
+	var profile := PlayerProfile.from_dict({"version": SaveGame.VERSION, "total_xp": 12})
+	assert_not_null(profile)
+	assert_eq(profile.gold, 0)
+	assert_true(profile.owned.is_empty())
+	assert_true(profile.equipped.is_empty())
+
+
+func test_equipped_item_that_is_not_owned_is_dropped_on_load() -> void:
+	var data := {"version": SaveGame.VERSION, "total_xp": 0, "owned": ["robe_ember"],
+		"equipped": {"0": "robe_ember", "1": "wand_quick"}}
+	var profile := PlayerProfile.from_dict(data)
+	assert_not_null(profile)
+	assert_eq(profile.equipped_id(0), &"robe_ember")
+	assert_eq(profile.equipped_id(1), &"")
+
+
+func test_from_dict_rejects_bad_gold_owned_and_equipped_shapes() -> void:
+	var base := {"version": SaveGame.VERSION, "total_xp": 5}
+	var cases := {
+		"string gold": {"gold": "5"},
+		"fractional gold": {"gold": 5.5},
+		"negative gold": {"gold": -1},
+		"gold above 2^53": {"gold": 1.0e19},
+		"owned not an array": {"owned": "robe_ember"},
+		"owned entry not a string": {"owned": [3]},
+		"equipped not a dictionary": {"equipped": []},
+		"equipped key not a slot": {"equipped": {"7": "robe_ember"}},
+		"equipped key not a number": {"equipped": {"robe": "robe_ember"}},
+		"equipped value not a string": {"equipped": {"0": 4}},
+		"total_xp above 2^53": {"total_xp": 1.0e19},
+		"total_xp slightly fractional": {"total_xp": 30.000001},
+		"version slightly off": {"version": 1.0000000001},
+	}
+	for name in cases:
+		var data := base.duplicate()
+		data.merge(cases[name], true)
+		assert_null(PlayerProfile.from_dict(data), name)
