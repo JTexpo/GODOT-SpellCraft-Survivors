@@ -19,6 +19,15 @@ func set_max_health(value: float) -> void:
 	health_changed.emit(current_health, max_health)
 
 
+## Raises the maximum and the current health by the same amount (a level's health reward).
+func raise_max_health(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	max_health += amount
+	current_health += amount
+	health_changed.emit(current_health, max_health)
+
+
 func take_damage(amount: float) -> void:
 	if amount <= 0.0 or is_dead():
 		return

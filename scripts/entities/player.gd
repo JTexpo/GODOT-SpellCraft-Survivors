@@ -17,7 +17,13 @@ const SLOT_ACTIONS: Array[StringName] = [
 @onready var inventory: ScrollInventory = $ScrollInventory
 @onready var collector: PickupCollector = $PickupCollector
 @onready var interaction: InteractionComponent = $InteractionComponent
+@onready var progress: RunProgress = $RunProgress
 
+
+## The values the scene starts with. Bonuses are always worked out from these, so applying the same
+## bonuses twice gives the same result.
+var base_speed: float = 0.0
+var base_health: float = 0.0
 
 var _cast_blocked: bool = false
 
@@ -29,8 +35,23 @@ func require_cast_release() -> void:
 
 
 func _ready() -> void:
+	base_speed = _move.speed
+	base_health = health.max_health
 	_hurtbox.hit_received.connect(_on_hit_received)
 	health.died.connect(_on_died)
+
+
+## Sets speed, maximum health and the spells' mana bonus from the base values and `bonuses`. With
+## `heal_difference` a rise in maximum health also heals by that rise (a mid-run reward). Without it
+## the player starts with full health (a new run).
+func apply_stat_bonuses(bonuses: StatBonuses, heal_difference: bool = false) -> void:
+	_move.speed = base_speed * bonuses.multiplier(StatBonuses.Stat.SPEED)
+	var new_max := base_health * bonuses.multiplier(StatBonuses.Stat.HEALTH)
+	if heal_difference:
+		health.raise_max_health(new_max - health.max_health)
+	else:
+		health.set_max_health(new_max)
+	loadout.set_mana_bonus(bonuses.fraction(StatBonuses.Stat.SPELL_MANA))
 
 
 func _physics_process(delta: float) -> void:

@@ -260,7 +260,7 @@ func _slot_button(index: int) -> Button:
 		text = "%d  empty" % (index + 1)
 	else:
 		var instance := _loadout.slots[index]
-		text = "%d %s\n%d / %d" % [index + 1, instance.data.display_name, roundi(instance.current_mana), roundi(instance.data.max_mana)]
+		text = "%d %s\n%d / %d" % [index + 1, instance.data.display_name, roundi(instance.current_mana), roundi(instance.max_mana())]
 	var button := _selectable(text, "slot:%d" % index, index == session.slot_index, _on_slot_pressed.bind(index))
 	button.custom_minimum_size = SLOT_SIZE
 	button.disabled = not _loadout.is_unlocked(index)
