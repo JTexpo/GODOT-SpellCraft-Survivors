@@ -209,8 +209,8 @@ func _rebuild() -> void:
 		_clear(container)
 	for i in SpellLoadout.SLOT_COUNT:
 		_slot_row.add_child(_slot_button(i))
-	_fill_scrolls(_base_column, "Base", session.owned_bases(), session.base, _on_base_pressed)
-	_fill_scrolls(_area_column, "Area", session.owned_areas(), session.area, _on_area_pressed)
+	_fill_scrolls(_base_column, "Base", session.owned_bases(), session.bases, _on_base_pressed)
+	_fill_scrolls(_area_column, "Area", session.owned_areas(), [session.area], _on_area_pressed)
 	_range_column.add_child(_label("Range", Vector2.ZERO, Vector2(100, ROW_HEIGHT)))
 	for i in session.rules.range_options.size():
 		var option := session.rules.option(i)
@@ -239,13 +239,13 @@ func _slot_button(index: int) -> Button:
 	return button
 
 
-func _fill_scrolls(column: VBoxContainer, heading: String, scrolls: Array[ScrollData], chosen: ScrollData, callback: Callable) -> void:
+func _fill_scrolls(column: VBoxContainer, heading: String, scrolls: Array[ScrollData], chosen: Array, callback: Callable) -> void:
 	column.add_child(_label(heading, Vector2.ZERO, Vector2(100, ROW_HEIGHT)))
 	if scrolls.is_empty():
 		column.add_child(_label("(none)", Vector2.ZERO, Vector2(100, ROW_HEIGHT)))
 	for scroll in scrolls:
 		var text := "%s x%d" % [scroll.display_name, _inventory.count(scroll)]
-		column.add_child(_selectable(text, "scroll:%s" % scroll.id, scroll == chosen, callback.bind(scroll)))
+		column.add_child(_selectable(text, "scroll:%s" % scroll.id, chosen.has(scroll), callback.bind(scroll)))
 
 
 func _selectable(text: String, key: String, selected: bool, callback: Callable) -> Button:

@@ -45,7 +45,7 @@ func test_defaults() -> void:
 	var session := _session()
 	assert_eq(session.option_index, _rules.normal_index())
 	assert_eq(session.slot_index, 0)
-	assert_null(session.base)
+	assert_eq(session.bases, [])
 	assert_null(session.area)
 	assert_false(session.can_confirm())
 	assert_eq(session.message(), CraftingSystem.REASON_NO_BASE)
@@ -81,9 +81,9 @@ func test_selecting_rules() -> void:
 	assert_false(session.select_area(_fire), "wrong category")
 	assert_signal_not_emitted(session, "changed")
 	assert_true(session.select_base(_fire))
-	assert_eq(session.base, _fire)
+	assert_eq(session.bases, [_fire])
 	assert_true(session.select_base(_fire), "choosing it again clears it")
-	assert_null(session.base)
+	assert_eq(session.bases, [])
 	assert_true(session.select_area(_missile))
 	assert_eq(session.area, _missile)
 	assert_signal_emit_count(session, "changed", 3)
@@ -151,7 +151,7 @@ func test_confirm_crafts_and_clears_spent_choices() -> void:
 	var result := session.confirm()
 	assert_true(result.ok)
 	assert_eq(_loadout.slots[0].data, result.spell)
-	assert_null(session.base, "the last Fire scroll was used up")
+	assert_eq(session.bases, [], "the last Fire scroll was used up")
 	assert_eq(session.area, _missile, "one Missile scroll is left")
 	assert_eq(_inventory.count(_missile), 1)
 
@@ -182,3 +182,182 @@ func test_owned_buffs_are_listed_but_never_craftable() -> void:
 	assert_eq(session.request().buffs, [])
 	assert_true(session.confirm().ok)
 	assert_eq(_inventory.count(buff), 1, "the buff scroll is untouched")
+
+
+func _own(scroll: ScrollData, amount: int = 1) -> void:
+	_inventory.add(scroll, amount)
+
+
+func test_bases_are_multi_select_up_to_the_limit() -> void:
+	var extra := _scroll("buff/additional_base")
+	var sea := _scroll("base/sea")
+	var land := _scroll("base/land")
+	for scroll in [_fire, sea, land]:
+		_own(scroll)
+	_own(extra)
+	var session := _session()
+	assert_true(session.add_buff(extra))
+	assert_eq(session.max_bases(), 2)
+	session.select_base(_fire)
+	session.select_base(sea)
+	assert_eq(session.bases, [_fire, sea])
+	session.select_base(land)
+	assert_eq(session.bases, [sea, land], "a third choice replaces the oldest")
+
+
+func test_the_limit_is_one_without_additional_base() -> void:
+	_own(_fire)
+	_own(_thunder)
+	var session := _session()
+	assert_eq(session.max_bases(), 1)
+	session.select_base(_fire)
+	session.select_base(_thunder)
+	assert_eq(session.bases, [_thunder])
+
+
+func test_choosing_a_chosen_base_clears_it() -> void:
+	var extra := _scroll("buff/additional_base")
+	var sea := _scroll("base/sea")
+	_own(_fire)
+	_own(sea)
+	_own(extra)
+	var session := _session()
+	session.add_buff(extra)
+	session.select_base(_fire)
+	session.select_base(sea)
+	session.select_base(_fire)
+	assert_eq(session.bases, [sea])
+
+
+func test_buff_stacks_respect_ownership_and_caps() -> void:
+	var damage := _scroll("buff/damage")
+	var duplicate := _scroll("buff/duplicate_area")
+	var ignore := _scroll("buff/ignore_resistance")
+	_own(damage, 2)
+	_own(duplicate, 5)
+	_own(ignore, 2)
+	var session := _session()
+	assert_true(session.add_buff(damage))
+	assert_true(session.add_buff(damage))
+	assert_false(session.add_buff(damage), "only two owned")
+	assert_eq(session.buff_stacks(damage), 2)
+	for i in 4:
+		assert_true(session.add_buff(duplicate), "stack %d" % (i + 1))
+	assert_false(session.add_buff(duplicate), "the cap is four")
+	assert_true(session.add_buff(ignore))
+	assert_false(session.add_buff(ignore), "the cap is one")
+
+
+func test_removing_additional_base_trims_the_extra_bases() -> void:
+	var extra := _scroll("buff/additional_base")
+	var sea := _scroll("base/sea")
+	_own(_fire)
+	_own(sea)
+	_own(extra)
+	var session := _session()
+	session.add_buff(extra)
+	session.select_base(_fire)
+	session.select_base(sea)
+	assert_true(session.remove_buff(extra))
+	assert_eq(session.bases, [_fire])
+	assert_false(session.remove_buff(extra), "no stack left to remove")
+
+
+func test_bad_buff_choices_are_rejected() -> void:
+	var no_effect := _scroll("buff/damage").duplicate() as ScrollData
+	no_effect.buff = null
+	_own(_fire)
+	_own(_missile)
+	_own(no_effect)
+	var session := _session()
+	assert_false(session.add_buff(_fire))
+	assert_false(session.add_buff(_missile))
+	assert_false(session.add_buff(no_effect))
+	assert_false(session.add_buff(null))
+	assert_eq(session.buffs, [])
+
+
+func test_the_request_carries_bases_and_buff_stacks_as_copies() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_thunder)
+	_own(damage, 2)
+	var session := _session()
+	session.select_base(_fire)
+	session.add_buff(damage)
+	var earlier := session.request()
+	session.select_base(_thunder)
+	session.add_buff(damage)
+	assert_eq(earlier.bases, [_fire])
+	assert_eq(earlier.buffs, [damage])
+	assert_eq(session.request().buffs, [damage, damage])
+
+
+func test_confirm_with_buffs_uses_the_scrolls_and_trims_choices() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_missile)
+	_own(damage)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	session.add_buff(damage)
+	var result := session.confirm()
+	assert_true(result.ok, result.reason)
+	assert_eq(session.buffs, [])
+	assert_eq(session.bases, [])
+	assert_null(session.area)
+
+
+func test_drawbacks_describe_the_cost() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_missile)
+	_own(damage, 2)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	assert_eq(session.drawbacks(), [])
+	session.add_buff(damage)
+	session.add_buff(damage)
+	assert_eq(session.drawbacks(), ["Buffs: costs 2.3x per cast, 100 casts become 44."])
+
+
+func test_drawbacks_flag_a_spell_that_could_never_cast() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_missile)
+	_own(damage, 40)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	for i in 40:
+		session.add_buff(damage)
+	assert_true(session.drawbacks().has("Too costly: this spell could never cast."))
+
+
+func test_message_asks_for_the_missing_base() -> void:
+	var extra := _scroll("buff/additional_base")
+	_own(_fire)
+	_own(_missile)
+	_own(extra)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	session.add_buff(extra)
+	assert_eq(session.message(), CraftingSystem.need_bases_reason(1))
+
+
+func test_huge_stacks_keep_the_numbers_finite() -> void:
+	var damage := _scroll("buff/damage")
+	_own(_fire)
+	_own(_missile)
+	_own(damage, 40)
+	var session := _session()
+	session.select_base(_fire)
+	session.select_area(_missile)
+	for i in 40:
+		session.add_buff(damage)
+	var stats := session.new_stats()
+	for key in ["damage", "cost", "pool", "casts"]:
+		assert_true(is_finite(stats[key]), key)

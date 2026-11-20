@@ -192,7 +192,7 @@ func test_choices_survive_a_rebuild_and_buttons_exist() -> void:
 	assert_eq(_screen.area_button_count(), 1)
 	assert_eq(_screen.range_button_count(), 4)
 	_screen.choose_base(_fire)
-	assert_eq(_screen.session.base, _fire)
+	assert_eq(_screen.session.bases, [_fire])
 	assert_eq(_screen.base_button_count(), 1)
 
 
