@@ -20,3 +20,5 @@ extends Resource
 @export var spawn_weight: float = 1.0
 ## What this enemy can drop when it dies. Null drops nothing.
 @export var drop_table: DropTable
+## XP the enemy drops as a gem when it dies.
+@export var xp_reward: int = 5
