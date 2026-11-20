@@ -288,7 +288,7 @@ XP is accumulated during adventures and contributes toward the player's permanen
 
 There are 20 progression levels. Every wizard starts at level 1, which gives no reward. Levels 2 to 20 each provide a predefined upgrade, gradually improving the wizard's attributes and starting spell loadout.
 
-Enemies drop XP as gems on the ground, and walking over a gem collects it. Stat and spell slot rewards apply the moment their level is reached. Rewards that change the starting spells apply when the next run begins, and a chosen buff is picked on a small screen before that run starts.
+Enemies drop XP as gems on the ground, and walking over a gem collects it. Stat and spell slot rewards apply the moment their level is reached. Rewards that change the starting spells apply when the next run begins. Starting-spell buffs are never saved: a random buff is re-rolled and a chosen buff is picked again at the start of every run.
 
 ### Level Progression
 
@@ -323,8 +323,8 @@ Enemies drop XP as gems on the ground, and walking over a gem collects it. Stat 
 | Increase Maximum Health | +20% of base health each (+80% in total), and the player heals by the amount it adds |
 | Increase Maximum Mana of All Spells | +15% of each spell's pool each (+30% in total), for spells equipped now and later |
 | Spell slots | One slot per reward, up to five |
-| Starting Spell receives a Random Buff | Rolled when the level is reached and kept, from the five buffs that work on one element (not Additional Base) |
-| Starting Spell receives a Chosen Buff | Picked on a screen at the start of the next run, from the same five |
+| Starting Spell receives a Random Buff | Re-rolled at the start of every run, from the five buffs that work on one element (not Additional Base) |
+| Starting Spell receives a Chosen Buff | Picked on a screen at the start of every run, from the same five |
 | Start with 2 Spells | The second starting spell is Sea Cone |
 
 XP needed to reach level 2 is 30, and each level costs 20 more than the one before it (3,990 XP in total for level 20).
@@ -343,11 +343,31 @@ Gold is collected during adventures and used to purchase equipment and consumabl
 
 Unlike XP, Gold is primarily used to customize the wizard's equipment and playstyle.
 
+Enemies drop Gold coins, and walking over one collects it (plain, Fire and Thunder enemies give 1 Gold, Sea 2, Land 3). Gold is banked the moment it is collected and saved with XP, so dying never costs what you collected.
+
+After a run ends, the death screen shows the XP and Gold earned and a **Shop** button. The shop is where equipment is bought, swapped and taken off. It cannot be opened during a run, so equipment changes take effect at the next run. Buying an item also equips it, and the item it replaces stays owned.
+
+There are three equipment slots: a Robe, a Weapon (one Wand or Staff) and Headwear (one Hat or Hood).
+
+| Item | Price | Modifiers |
+|---|---|---|
+| Ember, Storm, Stone, Tide Robe | 100 | +15% damage for Fire, Thunder, Land or Sea spells |
+| Warded Robe | 120 | +30% maximum health |
+| Mana Hat or Hood | 80 | +10% maximum mana for all spells |
+| Swift Hat or Hood | 80 | +10% movement speed |
+| Hardy Hat or Hood | 80 | +20% maximum health |
+| Quickwand | 200 | +25% casting speed, -15% spell damage, 10% chance to cast twice |
+| Flickerwand | 350 | +40% casting speed, -30% spell damage, 15% chance to cast twice |
+| Oak Staff | 200 | +25% spell damage, -15% casting speed, 10% chance to deal double damage |
+| Elder Staff | 350 | +45% spell damage, -30% casting speed, 15% chance to deal double damage |
+
+Casting twice launches every shot a second time for the same mana. Double damage doubles every shot of that cast. Both are rolled once per cast. A spell's element bonus is the average of the bonuses for its elements. The crafting preview shows these bonuses in the spell's damage, interval, pool and casts.
+
 Equipment categories include:
 - Robes
 - Staffs and Wands
 - Hats and Hoods
-- Potions
+- Potions (Sprint 10)
 
 ### Robes
 

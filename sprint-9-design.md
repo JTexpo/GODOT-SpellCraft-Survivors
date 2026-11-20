@@ -1,6 +1,6 @@
 # Sprint 9 Design: Gold, Equipment and the Shop
 
-**Status:** Proposed (awaiting approval).
+**Status:** Built (Sprint 9).
 
 Scope comes from `sprint-development.md` (Sprint 9) plus one change the user asked for: **starting-spell buffs are asked for or re-rolled every run instead of being saved** (player feedback). Architecture follows `technical-design.md` (sections 10 and 11), `CLAUDE.md` and `sprint-0` to `sprint-8-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 
