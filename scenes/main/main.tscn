@@ -28,6 +28,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/xp_bar.tscn" id="54"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_toast.tscn" id="55"]
 [ext_resource type="PackedScene" path="res://scenes/ui/gold_counter.tscn" id="57"]
+[ext_resource type="PackedScene" path="res://scenes/ui/shop_screen.tscn" id="58"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/fire.tres" id="20"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/thunder.tres" id="21"]
 [ext_resource type="Resource" path="res://resources/scrolls/base/land.tres" id="22"]
@@ -91,6 +92,8 @@ gem_scene = ExtResource("56")
 script = ExtResource("52")
 
 [node name="BuffPickScreen" parent="." instance=ExtResource("53")]
+
+[node name="ShopScreen" parent="." instance=ExtResource("58")]
 
 [node name="DamageNumbers" type="Node2D" parent="."]
 script = ExtResource("10")

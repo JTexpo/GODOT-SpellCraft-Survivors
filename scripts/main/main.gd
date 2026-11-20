@@ -25,6 +25,7 @@ extends Node2D
 @onready var _xp_bar: XpBar = $Hud/XpBar
 @onready var _level_toast: LevelToast = $Hud/LevelToast
 @onready var _gold_counter: GoldCounter = $Hud/GoldCounter
+@onready var _shop_screen: ShopScreen = $ShopScreen
 
 ## Where the profile is saved. Empty means "do not load or save": tests set it before adding Main to
 ## the tree so they never touch the player's real save.
@@ -105,6 +106,9 @@ func _begin_progression() -> void:
 	progress.gold_changed.connect(_on_gold_changed)
 	progress.leveled_up.connect(_on_leveled_up)
 	_player.died.connect(_on_player_died)
+	_death_screen.shop_requested.connect(_on_shop_requested)
+	_shop_screen.changed.connect(_saver.save_now)
+	_shop_screen.closed.connect(_death_screen.set_shop_open.bind(false))
 	var run_buffs := RunBuffs.new()
 	var level := profile.level(track)
 	var rolled := StartingBuffs.roll_random(run_buffs, track, level, _rng)
@@ -139,6 +143,10 @@ func _rolled_notice(run_buffs: RunBuffs, reward_level: int) -> String:
 	var scroll := StartingBuffs.find_scroll(track, run_buffs.pick(reward_level))
 	var spell_name := "Starting spell" if reward.spell_index == 0 else "Second spell"
 	return "%s gains %s" % [spell_name, scroll.display_name if scroll != null else "a buff"]
+
+
+func _on_shop_requested() -> void:
+	_shop_screen.open(profile, catalog)
 
 
 func _on_player_died() -> void:

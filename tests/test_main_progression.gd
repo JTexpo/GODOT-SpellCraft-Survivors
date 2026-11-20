@@ -284,3 +284,62 @@ func test_a_level_up_in_a_run_keeps_the_saved_equipment() -> void:
 	var main := _new_main(_path())
 	_player(main).progress.add_xp(30)
 	assert_almost_eq(_speed(main), 90.0 * (1.0 + 0.08 + 0.10), 0.001)
+
+
+func _die(main: Main) -> void:
+	(_player(main).get_node("HurtboxComponent") as HurtboxComponent).receive_hit(1000.0, Vector2.ZERO)
+
+
+func test_death_screen_shop_opens_the_shop_and_a_purchase_is_saved_immediately() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(500)
+	SaveGame.save_profile(profile, _path())
+	var main := _new_main(_path())
+	_die(main)
+	var death := main.get_node("DeathScreen") as DeathScreen
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	(death.get_node("ShopButton") as Button).pressed.emit()
+	assert_true(shop.is_open())
+	shop.buy(&"robe_ember")
+	var saved := SaveGame.load_profile(_path())
+	assert_eq(saved.gold, 400)
+	assert_true(saved.owns(&"robe_ember"))
+	assert_eq(saved.equipped_id(EquipmentData.Slot.ROBE), &"robe_ember")
+
+
+func test_closing_the_shop_lets_the_death_screen_restart_again() -> void:
+	var main := _new_main("")
+	_die(main)
+	var death := main.get_node("DeathScreen") as DeathScreen
+	death.input_delay_msec = 0
+	var shop := main.get_node("ShopScreen") as ShopScreen
+	(death.get_node("ShopButton") as Button).pressed.emit()
+	watch_signals(death)
+	var restart := InputEventAction.new()
+	restart.action = &"restart"
+	restart.pressed = true
+	death.handle_event(restart)
+	assert_signal_not_emitted(death, "restart_requested")
+	shop.close()
+	death.handle_event(restart)
+	assert_signal_emit_count(death, "restart_requested", 1)
+
+
+func test_next_run_after_buying_applies_the_item() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(500)
+	SaveGame.save_profile(profile, _path())
+	var first := _new_main(_path())
+	_die(first)
+	(first.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
+	(first.get_node("ShopScreen") as ShopScreen).buy(&"wand_quick")
+	first.free()
+	var second := _new_main(_path())
+	assert_almost_eq(_player(second).loadout.bonuses.fraction(StatBonuses.Stat.CAST_SPEED), 0.25, 0.0001)
+	assert_almost_eq(_player(second).loadout.slots[0].cast_speed_bonus, 0.25, 0.0001)
+
+
+func test_shop_cannot_be_opened_while_alive() -> void:
+	var main := _new_main("")
+	(main.get_node("DeathScreen/ShopButton") as Button).pressed.emit()
+	assert_false((main.get_node("ShopScreen") as ShopScreen).is_open())
