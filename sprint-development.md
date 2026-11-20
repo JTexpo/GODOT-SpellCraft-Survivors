@@ -406,29 +406,29 @@ Buffs allow players to create specialized spells with unique strengths and weakn
 
 #### Buff Implementation
 
-- [ ] Implement Increased Max Mana.
-- [ ] Implement Increased Damage.
-- [ ] Implement Double Vulnerability Damage.
-- [ ] Implement Ignore Resistance.
-- [ ] Implement Duplicate Area.
-- [ ] Implement Additional Base.
+- [x] Implement Increased Max Mana.
+- [x] Implement Increased Damage.
+- [x] Implement Double Vulnerability Damage.
+- [x] Implement Ignore Resistance.
+- [x] Implement Duplicate Area.
+- [x] Implement Additional Base.
 
 #### Buff Calculations
 
-- [ ] Calculate combined spell damage.
-- [ ] Calculate additional mana requirements.
-- [ ] Calculate maximum mana.
-- [ ] Calculate elemental interactions for multiple Base types.
-- [ ] Calculate duplicated Area behavior.
-- [ ] Validate buff combinations.
+- [x] Calculate combined spell damage.
+- [x] Calculate additional mana requirements.
+- [x] Calculate maximum mana.
+- [x] Calculate elemental interactions for multiple Base types.
+- [x] Calculate duplicated Area behavior.
+- [x] Validate buff combinations.
 
 #### Crafting Interface
 
-- [ ] Display available Buff scrolls.
-- [ ] Display active Buffs.
-- [ ] Preview resulting spell statistics.
-- [ ] Display additional mana costs.
-- [ ] Communicate potential drawbacks.
+- [x] Display available Buff scrolls.
+- [x] Display active Buffs.
+- [x] Preview resulting spell statistics.
+- [x] Display additional mana costs.
+- [x] Communicate potential drawbacks.
 
 ### Deliverable
 
@@ -441,6 +441,8 @@ A complete spell crafting system supporting Base, Area, and Buff combinations.
 - Mana requirements scale with Buffs.
 - Multiple Buffs can be combined.
 - The crafting interface communicates the resulting spell.
+
+**Built note:** buffs are data: each Buff scroll carries a `BuffEffect` resource, and `SpellBuilder` folds the stacks into the spell, so a new buff is a new `.tres`. A hit uses the best match of a hybrid's elements. Duplicate Area fires a ring of shots (or a ring of zones around the target). Additional Base opens one more Base slot per stack, with the Base count matching exactly and no repeated element. Crafting is still one screen: a buff row with minus and plus steppers, a multi-select Base column ("Base 2 of 2") and a preview with the drawbacks in plain words. Spells whose cost is above their pool are refused. Balance has not been tested in play.
 
 ---
 

@@ -206,3 +206,33 @@ func test_hit_cooldown_survives_a_pause() -> void:
 	OS.delay_msec(60)
 	assert_true(hitbox.try_hit(target), "the cooldown ran out in game time")
 	GameTime.reset()
+
+
+func test_receive_hit_with_a_profile_uses_the_best_match() -> void:
+	var target := _make_target(Vector2.ZERO, 30.0)
+	target.element = SpellData.Element.FIRE
+	var profile := AttackProfile.new()
+	profile.elements = [SpellData.Element.FIRE, SpellData.Element.SEA]
+	watch_signals(target)
+	target.receive_hit(10.0, Vector2.ZERO, 0.0, SpellData.Element.FIRE, profile)
+	assert_eq(target.health.current_health, 15.0)
+	assert_signal_emitted_with_parameters(target, "hit_received", [15.0, Vector2.ZERO, 0.0, ElementTable.Effect.VULNERABLE])
+
+
+func test_receive_hit_without_a_profile_is_unchanged() -> void:
+	var target := _make_target(Vector2.ZERO, 30.0)
+	target.element = SpellData.Element.LAND
+	target.receive_hit(10.0, Vector2.ZERO, 0.0, SpellData.Element.FIRE)
+	assert_eq(target.health.current_health, 15.0)
+
+
+func test_the_hitbox_hands_its_profile_to_the_hurtbox() -> void:
+	var target := _make_target(Vector2.ZERO, 30.0)
+	target.element = SpellData.Element.FIRE
+	var hitbox := _make_hitbox(10.0)
+	hitbox.element = SpellData.Element.FIRE
+	var profile := AttackProfile.new()
+	profile.elements = [SpellData.Element.FIRE, SpellData.Element.SEA]
+	hitbox.profile = profile
+	assert_true(hitbox.try_hit(target))
+	assert_eq(target.health.current_health, 15.0)

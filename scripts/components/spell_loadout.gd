@@ -111,9 +111,10 @@ func try_cast(origin: Vector2, direction: Vector2, target: Vector2 = Vector2.INF
 	if not target.is_finite():
 		target = origin + direction * FAR_TARGET_DISTANCE
 	var root := projectile_root if projectile_root != null else get_parent().get_parent()
-	var effect := spell.data.area_data.scene.instantiate() as AreaEffect
-	root.add_child(effect)
-	effect.launch(spell.data, origin, direction, target)
+	for shot in CastPattern.shots(spell.data, origin, direction, target):
+		var effect := spell.data.area_data.scene.instantiate() as AreaEffect
+		root.add_child(effect)
+		effect.launch(spell.data, origin, shot.direction, shot.target)
 	cast_fired.emit(selected_index)
 	return true
 

@@ -88,7 +88,7 @@ func test_preview_matches_the_builder() -> void:
 	assert_true(_screen.choose_base(_thunder))
 	assert_true(_screen.choose_area(_wave))
 	assert_true(_screen.choose_range(2))
-	var built := SpellBuilder.build(_thunder, _wave, CraftingRules.default_rules().option(2))
+	var built := SpellBuilder.build([_thunder], _wave, CraftingRules.default_rules().option(2))
 	var text := _screen.preview_text()
 	assert_true(text.contains("Thunder Wave (Long)"), text)
 	assert_true(text.contains("%.1f" % built.mana_cost), text)
@@ -148,15 +148,19 @@ func test_locked_slot_cannot_be_chosen() -> void:
 	assert_eq(_screen.session.slot_index, 0)
 
 
-func test_buffs_are_shown_locked() -> void:
-	var buff := _scroll("buff/damage")
-	_inventory.add(buff)
+func test_buffs_text_names_the_chosen_stacks() -> void:
+	var damage := _scroll("buff/damage")
+	var duplicate := _scroll("buff/duplicate_area")
+	_inventory.add(damage, 2)
+	_inventory.add(duplicate)
 	_screen.open(_inventory, _loadout)
-	var text := _screen.buffs_text()
-	assert_true(text.contains("Increased Damage"), text)
-	assert_true(text.to_lower().contains("locked"), text)
-	assert_false(_screen.choose_base(buff))
-	assert_false(_screen.choose_area(buff))
+	assert_eq(_screen.buffs_text(), "Buffs: none")
+	_screen.add_buff(damage)
+	_screen.add_buff(damage)
+	_screen.add_buff(duplicate)
+	assert_eq(_screen.buffs_text(), "Buffs: Increased Damage x2, Duplicate Area x1")
+	assert_false(_screen.choose_base(damage), "a buff is not a Base")
+	assert_false(_screen.choose_area(damage), "a buff is not an Area")
 
 
 func test_ui_cancel_and_pause_actions_close_it() -> void:
@@ -192,7 +196,7 @@ func test_choices_survive_a_rebuild_and_buttons_exist() -> void:
 	assert_eq(_screen.area_button_count(), 1)
 	assert_eq(_screen.range_button_count(), 4)
 	_screen.choose_base(_fire)
-	assert_eq(_screen.session.base, _fire)
+	assert_eq(_screen.session.bases, [_fire])
 	assert_eq(_screen.base_button_count(), 1)
 
 
@@ -215,3 +219,160 @@ func test_a_bridged_touch_does_not_press_the_global_cast_action() -> void:
 	Input.action_release(&"cast")
 	assert_false(pressed_cast, "a bridged touch must not press the cast action")
 
+
+
+func _own(path: String, amount: int = 1) -> ScrollData:
+	var scroll := _scroll(path)
+	_inventory.add(scroll, amount)
+	return scroll
+
+
+func _hybrid_recipe() -> Array:
+	var fire := _own("base/fire")
+	var sea := _own("base/sea")
+	var extra := _own("buff/additional_base")
+	var duplicate := _own("buff/duplicate_area")
+	var damage := _own("buff/damage", 2)
+	var missile := _own("area/missile")
+	_screen.open(_inventory, _loadout)
+	_screen.add_buff(extra)
+	_screen.choose_base(fire)
+	_screen.choose_base(sea)
+	_screen.choose_area(missile)
+	_screen.add_buff(duplicate)
+	_screen.add_buff(damage)
+	_screen.add_buff(damage)
+	return [fire, sea, extra, duplicate, damage, missile]
+
+
+func test_buff_buttons_exist_for_owned_buff_scrolls() -> void:
+	_own("buff/damage")
+	_own("buff/duplicate_area")
+	_screen.open(_inventory, _loadout)
+	assert_eq(_screen.buff_button_count(), 2)
+
+
+func test_buff_stepper_respects_ownership_and_caps() -> void:
+	var damage := _own("buff/damage", 2)
+	_screen.open(_inventory, _loadout)
+	assert_true(_screen.add_buff(damage))
+	assert_true(_screen.add_buff(damage))
+	assert_false(_screen.add_buff(damage))
+	assert_true(_screen.remove_buff(damage))
+	assert_eq(_screen.session.buff_stacks(damage), 1)
+
+
+func test_preview_shows_elements_shots_and_drawbacks() -> void:
+	_hybrid_recipe()
+	var text := _screen.preview_text()
+	assert_true(text.contains("Fire+Sea"), text)
+	assert_true(text.contains("Shots 2"), text)
+	assert_true(text.contains("casts become"), text)
+	assert_true(text.contains("Now: Fire Missile"), text)
+
+
+func test_preview_hides_unused_lines() -> void:
+	var fire := _own("base/fire")
+	var missile := _own("area/missile")
+	_screen.open(_inventory, _loadout)
+	_screen.choose_base(fire)
+	_screen.choose_area(missile)
+	var text := _screen.preview_text()
+	assert_false(text.contains("Ignores resistance"), text)
+	assert_false(text.contains("Vulnerable bonus"), text)
+
+
+func test_preview_shows_vulnerability_and_ignore_resistance_when_set() -> void:
+	var fire := _own("base/fire")
+	var missile := _own("area/missile")
+	var vulnerable := _own("buff/double_vulnerability")
+	var ignore := _own("buff/ignore_resistance")
+	_screen.open(_inventory, _loadout)
+	_screen.choose_base(fire)
+	_screen.choose_area(missile)
+	_screen.add_buff(vulnerable)
+	_screen.add_buff(ignore)
+	var text := _screen.preview_text()
+	assert_true(text.contains("Vulnerable bonus x2.0"), text)
+	assert_true(text.contains("Ignores resistance"), text)
+
+
+func test_base_heading_shows_the_limit() -> void:
+	var extra := _own("buff/additional_base")
+	_own("base/fire")
+	_screen.open(_inventory, _loadout)
+	assert_true(_screen.base_heading_text().contains("0 of 1"), _screen.base_heading_text())
+	_screen.choose_base(_scroll("base/fire"))
+	assert_true(_screen.base_heading_text().contains("1 of 1"), _screen.base_heading_text())
+	_screen.add_buff(extra)
+	assert_true(_screen.base_heading_text().contains("1 of 2"), _screen.base_heading_text())
+
+
+func test_confirm_is_disabled_until_the_extra_base_is_picked() -> void:
+	var fire := _own("base/fire")
+	var sea := _own("base/sea")
+	var extra := _own("buff/additional_base")
+	var missile := _own("area/missile")
+	_screen.open(_inventory, _loadout)
+	_screen.choose_area(missile)
+	_screen.add_buff(extra)
+	_screen.choose_base(fire)
+	assert_false(_screen.confirm_enabled())
+	assert_eq(_screen.message_text(), CraftingSystem.need_bases_reason(1))
+	_screen.choose_base(sea)
+	assert_true(_screen.confirm_enabled())
+
+
+func test_removing_additional_base_updates_the_screen() -> void:
+	var fire := _own("base/fire")
+	var sea := _own("base/sea")
+	var extra := _own("buff/additional_base")
+	_screen.open(_inventory, _loadout)
+	_screen.add_buff(extra)
+	_screen.choose_base(fire)
+	_screen.choose_base(sea)
+	assert_eq(_screen.session.bases.size(), 2)
+	_screen.remove_buff(extra)
+	assert_eq(_screen.session.bases.size(), 1)
+	assert_true(_screen.base_heading_text().contains("1 of 1"))
+
+
+func test_full_hybrid_craft_through_the_screen() -> void:
+	_hybrid_recipe()
+	watch_signals(_screen)
+	_screen.confirm()
+	var spell := (_loadout.slots[0] as SpellInstance).data
+	assert_eq(spell.elements, [SpellData.Element.FIRE, SpellData.Element.SEA])
+	assert_eq(spell.copies, 2)
+	assert_eq(spell.buff_stacks[&"buff_damage"], 2)
+	assert_eq(_inventory.total_count(), 0)
+	assert_false(_screen.is_open())
+	assert_signal_emit_count(_screen, "closed", 1)
+
+
+func test_huge_stacks_keep_the_preview_readable() -> void:
+	var fire := _own("base/fire")
+	var missile := _own("area/missile")
+	var damage := _own("buff/damage", 40)
+	_screen.open(_inventory, _loadout)
+	_screen.choose_base(fire)
+	_screen.choose_area(missile)
+	for i in 40:
+		_screen.add_buff(damage)
+	var text := _screen.preview_text().to_lower()
+	assert_false(text.contains("inf"), text)
+	assert_false(text.contains("nan"), text)
+	assert_true(text.contains("too costly"), text)
+
+
+func test_focus_survives_a_stepper_becoming_disabled() -> void:
+	var damage := _own("buff/damage")
+	_screen.open(_inventory, _loadout)
+	var plus := _screen._buff_grid.find_children("*", "Button", true, false).filter(
+		func(button: Node) -> bool: return str(button.get_meta(&"key", "")) == "buff+:%s" % damage.id)[0] as Button
+	plus.grab_focus()
+	plus.pressed.emit()
+	await wait_process_frames(2)
+	var owner := _screen.get_viewport().gui_get_focus_owner()
+	assert_not_null(owner, "the last owned stack disabled the plus button")
+	assert_false((owner as Button).disabled)

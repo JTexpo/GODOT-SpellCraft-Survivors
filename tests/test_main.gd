@@ -274,6 +274,30 @@ func test_full_craft_through_main() -> void:
 	assert_false(screen.is_open())
 
 
+func test_full_buffed_craft_through_main() -> void:
+	var parts := _open_main()
+	var main := parts[0] as Main
+	var screen := parts[1] as CraftingScreen
+	var player := parts[3] as Player
+	var event := InputEventAction.new()
+	event.action = &"debug_give_scrolls"
+	event.pressed = true
+	main._unhandled_input(event)
+	(parts[2] as Lectern).interact(player)
+	var damage := load("res://resources/scrolls/buff/damage.tres") as ScrollData
+	screen.choose_base(load("res://resources/scrolls/base/thunder.tres") as ScrollData)
+	screen.choose_area(load("res://resources/scrolls/area/missile.tres") as ScrollData)
+	assert_true(screen.add_buff(damage))
+	assert_true(screen.add_buff(damage))
+	screen.confirm()
+	var spell := (player.loadout.slots[0] as SpellInstance).data
+	assert_eq(spell.buff_stacks[&"buff_damage"], 2)
+	assert_eq(player.inventory.count(damage), 1)
+	var bar := main.get_node("Hud/SpellBar") as SpellBar
+	assert_eq(bar.widgets[0].element_color, spell.color)
+	assert_false(screen.is_open())
+
+
 func test_tapping_the_death_screen_restarts_through_the_real_input_pipeline() -> void:
 	# Real touches go through the viewport (controls first, then unhandled input), not straight to
 	# DeathScreen.handle_event. The root cause of the phone bug was a screen-sized ColorRect that

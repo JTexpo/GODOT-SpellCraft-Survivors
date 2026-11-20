@@ -337,3 +337,43 @@ func test_selection_survives_replacing_the_selected_slot() -> void:
 	_loadout._process(10.0)
 	_loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
 	assert_signal_emit_count(_loadout, "cast_failed_dry", 2)
+
+
+func _stub_effects() -> Array[StubAreaEffect]:
+	var found: Array[StubAreaEffect] = []
+	for child in _root.get_children():
+		if child is StubAreaEffect:
+			found.append(child)
+	return found
+
+
+func _copies_loadout(copies: int) -> SpellLoadout:
+	var spell := _stub_spell()
+	spell.copies = copies
+	var spells: Array[SpellData] = [spell, null, null, null, null]
+	return _make_loadout(spells)
+
+
+func test_a_three_copy_spell_launches_three_effects_with_ring_directions() -> void:
+	var loadout := _copies_loadout(3)
+	assert_true(loadout.try_cast(Vector2(5, 5), Vector2.RIGHT, Vector2(50, 5)))
+	var stubs := _stub_effects()
+	assert_eq(stubs.size(), 3)
+	for i in 3:
+		assert_almost_eq(absf(angle_difference(stubs[i].launched_direction.angle(), deg_to_rad(120.0 * i))), 0.0, 0.0001)
+		assert_eq(stubs[i].launched_origin, Vector2(5, 5))
+		assert_eq(stubs[i].launched_spell, loadout.selected().data)
+
+
+func test_mana_is_spent_once_for_all_copies() -> void:
+	var loadout := _copies_loadout(5)
+	var spell := loadout.selected()
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_eq(_stub_effects().size(), 5)
+	assert_eq(spell.current_mana, spell.data.max_mana - spell.data.mana_cost)
+
+
+func test_a_one_copy_spell_launches_exactly_one_effect() -> void:
+	var loadout := _copies_loadout(1)
+	loadout.try_cast(Vector2.ZERO, Vector2.RIGHT)
+	assert_eq(_stub_effects().size(), 1)

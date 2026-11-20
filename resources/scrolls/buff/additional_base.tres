@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="ScrollData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ScrollData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/scrolls/scroll_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/crafting/buff_effects/additional_base.tres" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -11,3 +12,4 @@ category = 2
 rarity = 2
 color = Color(0.75, 0.4, 0.9, 1)
 buff_id = &"additional_base"
+buff = ExtResource("2")

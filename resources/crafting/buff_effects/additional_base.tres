@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BuffEffect" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/crafting/buff_effect.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+damage_multiplier = 1.0
+max_mana_multiplier = 1.0
+cost_multiplier = 1.8
+vulnerability_bonus = 0.0
+ignores_resistance = false
+extra_copies = 0
+extra_bases = 1
+max_stacks = 3

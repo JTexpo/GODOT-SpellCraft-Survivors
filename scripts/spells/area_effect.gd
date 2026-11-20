@@ -14,5 +14,6 @@ func launch(_spell: SpellData, _origin: Vector2, _direction: Vector2, _target: V
 func _configure_hitbox(hitbox: HitboxComponent, spell: SpellData, hit_cooldown: float) -> void:
 	hitbox.damage = spell.damage
 	hitbox.element = spell.primary_element()
+	hitbox.profile = spell.attack_profile()
 	hitbox.knockback = spell.knockback
 	hitbox.hit_cooldown = hit_cooldown
