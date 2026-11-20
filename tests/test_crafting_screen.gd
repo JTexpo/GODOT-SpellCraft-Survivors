@@ -88,7 +88,7 @@ func test_preview_matches_the_builder() -> void:
 	assert_true(_screen.choose_base(_thunder))
 	assert_true(_screen.choose_area(_wave))
 	assert_true(_screen.choose_range(2))
-	var built := SpellBuilder.build(_thunder, _wave, CraftingRules.default_rules().option(2))
+	var built := SpellBuilder.build([_thunder], _wave, CraftingRules.default_rules().option(2))
 	var text := _screen.preview_text()
 	assert_true(text.contains("Thunder Wave (Long)"), text)
 	assert_true(text.contains("%.1f" % built.mana_cost), text)

@@ -18,7 +18,7 @@ const REASON_CANNOT_BUILD := "That recipe can't be built."
 ## The spell the request would build, or null if the Base, Area or range is unusable. Ignores the
 ## inventory and the slot, so the screen can preview before the player owns everything.
 static func preview(request: CraftingRequest, rules: CraftingRules) -> SpellData:
-	return SpellBuilder.build(request.base, request.area, rules.option(request.option_index))
+	return SpellBuilder.build([request.base], request.area, rules.option(request.option_index), request.buffs)
 
 
 static func validate(

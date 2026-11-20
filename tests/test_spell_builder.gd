@@ -23,7 +23,7 @@ func _normal() -> RangeOption:
 
 
 func test_fire_missile_at_normal_equals_the_starting_spell_except_its_bigger_pool() -> void:
-	var built := SpellBuilder.build(_base("fire"), _area("missile"), _normal())
+	var built := SpellBuilder.build([_base("fire")], _area("missile"), _normal())
 	var starting := load("res://resources/spells/fire_missile.tres") as SpellData
 	assert_not_null(built)
 	assert_eq(built.damage, starting.damage)
@@ -48,7 +48,7 @@ func test_every_base_and_area_pair_builds() -> void:
 		for area_name in AREAS:
 			var base := _base(base_name)
 			var area := _area(area_name)
-			var built := SpellBuilder.build(base, area, _normal())
+			var built := SpellBuilder.build([base], area, _normal())
 			assert_not_null(built, "%s %s" % [base_name, area_name])
 			assert_eq(built.primary_element(), base.element)
 			assert_eq(built.area_data, area.area_data)
@@ -62,7 +62,7 @@ func test_longer_range_costs_more_and_gives_fewer_casts() -> void:
 	var area := _area("wave")
 	var previous: SpellData = null
 	for i in _rules.range_options.size():
-		var built := SpellBuilder.build(base, area, _rules.option(i))
+		var built := SpellBuilder.build([base], area, _rules.option(i))
 		assert_eq(built.range_scale, _rules.option(i).range_scale)
 		if previous != null:
 			assert_gt(built.mana_cost, previous.mana_cost)
@@ -73,28 +73,28 @@ func test_longer_range_costs_more_and_gives_fewer_casts() -> void:
 
 func test_land_is_slower_and_heavier_than_thunder() -> void:
 	for area_name in AREAS:
-		var land := SpellBuilder.build(_base("land"), _area(area_name), _normal())
-		var thunder := SpellBuilder.build(_base("thunder"), _area(area_name), _normal())
+		var land := SpellBuilder.build([_base("land")], _area(area_name), _normal())
+		var thunder := SpellBuilder.build([_base("thunder")], _area(area_name), _normal())
 		assert_gt(land.damage, thunder.damage, area_name)
 		assert_gt(land.cast_interval, thunder.cast_interval, area_name)
 		assert_gt(thunder.max_mana, land.max_mana, area_name)
 
 
 func test_name_and_id() -> void:
-	var normal := SpellBuilder.build(_base("fire"), _area("missile"), _normal())
+	var normal := SpellBuilder.build([_base("fire")], _area("missile"), _normal())
 	assert_eq(normal.display_name, "Fire Missile")
 	assert_eq(normal.id, &"fire_missile_normal")
-	var long := SpellBuilder.build(_base("fire"), _area("missile"), _rules.option(2))
+	var long := SpellBuilder.build([_base("fire")], _area("missile"), _rules.option(2))
 	assert_eq(long.display_name, "Fire Missile (Long)")
 	assert_eq(long.id, &"fire_missile_long")
-	var very_long := SpellBuilder.build(_base("sea"), _area("line"), _rules.option(3))
+	var very_long := SpellBuilder.build([_base("sea")], _area("line"), _rules.option(3))
 	assert_eq(very_long.display_name, "Sea Line (Very long)")
 	assert_eq(very_long.id, &"sea_line_very_long")
-	assert_eq(SpellBuilder.display_name(_base("land"), _area("area"), _normal()), "Land Area")
+	assert_eq(SpellBuilder.display_name([_base("land")], _area("area"), _normal()), "Land Area")
 
 
 func test_describe_reports_the_numbers() -> void:
-	var built := SpellBuilder.build(_base("land"), _area("area"), _rules.option(2))
+	var built := SpellBuilder.build([_base("land")], _area("area"), _rules.option(2))
 	var info := SpellBuilder.describe(built)
 	assert_eq(info["name"], "Land Area (Long)")
 	assert_eq(info["damage"], built.damage)
@@ -104,21 +104,166 @@ func test_describe_reports_the_numbers() -> void:
 	assert_almost_eq(info["casts"], built.max_mana / built.mana_cost, 0.0001)
 	assert_eq(info["range"], built.effective_range())
 	assert_eq(info["area"], "Area")
-	assert_eq(SpellBuilder.describe(SpellBuilder.build(_base("fire"), _area("missile"), _normal()))["area"], "Missile")
+	assert_eq(SpellBuilder.describe(SpellBuilder.build([_base("fire")], _area("missile"), _normal()))["area"], "Missile")
 
 
 func test_bad_inputs_return_null() -> void:
 	var fire := _base("fire")
 	var missile := _area("missile")
-	assert_null(SpellBuilder.build(null, missile, _normal()))
-	assert_null(SpellBuilder.build(fire, null, _normal()))
-	assert_null(SpellBuilder.build(fire, missile, null))
-	assert_null(SpellBuilder.build(missile, missile, _normal()), "an Area scroll given as the Base")
-	assert_null(SpellBuilder.build(fire, fire, _normal()), "a Base scroll given as the Area")
+	assert_null(SpellBuilder.build([null], missile, _normal()))
+	assert_null(SpellBuilder.build([fire], null, _normal()))
+	assert_null(SpellBuilder.build([fire], missile, null))
+	assert_null(SpellBuilder.build([missile], missile, _normal()), "an Area scroll given as the Base")
+	assert_null(SpellBuilder.build([fire], fire, _normal()), "a Base scroll given as the Area")
 	var bare := fire.duplicate() as ScrollData
 	bare.modifiers = null
-	assert_null(SpellBuilder.build(bare, missile, _normal()), "a Base with no modifiers")
+	assert_null(SpellBuilder.build([bare], missile, _normal()), "a Base with no modifiers")
 	var no_stats := missile.duplicate() as ScrollData
 	no_stats.area_data = missile.area_data.duplicate() as AreaData
 	no_stats.area_data.base_stats = null
-	assert_null(SpellBuilder.build(fire, no_stats, _normal()), "an Area with no baseline")
+	assert_null(SpellBuilder.build([fire], no_stats, _normal()), "an Area with no baseline")
+
+
+func _buff(name: String) -> ScrollData:
+	return load("res://resources/scrolls/buff/%s.tres" % name) as ScrollData
+
+
+func _fire_missile(buffs: Array = []) -> SpellData:
+	return SpellBuilder.build([_base("fire")], _area("missile"), _normal(), buffs)
+
+
+func test_no_buffs_equals_the_sprint_6_result() -> void:
+	for base_name in BASES:
+		for area_name in AREAS:
+			var plain := SpellBuilder.build([_base(base_name)], _area(area_name), _normal())
+			var with_empty := SpellBuilder.build([_base(base_name)], _area(area_name), _normal(), [])
+			assert_eq(plain.damage, with_empty.damage)
+			assert_eq(plain.mana_cost, with_empty.mana_cost)
+			assert_eq(plain.max_mana, with_empty.max_mana)
+			assert_eq(plain.cast_interval, with_empty.cast_interval)
+			assert_eq(plain.copies, 1)
+			assert_eq(plain.vulnerability_scale, 1.0)
+			assert_false(plain.ignores_resistance)
+			assert_true(plain.buff_stacks.is_empty())
+
+
+func test_each_buff_folds_alone() -> void:
+	var damage := _fire_missile([_buff("damage")])
+	assert_almost_eq(damage.damage, 15.0, 0.0001)
+	assert_almost_eq(damage.mana_cost, 1.5, 0.0001)
+	var pool := _fire_missile([_buff("max_mana")])
+	assert_almost_eq(pool.max_mana, 150.0, 0.0001)
+	assert_almost_eq(pool.mana_cost, 1.25, 0.0001)
+	var vulnerable := _fire_missile([_buff("double_vulnerability")])
+	assert_almost_eq(vulnerable.vulnerability_scale, 2.0, 0.0001)
+	assert_almost_eq(vulnerable.mana_cost, 1.25, 0.0001)
+	var ignoring := _fire_missile([_buff("ignore_resistance")])
+	assert_true(ignoring.ignores_resistance)
+	assert_almost_eq(ignoring.mana_cost, 1.25, 0.0001)
+	var duplicated := _fire_missile([_buff("duplicate_area")])
+	assert_eq(duplicated.copies, 2)
+	assert_almost_eq(duplicated.mana_cost, 2.0, 0.0001)
+	var extra_base := _fire_missile([_buff("additional_base")])
+	assert_almost_eq(extra_base.mana_cost, 1.8, 0.0001)
+	assert_eq(extra_base.elements.size(), 1, "the extra element comes from a second Base scroll, not the buff")
+
+
+func test_stacks_multiply_and_add() -> void:
+	var two_damage := _fire_missile([_buff("damage"), _buff("damage")])
+	assert_almost_eq(two_damage.damage, 22.5, 0.0001)
+	assert_almost_eq(two_damage.mana_cost, 2.25, 0.0001)
+	var two_vulnerable := _fire_missile([_buff("double_vulnerability"), _buff("double_vulnerability")])
+	assert_almost_eq(two_vulnerable.vulnerability_scale, 3.0, 0.0001)
+	var three_copies := _fire_missile([_buff("duplicate_area"), _buff("duplicate_area"), _buff("duplicate_area")])
+	assert_eq(three_copies.copies, 4)
+	assert_almost_eq(three_copies.mana_cost, 8.0, 0.0001)
+
+
+func test_buffs_combine() -> void:
+	var spell := _fire_missile([_buff("damage"), _buff("duplicate_area"), _buff("ignore_resistance")])
+	assert_almost_eq(spell.damage, 15.0, 0.0001)
+	assert_eq(spell.copies, 2)
+	assert_true(spell.ignores_resistance)
+	assert_almost_eq(spell.mana_cost, 1.0 * 1.5 * 2.0 * 1.25, 0.0001)
+
+
+func test_damage_per_mana_never_improves_from_damage_or_copies() -> void:
+	var plain := _fire_missile()
+	var plain_ratio := plain.damage / plain.mana_cost
+	var stacks: Array = []
+	for count in range(1, 7):
+		stacks.append(_buff("damage"))
+		var spell := _fire_missile(stacks)
+		assert_lte(spell.damage / spell.mana_cost, plain_ratio + 0.0001, "%d damage stacks" % count)
+	var copies: Array = []
+	for count in range(1, 5):
+		copies.append(_buff("duplicate_area"))
+		var spell := _fire_missile(copies)
+		assert_gte(spell.mana_cost, spell.copies * plain.mana_cost - 0.0001, "%d duplicate stacks" % count)
+
+
+func test_hybrid_uses_the_mean_of_the_bases() -> void:
+	var hybrid := SpellBuilder.build([_base("fire"), _base("thunder")], _area("missile"), _normal())
+	assert_almost_eq(hybrid.damage, 10.0 * (1.0 + 0.7) / 2.0, 0.0001)
+	assert_almost_eq(hybrid.mana_cost, 1.0, 0.0001)
+	assert_almost_eq(hybrid.max_mana, 100.0 * (1.0 + 1.5) / 2.0, 0.0001)
+	assert_almost_eq(hybrid.cast_interval, 0.35 * (1.0 + 0.5) / 2.0, 0.0001)
+
+
+func test_hybrid_elements_name_color_and_id() -> void:
+	var fire_sea := SpellBuilder.build([_base("fire"), _base("sea")], _area("missile"), _normal())
+	assert_eq(fire_sea.elements, [SpellData.Element.FIRE, SpellData.Element.SEA])
+	assert_eq(fire_sea.display_name, "Fire+Sea Missile")
+	assert_eq(fire_sea.color, _base("fire").color)
+	var sea_fire := SpellBuilder.build([_base("sea"), _base("fire")], _area("missile"), _normal())
+	assert_eq(sea_fire.display_name, "Sea+Fire Missile")
+	assert_eq(sea_fire.color, _base("sea").color)
+	assert_ne(fire_sea.id, sea_fire.id)
+	assert_ne(_fire_missile().id, _fire_missile([_buff("damage")]).id)
+	assert_ne(_fire_missile([_buff("damage")]).id, _fire_missile([_buff("damage"), _buff("damage")]).id)
+
+
+func test_buff_stacks_are_recorded() -> void:
+	var damage := _buff("damage")
+	var spell := _fire_missile([damage, damage, _buff("duplicate_area")])
+	assert_eq(spell.buff_stacks.size(), 2)
+	assert_eq(spell.buff_stacks[damage.id], 2)
+	assert_eq(spell.buff_stacks[_buff("duplicate_area").id], 1)
+
+
+func test_describe_reports_the_new_numbers() -> void:
+	var buffs: Array = [_buff("double_vulnerability"), _buff("ignore_resistance"), _buff("duplicate_area")]
+	var spell := SpellBuilder.build([_base("fire"), _base("sea")], _area("missile"), _normal(), buffs)
+	var info := SpellBuilder.describe(spell)
+	assert_eq(info["elements"], "Fire+Sea")
+	assert_eq(info["copies"], 2)
+	assert_eq(info["vulnerability"], 2.0)
+	assert_true(info["ignores_resistance"])
+	assert_eq(SpellBuilder.element_name(SpellData.Element.THUNDER), "Thunder")
+	assert_eq(SpellBuilder.element_name(99), "None")
+
+
+func test_can_cast() -> void:
+	assert_true(SpellBuilder.can_cast(_fire_missile()))
+	var stacks: Array = []
+	for i in 40:
+		stacks.append(_buff("damage"))
+	assert_false(SpellBuilder.can_cast(_fire_missile(stacks)), "cost far above the pool")
+
+
+func test_huge_stacks_stay_finite() -> void:
+	var stacks: Array = []
+	for i in 40:
+		stacks.append(_buff("damage"))
+	var spell := _fire_missile(stacks)
+	for value in [spell.damage, spell.mana_cost, spell.max_mana]:
+		assert_true(is_finite(value))
+
+
+func test_bad_buffs_return_null() -> void:
+	var no_effect := _buff("damage").duplicate() as ScrollData
+	no_effect.buff = null
+	for bad in [_base("fire"), _area("missile"), no_effect, null]:
+		assert_null(_fire_missile([bad]), "buff entry %s" % [bad])
+	assert_null(SpellBuilder.build([], _area("missile"), _normal()), "no Base scrolls")
+	assert_null(SpellBuilder.build([_base("fire"), _area("missile")], _area("missile"), _normal()), "an Area scroll among the Bases")

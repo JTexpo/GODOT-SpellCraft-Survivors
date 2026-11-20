@@ -109,7 +109,7 @@ func test_preview_follows_the_choices() -> void:
 	session.select_base(_thunder)
 	session.select_area(_wave)
 	session.select_range(2)
-	var built := SpellBuilder.build(_thunder, _wave, _rules.option(2))
+	var built := SpellBuilder.build([_thunder], _wave, _rules.option(2))
 	var preview := session.preview()
 	assert_not_null(preview)
 	assert_eq(preview.mana_cost, built.mana_cost)
