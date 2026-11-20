@@ -1,6 +1,6 @@
 # Sprint 8 Design: XP, Levels and Saving
 
-**Status:** Proposed (awaiting approval). Revised: level 1 is the starting level and gives nothing (user).
+**Status:** Built (Sprint 8). Level 1 is the starting level and gives nothing (user).
 
 Scope comes from `sprint-development.md` (Sprint 8) plus one change the user asked for: **the save system moves here from Sprint 9**, because levels are permanent. Architecture follows `technical-design.md`, `CLAUDE.md` and `sprint-0` to `sprint-7-design.md`. Decisions below were agreed with the user in conversation, except where marked "my call".
 

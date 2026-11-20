@@ -1,4 +1,6 @@
 [gd_scene format=3]
+[ext_resource type="Script" path="res://scripts/systems/xp_dropper.gd" id="90"]
+[ext_resource type="PackedScene" path="res://scenes/progression/xp_gem.tscn" id="91"]
 
 [ext_resource type="Script" path="res://scripts/dev/stress_test.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/test_arena.tscn" id="2"]
@@ -26,6 +28,10 @@ limit_left = 0
 limit_top = 0
 limit_right = 960
 limit_bottom = 540
+
+[node name="XpDropper" type="Node" parent="."]
+script = ExtResource("90")
+gem_scene = ExtResource("91")
 
 [node name="ScrollDropper" type="Node" parent="."]
 script = ExtResource("7")

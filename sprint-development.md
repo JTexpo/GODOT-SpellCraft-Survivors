@@ -456,31 +456,37 @@ Players should become stronger as they survive and defeat enemies.
 
 #### XP Collection
 
-- [ ] Implement XP drops.
-- [ ] Implement XP pickup.
-- [ ] Implement XP accumulation.
-- [ ] Implement XP display.
-- [ ] Implement level-up thresholds.
+- [x] Implement XP drops.
+- [x] Implement XP pickup.
+- [x] Implement XP accumulation.
+- [x] Implement XP display.
+- [x] Implement level-up thresholds.
 
 #### Leveling System
 
-- [ ] Implement the 20-level progression structure.
-- [ ] Implement movement speed upgrades.
-- [ ] Implement health upgrades.
-- [ ] Implement maximum spell mana upgrades.
-- [ ] Implement spell slot upgrades.
-- [ ] Implement starting spell bonuses.
-- [ ] Implement random Buff selection.
-- [ ] Implement chosen Buff selection.
-- [ ] Implement starting spell unlocks.
+- [x] Implement the 20-level progression structure.
+- [x] Implement movement speed upgrades.
+- [x] Implement health upgrades.
+- [x] Implement maximum spell mana upgrades.
+- [x] Implement spell slot upgrades.
+- [x] Implement starting spell bonuses.
+- [x] Implement random Buff selection.
+- [x] Implement chosen Buff selection.
+- [x] Implement starting spell unlocks.
+
+#### Saving (moved here from Sprint 9: levels are permanent)
+
+- [x] Save and load a profile (XP and the chosen buffs) as one versioned file.
+- [x] Recover from a missing, damaged or newer save without losing the old file.
+- [x] Save on level-up, on death, periodically and when the game closes.
 
 #### UI
 
-- [ ] Display current XP.
-- [ ] Display current level.
-- [ ] Display XP progress toward the next level.
-- [ ] Display level-up notifications.
-- [ ] Display unlocked spell slots.
+- [x] Display current XP.
+- [x] Display current level.
+- [x] Display XP progress toward the next level.
+- [x] Display level-up notifications.
+- [x] Display unlocked spell slots.
 
 ### Deliverable
 
@@ -490,9 +496,11 @@ A complete XP and leveling system that improves the player throughout an adventu
 
 - XP is collected correctly.
 - Level-ups trigger at the correct thresholds.
-- All 20 progression rewards function.
+- All progression rewards (levels 2 to 20) function.
 - Spell slots unlock correctly.
 - Starting spell modifications are applied correctly.
+
+**Built note:** XP and level persist between runs (the user's decision), so the save system moved here from Sprint 9. Level 1 is where every wizard starts and gives nothing, so the track holds levels 2 to 20 as 19 `LevelReward` resources on a `LevelTrack`. Enemies drop XP gems (capped at 150, merging into the oldest gem at the cap so no XP is lost). Stat and slot rewards apply at once through one `Player.apply_stat_bonuses`. Starting-spell rewards apply at the next run start: a random buff is rolled when the level is reached and kept, a chosen buff is picked on a small screen before the run, and level 14 adds Sea Cone as a second starting spell. The F11 debug key is gone and F12 gives 100 XP. Balance has not been tested in play.
 
 ---
 
@@ -509,7 +517,7 @@ Players can now use Gold to purchase equipment that changes their future adventu
 - [ ] Implement Gold drops.
 - [ ] Implement Gold collection.
 - [ ] Implement Gold accumulation.
-- [ ] Implement Gold persistence between runs.
+- [ ] Implement Gold persistence between runs (the save file and profile already exist from Sprint 8, so this adds Gold to them).
 - [ ] Display Gold collected during an adventure.
 
 #### Equipment
@@ -522,7 +530,7 @@ Players can now use Gold to purchase equipment that changes their future adventu
 - [ ] Implement equipment modifiers.
 - [ ] Implement equipment purchasing.
 - [ ] Implement equipment selection.
-- [ ] Implement equipment persistence.
+- [ ] Implement equipment persistence (also added to the Sprint 8 profile and save file).
 
 #### Equipment Bonuses
 
