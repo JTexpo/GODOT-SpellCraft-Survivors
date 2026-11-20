@@ -114,3 +114,29 @@ func test_a_second_bad_file_replaces_the_old_bak_without_error() -> void:
 	_write("second bad")
 	SaveGame.load_profile(_path())
 	assert_eq(_read(_path() + ".bak"), "second bad")
+
+
+func test_gold_and_equipment_survive_save_and_load() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(321)
+	profile.grant(&"robe_tide")
+	profile.equip(0, &"robe_tide")
+	assert_true(SaveGame.save_profile(profile, _path()))
+	var loaded := SaveGame.load_profile(_path())
+	assert_eq(loaded.gold, 321)
+	assert_true(loaded.owns(&"robe_tide"))
+	assert_eq(loaded.equipped_id(0), &"robe_tide")
+
+
+func test_large_gold_survives_exactly() -> void:
+	var profile := PlayerProfile.new()
+	profile.add_gold(PlayerProfile.MAX_VALUE - 7)
+	SaveGame.save_profile(profile, _path())
+	assert_eq(SaveGame.load_profile(_path()).gold, PlayerProfile.MAX_VALUE - 7)
+
+
+func test_a_save_with_a_bad_gold_field_is_kept_as_bak() -> void:
+	_write('{"version": 1, "total_xp": 5, "gold": "lots"}')
+	var profile := SaveGame.load_profile(_path())
+	assert_eq(profile.gold, 0)
+	assert_true(FileAccess.file_exists(_path() + ".bak"))
