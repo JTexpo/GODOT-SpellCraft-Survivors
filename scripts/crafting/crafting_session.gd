@@ -72,7 +72,8 @@ func owned_buffs() -> Array[ScrollData]:
 
 func request() -> CraftingRequest:
 	var made := CraftingRequest.new()
-	made.base = base
+	if base != null:
+		made.bases = [base] as Array[ScrollData]
 	made.area = area
 	made.option_index = option_index
 	made.slot_index = slot_index

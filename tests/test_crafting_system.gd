@@ -43,7 +43,8 @@ func before_each() -> void:
 
 func _request(base: ScrollData, area: ScrollData, option_index: int = 1, slot: int = 0) -> CraftingRequest:
 	var request := CraftingRequest.new()
-	request.base = base
+	if base != null:
+		request.bases = [base] as Array[ScrollData]
 	request.area = area
 	request.option_index = option_index
 	request.slot_index = slot
@@ -55,7 +56,7 @@ func _snapshot() -> Dictionary:
 	for slot in _loadout.slots:
 		slots.append([slot, slot.current_mana if slot != null else -1.0])
 	var counts := []
-	for scroll in [_fire, _thunder, _missile, _wave]:
+	for scroll in [_fire, _thunder, _missile, _wave, _scroll("base/sea"), _scroll("buff/damage"), _scroll("buff/additional_base"), _scroll("buff/duplicate_area"), _scroll("buff/ignore_resistance")]:
 		counts.append(_inventory.count(scroll))
 	return {"slots": slots, "counts": counts, "total": _inventory.total_count()}
 
@@ -87,6 +88,122 @@ func test_craft_replaces_the_target_slot_only() -> void:
 	assert_eq(_loadout.slots[2].data.display_name, "Thunder Wave (Long)")
 
 
+## Own: 1 Fire, 1 Missile, 1 Increased Damage, plus Sea and Additional Base scrolls where a case needs them.
+func _full(bases: Array, buffs: Array, area: ScrollData = null) -> CraftingRequest:
+	var request := _request(null, area if area != null else _missile)
+	request.bases.assign(bases)
+	request.buffs.assign(buffs)
+	return request
+
+
+func _buff_cases() -> Array:
+	var damage := _scroll("buff/damage")
+	var extra := _scroll("buff/additional_base")
+	var sea := _scroll("base/sea")
+	var duplicate := _scroll("buff/duplicate_area")
+	var ignore := _scroll("buff/ignore_resistance")
+	var fire_copy := _fire.duplicate() as ScrollData
+	var bad_buff := damage.duplicate() as ScrollData
+	bad_buff.buff = null
+	return [
+		["one extra-base stack, one Base", _full([_fire], [extra]), CraftingSystem.need_bases_reason(1)],
+		["two Bases without the buff", _full([_fire, sea], []), CraftingSystem.REASON_TOO_MANY_BASES],
+		["two stacks, two Bases", _full([_fire, sea], [extra, extra]), CraftingSystem.need_bases_reason(1)],
+		["same element twice", _full([_fire, _fire], [extra]), CraftingSystem.REASON_DUPLICATE_ELEMENT],
+		["same element, two scrolls", _full([_fire, fire_copy], [extra]), CraftingSystem.REASON_DUPLICATE_ELEMENT],
+		["five duplicate stacks", _full([_fire], [duplicate, duplicate, duplicate, duplicate, duplicate]), CraftingSystem.REASON_STACK_CAP],
+		["two ignore stacks", _full([_fire], [ignore, ignore]), CraftingSystem.REASON_STACK_CAP],
+		["damage not owned enough", _full([_fire], [damage, damage]), CraftingSystem.REASON_MISSING],
+		["Base scroll as buff", _full([_fire], [_fire]), CraftingSystem.REASON_BAD_BUFF],
+		["Area scroll as buff", _full([_fire], [_missile]), CraftingSystem.REASON_BAD_BUFF],
+		["buff without data", _full([_fire], [bad_buff]), CraftingSystem.REASON_BAD_BUFF],
+		["null buff", _full([_fire], [null]), CraftingSystem.REASON_BAD_BUFF],
+		["Area scroll among the Bases", _full([_fire, _missile], [extra]), CraftingSystem.REASON_WRONG_BASE],
+		["no Bases at all", _full([], []), CraftingSystem.REASON_NO_BASE],
+	]
+
+
+func _give_for_buff_cases() -> void:
+	_inventory.add(_fire)
+	_inventory.add(_scroll("base/sea"))
+	_inventory.add(_missile)
+	_inventory.add(_scroll("buff/damage"))
+	_inventory.add(_scroll("buff/additional_base"), 2)
+	_inventory.add(_scroll("buff/duplicate_area"), 5)
+	_inventory.add(_scroll("buff/ignore_resistance"), 2)
+
+
+func test_a_buff_craft_consumes_every_scroll_used() -> void:
+	var damage := _scroll("buff/damage")
+	_inventory.add(_fire, 2)
+	_inventory.add(_missile)
+	_inventory.add(damage, 3)
+	var result := CraftingSystem.craft(_full([_fire], [damage, damage]), _rules, _inventory, _loadout)
+	assert_true(result.ok, result.reason)
+	assert_eq(_inventory.count(_fire), 1)
+	assert_eq(_inventory.count(_missile), 0)
+	assert_eq(_inventory.count(damage), 1)
+	assert_eq((_loadout.slots[0] as SpellInstance).data.buff_stacks, {&"buff_damage": 2})
+
+
+func test_a_hybrid_craft_consumes_both_bases_and_the_additional_base_scroll() -> void:
+	var sea := _scroll("base/sea")
+	var extra := _scroll("buff/additional_base")
+	for scroll in [_fire, sea, extra, _missile]:
+		_inventory.add(scroll)
+	var result := CraftingSystem.craft(_full([_fire, sea], [extra]), _rules, _inventory, _loadout)
+	assert_true(result.ok, result.reason)
+	assert_eq(_inventory.total_count(), 0)
+	assert_eq((_loadout.slots[0] as SpellInstance).data.elements, [SpellData.Element.FIRE, SpellData.Element.SEA])
+
+
+func test_a_spell_that_could_never_cast_is_refused() -> void:
+	var damage := _scroll("buff/damage")
+	_inventory.add(_fire)
+	_inventory.add(_missile)
+	_inventory.add(damage, 40)
+	var stacks: Array = []
+	for i in 40:
+		stacks.append(damage)
+	var result := CraftingSystem.craft(_full([_fire], stacks), _rules, _inventory, _loadout)
+	assert_false(result.ok)
+	assert_eq(result.reason, CraftingSystem.REASON_TOO_COSTLY)
+	assert_eq(_inventory.count(damage), 40)
+
+
+func test_need_bases_reason_plural() -> void:
+	assert_eq(CraftingSystem.need_bases_reason(1), "Pick 1 more Base scroll for your Additional Base.")
+	assert_eq(CraftingSystem.need_bases_reason(2), "Pick 2 more Base scrolls for your Additional Base.")
+
+
+func test_every_invalid_buff_case_changes_nothing() -> void:
+	_give_for_buff_cases()
+	watch_signals(_inventory)
+	watch_signals(_loadout)
+	for case in _buff_cases():
+		var before := _snapshot()
+		var result := CraftingSystem.craft(case[1], _rules, _inventory, _loadout)
+		assert_false(result.ok, case[0])
+		assert_eq(result.reason, case[2], case[0])
+		assert_eq(_snapshot(), before, "%s changed something" % case[0])
+	assert_signal_not_emitted(_inventory, "changed")
+	assert_signal_not_emitted(_loadout, "slot_changed")
+
+
+func test_validate_never_consumes_with_buffs() -> void:
+	var damage := _scroll("buff/damage")
+	_inventory.add(_fire)
+	_inventory.add(_missile)
+	_inventory.add(damage)
+	var before := _snapshot()
+	var request := _full([_fire], [damage])
+	for i in 3:
+		var result := CraftingSystem.validate(request, _rules, _inventory, _loadout)
+		assert_true(result.ok, result.reason)
+	assert_eq(_snapshot(), before)
+	assert_eq(_inventory.count(damage), 1)
+
+
 func test_each_invalid_case_changes_nothing() -> void:
 	_inventory.add(_fire)
 	_inventory.add(_missile)
@@ -104,9 +221,8 @@ func test_each_invalid_case_changes_nothing() -> void:
 		["base not owned", _request(_thunder, _missile), CraftingSystem.REASON_MISSING],
 		["area not owned", _request(_fire, _wave), CraftingSystem.REASON_MISSING],
 	]
-	var buffed := _request(_fire, _missile)
-	buffed.buffs = [_scroll("buff/damage")] as Array[ScrollData]
-	cases.append(["buffs given", buffed, CraftingSystem.REASON_BUFFS_LOCKED])
+	for case in _buff_cases():
+		cases.append(case)
 	watch_signals(_inventory)
 	watch_signals(_loadout)
 	for case in cases:
