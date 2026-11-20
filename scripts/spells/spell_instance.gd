@@ -11,6 +11,8 @@ var cooldown_left: float = 0.0
 ## A fraction of the spell's own pool added by the wizard's level (0.15 is +15%). It lives here and
 ## not on the shared SpellData, so two instances of one spell never share it.
 var max_mana_bonus: float = 0.0
+## A fraction of casting speed added by equipment (0.25 is +25% faster, -0.15 is 15% slower).
+var cast_speed_bonus: float = 0.0
 
 
 func _init(spell_data: SpellData) -> void:
@@ -30,7 +32,7 @@ func cast() -> bool:
 	if not can_cast():
 		return false
 	current_mana -= data.mana_cost
-	cooldown_left = data.cast_interval
+	cooldown_left = effective_interval()
 	mana_changed.emit(current_mana, max_mana())
 	return true
 
@@ -54,7 +56,16 @@ func mana_ratio() -> float:
 
 ## The pool, including the level's bonus.
 func max_mana() -> float:
-	return data.max_mana * (1.0 + max_mana_bonus)
+	return CastMath.pool(data.max_mana, max_mana_bonus)
+
+
+## Seconds between casts, including the casting speed bonus.
+func effective_interval() -> float:
+	return CastMath.interval(data.cast_interval, cast_speed_bonus)
+
+
+func set_cast_speed_bonus(bonus: float) -> void:
+	cast_speed_bonus = bonus
 
 
 ## When the bonus rises, current mana rises by the pool's increase. When it falls, current is clamped.

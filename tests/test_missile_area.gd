@@ -120,3 +120,18 @@ func test_the_hitbox_carries_the_spells_profile() -> void:
 	assert_eq(hitbox.profile.vulnerability_scale, 2.0)
 	assert_true(hitbox.profile.ignores_resistance)
 	assert_eq(hitbox.element, SpellData.Element.FIRE, "the first element is still the hitbox's element")
+
+
+func test_damage_scale_multiplies_the_hit_damage() -> void:
+	var spell := _fire()
+	var effect := spell.area_data.scene.instantiate() as AreaEffect
+	effect.damage_scale = 2.5
+	add_child_autofree(effect)
+	effect.launch(spell, Vector2.ZERO, Vector2.RIGHT, Vector2(10000, 0))
+	assert_almost_eq((effect.get_node("Hitbox") as HitboxComponent).damage, spell.damage * 2.5, 0.0001)
+
+
+func test_default_damage_scale_leaves_the_damage_alone() -> void:
+	var spell := _fire()
+	var hitbox := _missile(spell).get_node("Hitbox") as HitboxComponent
+	assert_eq(hitbox.damage, spell.damage)
