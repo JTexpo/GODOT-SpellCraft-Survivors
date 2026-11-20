@@ -39,6 +39,20 @@ const MIN_SIZE := 0.1
 ## Buff scroll id to the number of stacks used, for display.
 var buff_stacks: Dictionary = {}
 
+var _attack_profile: AttackProfile
+
+
+## The elements and flags a hit needs, built once. Call it after the spell is fully built, because
+## it is cached.
+func attack_profile() -> AttackProfile:
+	if _attack_profile == null:
+		_attack_profile = AttackProfile.new()
+		for element in elements:
+			_attack_profile.elements.append(element)
+		_attack_profile.vulnerability_scale = vulnerability_scale
+		_attack_profile.ignores_resistance = ignores_resistance
+	return _attack_profile
+
 
 func primary_element() -> int:
 	return elements[0] if not elements.is_empty() else NO_ELEMENT

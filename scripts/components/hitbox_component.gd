@@ -9,6 +9,9 @@ signal hit_landed(target: HurtboxComponent)
 @export var knockback: float = 0.0
 ## The attacker's element. The hurtbox applies the elemental multiplier when the hit lands.
 @export var element: int = SpellData.NO_ELEMENT
+## A spell's full elements and flags (several elements, vulnerability scale, ignore resistance).
+## Null for attacks that only have `element`, such as enemies' contact hits.
+var profile: AttackProfile = null
 ## Minimum seconds between hits on the same target. 0 means no limit.
 @export var hit_cooldown: float = 0.0
 ## Stops after the first landed hit (same as max_hits = 1).
@@ -45,7 +48,7 @@ func try_hit(target: HurtboxComponent, now_msec: int = GameTime.now_msec()) -> b
 	if hit_cooldown > 0.0 and _last_hit_msec.has(id):
 		if now_msec - int(_last_hit_msec[id]) < int(hit_cooldown * 1000.0):
 			return false
-	if not target.receive_hit(damage, global_position, knockback, element):
+	if not target.receive_hit(damage, global_position, knockback, element, profile):
 		return false
 	_last_hit_msec[id] = now_msec
 	_hits_landed += 1

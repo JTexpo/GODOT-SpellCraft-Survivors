@@ -57,3 +57,17 @@ func test_spell_data_defaults() -> void:
 	assert_eq(spell.vulnerability_scale, 1.0)
 	assert_false(spell.ignores_resistance)
 	assert_true(spell.buff_stacks.is_empty())
+
+
+func test_attack_profile_is_built_once_per_spell_and_mirrors_it() -> void:
+	var spell := SpellData.new()
+	var elements: Array[SpellData.Element] = [SpellData.Element.LAND, SpellData.Element.SEA]
+	spell.elements = elements
+	spell.vulnerability_scale = 3.0
+	spell.ignores_resistance = true
+	var profile := spell.attack_profile()
+	assert_eq(profile, spell.attack_profile(), "built once, so a cast allocates nothing")
+	assert_eq(profile.elements, [SpellData.Element.LAND, SpellData.Element.SEA])
+	assert_eq(profile.vulnerability_scale, 3.0)
+	assert_true(profile.ignores_resistance)
+	assert_eq(SpellData.new().attack_profile().elements, [])

@@ -44,13 +44,17 @@ func receive_hit(
 	source_position: Vector2,
 	knockback: float = 0.0,
 	attacker_element: int = SpellData.NO_ELEMENT,
+	profile: AttackProfile = null,
 ) -> bool:
 	if health == null or health.is_dead() or is_invulnerable():
 		return false
-	var dealt := DamageSystem.calculate(damage, attacker_element, element)
-	var effect := DamageSystem.effect(attacker_element, element)
-	health.take_damage(dealt)
-	hit_received.emit(dealt, source_position, knockback, effect)
+	var result: HitResult
+	if profile != null:
+		result = DamageSystem.resolve(damage, profile.elements, element, profile.vulnerability_scale, profile.ignores_resistance)
+	else:
+		result = DamageSystem.resolve(damage, [attacker_element], element)
+	health.take_damage(result.amount)
+	hit_received.emit(result.amount, source_position, knockback, result.effect)
 	if invulnerability_time > 0.0:
 		_invulnerable_left = invulnerability_time
 		set_process(true)

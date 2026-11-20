@@ -106,3 +106,17 @@ func test_piercing_spell_survives_a_single_hit() -> void:
 	assert_lt(_health(enemy).current_health, _health(enemy).max_health)
 	assert_true(is_instance_valid(missile))
 	assert_false(missile.is_queued_for_deletion())
+
+
+func test_the_hitbox_carries_the_spells_profile() -> void:
+	var spell := _fire()
+	var elements: Array[SpellData.Element] = [SpellData.Element.FIRE, SpellData.Element.SEA]
+	spell.elements = elements
+	spell.vulnerability_scale = 2.0
+	spell.ignores_resistance = true
+	var hitbox := _missile(spell).get_node("Hitbox") as HitboxComponent
+	assert_not_null(hitbox.profile)
+	assert_eq(hitbox.profile.elements, [SpellData.Element.FIRE, SpellData.Element.SEA])
+	assert_eq(hitbox.profile.vulnerability_scale, 2.0)
+	assert_true(hitbox.profile.ignores_resistance)
+	assert_eq(hitbox.element, SpellData.Element.FIRE, "the first element is still the hitbox's element")
